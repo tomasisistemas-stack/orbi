@@ -1,0 +1,54 @@
+object FRSELOBR: TFRSELOBR
+  Left = 187
+  Top = 262
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsSingle
+  Caption = 'Seleciona Obra'
+  ClientHeight = 224
+  ClientWidth = 678
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  KeyPreview = True
+  OldCreateOrder = False
+  Position = poScreenCenter
+  OnKeyPress = FormKeyPress
+  PixelsPerInch = 96
+  TextHeight = 13
+  object IB_Grid1: TIB_Grid
+    Left = 0
+    Top = 0
+    Width = 678
+    Height = 224
+    CustomGlyphsSupplied = []
+    DataSource = DMVEN.DESELOBR
+    Align = alClient
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 0
+    OnKeyPress = IB_Grid1KeyPress
+    CurrentRowColor = clMoneyGreen
+    CurrentRowFont.Charset = DEFAULT_CHARSET
+    CurrentRowFont.Color = clWindowText
+    CurrentRowFont.Height = -11
+    CurrentRowFont.Name = 'MS Sans Serif'
+    CurrentRowFont.Style = [fsBold]
+    OrderingFont.Charset = DEFAULT_CHARSET
+    OrderingFont.Color = clWindowText
+    OrderingFont.Height = -11
+    OrderingFont.Name = 'MS Sans Serif'
+    OrderingFont.Style = []
+    FixedFont.Charset = DEFAULT_CHARSET
+    FixedFont.Color = clWindowText
+    FixedFont.Height = -11
+    FixedFont.Name = 'MS Sans Serif'
+    FixedFont.Style = []
+  end
+end

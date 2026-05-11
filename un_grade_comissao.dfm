@@ -1,0 +1,608 @@
+object frm_grade_comissao: Tfrm_grade_comissao
+  Left = 338
+  Top = 55
+  BorderIcons = [biSystemMenu]
+  Caption = 'Grade de Comiss'#245'es'
+  ClientHeight = 453
+  ClientWidth = 410
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  KeyPreview = True
+  OldCreateOrder = False
+  Position = poScreenCenter
+  OnKeyPress = FormKeyPress
+  OnShow = FormShow
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Panel1: TsPanel
+    Left = 0
+    Top = 412
+    Width = 410
+    Height = 41
+    Align = alBottom
+    TabOrder = 0
+    SkinData.SkinSection = 'PANEL'
+    object BtConferir: TsSpeedButton
+      Left = 157
+      Top = 5
+      Width = 97
+      Height = 30
+      Caption = 'Confirmar'
+      Flat = True
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      Glyph.Data = {
+        76010000424D7601000000000000760000002800000020000000100000000100
+        04000000000000010000120B0000120B00001000000000000000000000000000
+        800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
+        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00555555555555
+        555555555555555555555555555555555555555555FF55555555555559055555
+        55555555577FF5555555555599905555555555557777F5555555555599905555
+        555555557777FF5555555559999905555555555777777F555555559999990555
+        5555557777777FF5555557990599905555555777757777F55555790555599055
+        55557775555777FF5555555555599905555555555557777F5555555555559905
+        555555555555777FF5555555555559905555555555555777FF55555555555579
+        05555555555555777FF5555555555557905555555555555777FF555555555555
+        5990555555555555577755555555555555555555555555555555}
+      NumGlyphs = 2
+      ParentFont = False
+      OnClick = BtConferirClick
+      SkinData.SkinSection = 'SPEEDBUTTON'
+    end
+  end
+  object Panel2: TsPanel
+    Left = 0
+    Top = 0
+    Width = 410
+    Height = 44
+    Align = alTop
+    TabOrder = 1
+    SkinData.SkinSection = 'PANEL'
+    object GbFtTipo: TsGroupBox
+      Left = 105
+      Top = 2
+      Width = 83
+      Height = 38
+      Caption = 'Informe o Tipo'
+      TabOrder = 0
+      SkinData.SkinSection = 'GROUPBOX'
+      object cbftTipo: TComboBox
+        Left = 23
+        Top = 14
+        Width = 41
+        Height = 21
+        Style = csDropDownList
+        ItemIndex = 0
+        TabOrder = 0
+        Text = 'A'
+        Items.Strings = (
+          'A'
+          'B'
+          'C'
+          'D'
+          'E'
+          'F'
+          'G'
+          'H'
+          'I'
+          'J'
+          'K'
+          'L'
+          'M'
+          'N'
+          'O'
+          'P'
+          'Q'
+          'R'
+          'S'
+          'T'
+          'U'
+          'V'
+          'W'
+          'X'
+          'Y'
+          'Z')
+      end
+    end
+    object btok: TsBitBtn
+      Left = 193
+      Top = 3
+      Width = 112
+      Height = 38
+      Caption = 'Consulta'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      Glyph.Data = {
+        360C0000424D360C000000000000360000002800000020000000200000000100
+        180000000000000C000000000000000000000000000000000000FFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FF7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7FFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7F7F7F7F7F
+        7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F
+        7F7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7F7F7F7F7F7F7F7F7F0000
+        000000000000000000000000000000000000000000007F7F7F7F7F7F7F7F7F7F
+        7F7F7F7F7F7F7F7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7F7F7F000000000000000000FF00
+        00FF0000FF0000FF0000FF0000FF0000FF0000FF00000000000000000000007F
+        7F7F7F7F7F7F7F7F7F7F7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFF7F7F7F7F7F7F000000FF0000FF0000FF0000FF00
+        00FF0000FF0000FF0000FF0000FF0000FF0000FF0000FF0000FF0000FF000000
+        00000000007F7F7F7F7F7F7F7F7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFF7F7F7F000000000000FF0000FF0000FF0000FF0000FF00
+        00FF0000FF0000FF0000FF0000FF0000FF0000FF0000FF0000FF0000FF0000FF
+        0000FF00000000007F7F7F7F7F7F7F7F7FFFFFFF7F7F7F7F7F7FFFFFFFFFFFFF
+        FFFFFFFFFFFF7F7F7F000000FF0000FF0000FF0000FF0000FF0000FF0000FF00
+        00FF0000FF0000FF0000FF0000FF0000FF0000FF0000FF0000FF0000FF0000FF
+        0000FF0000FF00000000007F7F7F7F7F7F7F7F7F7F7F7F7F0000FFFFFFFFFFFF
+        FFFFFF7F7F7F0000007F0000FF0000FF0000FF0000FF0000FF0000FF0000FF00
+        00FF0000FF0000FF0000FF0000FF0000FF0000FF0000FF0000FF0000FF0000FF
+        0000FF0000FF0000FF00000000007F7F7F7F00007F0000FF0000FFFFFFFFFFFF
+        7F7F7F0000007F0000FF00007F0000FF0000FF0000FF0000FF0000FF0000FF00
+        00FF0000FF0000FF0000FF0000FF0000FF0000FF0000FF0000FF0000FF0000FF
+        0000FF0000FF0000FF00007F00007F00007F0000FF0000FFFF00FFFFFFFFFFFF
+        7F7F7F000000FF00007F0000FF00007F0000FF0000FF0000FF0000FF0000FF00
+        00000000000000000000000000000000000000FF0000FF0000FF0000FF0000FF
+        0000FF0000FF0000FF0000FF00007F0000FF0000FF0000FFFF00FFFFFFFFFFFF
+        000000FF00007F0000FF00007F0000FF00007F0000FF00007F00000000000000
+        00FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000FF0000FF0000FF
+        0000FF0000FF0000FF0000FF0000FF0000FF0000FFFF007F7F7FFFFFFFFFFFFF
+        7F00007F00007F00007F0000FF00007F0000FF00007F00000000007F7F7FFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7F00007F00007F0000FF0000FF
+        0000FF0000FF0000FF0000FF0000FF0000FF0000FFFF007F7F7FFFFFFF000000
+        7F00007F00007F00007F00007F00007F00007F0000FF00000000007F7F7FFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFF7F00007F0000FF0000FF0000FF0000FF0000FF
+        0000FF0000FF0000FF0000FF0000FF0000FFFF000000007F7F7FFFFFFF000000
+        7F00007F00007F00007F00007F00007F00007F00000000007F7F7F7F7F7FFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00FF0000FF0000FF0000FF0000FF0000FF
+        0000FF0000FF0000FF0000FF0000FF0000FFFF000000007F7F7FFFFFFF000000
+        7F00007F0000FFFFFFFFFFFF7F00007F00007F00007F7F7F7F7F7F7F7F7FFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00FFFF00FF0000FF0000FF
+        0000FF0000FF0000FF0000FF0000FFFF007F007F0000007F7F7FFFFFFF000000
+        7F00007F0000FFFFFFFF00FFFFFFFFFFFFFF7F00000000007F7F7F7F7F7F7F7F
+        7F7F7F7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00FFFF00FF
+        FF00FF0000FF0000FF0000FF0000FFFF007F007F0000007F7F7FFFFFFF000000
+        7F0000FFFFFFFF00FFFF00FFFF00FFFF00FFFFFFFFFFFFFFFFFFFF7F7F7F7F7F
+        7F7F7F7F7F7F7F7F7F7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000007F
+        007FFFFF00FFFF00FF0000FFFF007F007F7F007F0000007F7F7FFFFFFF000000
+        7F0000FFFFFFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFFFFFFFFFF
+        FF7F7F7F7F7F7F7F7F7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000007F
+        007F7F007F7F007FFFFF00FFFF007F007F7F007F0000007F7F7FFFFFFF000000
+        FFFFFFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
+        FFFF00FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7F7F7F0000007F
+        007F7F007F7F007F7F007F7F007F7F007F7F007F000000FFFFFFFFFFFF000000
+        FFFFFFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
+        FF7F007F7F007FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7F7F7F000000FF00FF7F
+        007FFF00FF7F007F7F007F7F007F7F007F7F007F000000FFFFFFFFFFFFFFFFFF
+        FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF7F007F7F007F7F00
+        7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F0000007F007FFF
+        00FF7F007FFF00FF7F007FFF00FF7F007F000000FFFFFFFFFFFFFFFFFFFFFFFF
+        FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF0000000000
+        007F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F000000000000FF00FFFF00FF7F
+        007FFF00FF7F007FFF00FF7F007FFF00FF000000FFFFFFFFFFFFFFFFFFFF00FF
+        FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
+        FF000000000000000000000000000000000000FF00FFFF00FFFF00FFFF00FFFF
+        00FF7F007FFF00FF7F007FFF00FF000000FFFFFFFFFFFFFFFFFFFFFFFFFF00FF
+        FF00FF7F007FFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
+        FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
+        00FFFF00FF7F007FFF00FF7F007F000000FFFFFFFFFFFFFFFFFFFF00FF7F007F
+        7F007F7F007F000000FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
+        FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
+        00FFFF00FFFF00FF7F007F000000FFFFFFFFFFFFFFFFFFFFFFFF7F007FFFFFFF
+        FFFFFFFFFFFFFFFFFF000000FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
+        FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
+        00FFFF00FFFF00FF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFF000000000000FF00FFFF00FFFF00FFFF00FFFF00
+        FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
+        00FF000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000FF00FFFF00FFFF00FFFF00
+        FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF00
+        0000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000000000FF00
+        FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF000000000000000000FF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000
+        00000000000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
+      ParentFont = False
+      TabOrder = 1
+      OnClick = btokClick
+      SkinData.SkinSection = 'BUTTON'
+    end
+  end
+  object Panel3: TsPanel
+    Left = 0
+    Top = 44
+    Width = 410
+    Height = 368
+    Align = alClient
+    BevelInner = bvLowered
+    TabOrder = 2
+    SkinData.SkinSection = 'PANEL'
+    object dgGradeComissoes: TDBGrid
+      Left = 2
+      Top = 89
+      Width = 406
+      Height = 277
+      Align = alClient
+      DataSource = dsGradeComissao
+      TabOrder = 0
+      TitleFont.Charset = DEFAULT_CHARSET
+      TitleFont.Color = clWindowText
+      TitleFont.Height = -11
+      TitleFont.Name = 'MS Sans Serif'
+      TitleFont.Style = []
+      OnKeyDown = dgGradeComissoesKeyDown
+      Columns = <
+        item
+          Alignment = taCenter
+          Expanded = False
+          FieldName = 'Tipo'
+          Title.Alignment = taCenter
+          Visible = True
+        end
+        item
+          Alignment = taCenter
+          Expanded = False
+          FieldName = 'Inicio'
+          Title.Alignment = taCenter
+          Width = 80
+          Visible = True
+        end
+        item
+          Alignment = taCenter
+          Expanded = False
+          FieldName = 'Fim'
+          Title.Alignment = taCenter
+          Width = 80
+          Visible = True
+        end
+        item
+          Alignment = taCenter
+          Expanded = False
+          FieldName = 'ComissaoInterno'
+          Title.Alignment = taCenter
+          Title.Caption = 'Com. Func.'
+          Width = 80
+          Visible = True
+        end
+        item
+          Alignment = taCenter
+          Expanded = False
+          FieldName = 'ComissaoOutros'
+          Title.Alignment = taCenter
+          Title.Caption = 'Com. Outros'
+          Width = 80
+          Visible = True
+        end>
+    end
+    object Panel4: TsPanel
+      Left = 2
+      Top = 2
+      Width = 406
+      Height = 87
+      Align = alTop
+      BevelInner = bvLowered
+      TabOrder = 1
+      SkinData.SkinSection = 'PANEL'
+      object sbInserir: TsSpeedButton
+        Left = 75
+        Top = 49
+        Width = 80
+        Height = 30
+        Caption = 'Inserir'
+        Flat = True
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        Glyph.Data = {
+          76010000424D7601000000000000760000002800000020000000100000000100
+          04000000000000010000130B0000130B00001000000000000000000000000000
+          800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
+          FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333333333
+          33333333FF33333333FF333993333333300033377F3333333777333993333333
+          300033F77FFF3333377739999993333333333777777F3333333F399999933333
+          33003777777333333377333993333333330033377F3333333377333993333333
+          3333333773333333333F333333333333330033333333F33333773333333C3333
+          330033333337FF3333773333333CC333333333FFFFF77FFF3FF33CCCCCCCCCC3
+          993337777777777F77F33CCCCCCCCCC3993337777777777377333333333CC333
+          333333333337733333FF3333333C333330003333333733333777333333333333
+          3000333333333333377733333333333333333333333333333333}
+        NumGlyphs = 2
+        ParentFont = False
+        OnClick = sbInserirClick
+        SkinData.SkinSection = 'SPEEDBUTTON'
+      end
+      object sbAlterar: TsSpeedButton
+        Left = 163
+        Top = 49
+        Width = 80
+        Height = 30
+        Caption = 'Alterar'
+        Flat = True
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        Glyph.Data = {
+          76010000424D7601000000000000760000002800000020000000100000000100
+          04000000000000010000120B0000120B00001000000000000000000000000000
+          800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
+          FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333000000
+          000033333377777777773333330FFFFFFFF03FF3FF7FF33F3FF700300000FF0F
+          00F077F777773F737737E00BFBFB0FFFFFF07773333F7F3333F7E0BFBF000FFF
+          F0F077F3337773F3F737E0FBFBFBF0F00FF077F3333FF7F77F37E0BFBF00000B
+          0FF077F3337777737337E0FBFBFBFBF0FFF077F33FFFFFF73337E0BF0000000F
+          FFF077FF777777733FF7000BFB00B0FF00F07773FF77373377373330000B0FFF
+          FFF03337777373333FF7333330B0FFFF00003333373733FF777733330B0FF00F
+          0FF03333737F37737F373330B00FFFFF0F033337F77F33337F733309030FFFFF
+          00333377737FFFFF773333303300000003333337337777777333}
+        NumGlyphs = 2
+        ParentFont = False
+        OnClick = sbAlterarClick
+        SkinData.SkinSection = 'SPEEDBUTTON'
+      end
+      object sbSalvar: TsSpeedButton
+        Left = 251
+        Top = 49
+        Width = 80
+        Height = 30
+        Caption = 'Salvar'
+        Enabled = False
+        Flat = True
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        Glyph.Data = {
+          76010000424D7601000000000000760000002800000020000000100000000100
+          04000000000000010000120B0000120B00001000000000000000000000000000
+          800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
+          FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00555555555555
+          555555555555555555555555555555555555555555FF55555555555559055555
+          55555555577FF5555555555599905555555555557777F5555555555599905555
+          555555557777FF5555555559999905555555555777777F555555559999990555
+          5555557777777FF5555557990599905555555777757777F55555790555599055
+          55557775555777FF5555555555599905555555555557777F5555555555559905
+          555555555555777FF5555555555559905555555555555777FF55555555555579
+          05555555555555777FF5555555555557905555555555555777FF555555555555
+          5990555555555555577755555555555555555555555555555555}
+        NumGlyphs = 2
+        ParentFont = False
+        OnClick = sbSalvarClick
+        SkinData.SkinSection = 'SPEEDBUTTON'
+      end
+      object GbTipo: TsGroupBox
+        Left = 7
+        Top = 3
+        Width = 53
+        Height = 38
+        Caption = 'Tipo'
+        TabOrder = 0
+        SkinData.SkinSection = 'GROUPBOX'
+        object cbTipo: TDBComboBox
+          Left = 7
+          Top = 14
+          Width = 41
+          Height = 21
+          Style = csDropDownList
+          DataField = 'Tipo'
+          DataSource = dsGradeComissao
+          Items.Strings = (
+            'A'
+            'B'
+            'C'
+            'D'
+            'E'
+            'F'
+            'G'
+            'H'
+            'I'
+            'J'
+            'K'
+            'L'
+            'M'
+            'N'
+            'O'
+            'P'
+            'Q'
+            'R'
+            'S'
+            'T'
+            'U'
+            'V'
+            'W'
+            'X'
+            'Y'
+            'Z')
+          TabOrder = 0
+        end
+      end
+      object gbMargemIni: TsGroupBox
+        Left = 83
+        Top = 3
+        Width = 65
+        Height = 38
+        Caption = 'Mg. Inicial'
+        TabOrder = 1
+        SkinData.SkinSection = 'GROUPBOX'
+        object edMargIni: TDBEdit
+          Left = 8
+          Top = 14
+          Width = 49
+          Height = 21
+          AutoSize = False
+          DataField = 'Inicio'
+          DataSource = dsGradeComissao
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 0
+        end
+      end
+      object gbMargemFim: TsGroupBox
+        Left = 169
+        Top = 3
+        Width = 65
+        Height = 38
+        Caption = 'Mg. Final'
+        TabOrder = 2
+        SkinData.SkinSection = 'GROUPBOX'
+        object edMargFim: TDBEdit
+          Left = 8
+          Top = 14
+          Width = 49
+          Height = 21
+          AutoSize = False
+          DataField = 'Fim'
+          DataSource = dsGradeComissao
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 0
+        end
+      end
+      object gbComissaoInterno: TsGroupBox
+        Left = 252
+        Top = 3
+        Width = 65
+        Height = 38
+        Caption = 'Com. Func.'
+        TabOrder = 3
+        SkinData.SkinSection = 'GROUPBOX'
+        object edComissaoInterno: TDBEdit
+          Left = 8
+          Top = 14
+          Width = 49
+          Height = 21
+          AutoSize = False
+          DataField = 'ComissaoInterno'
+          DataSource = dsGradeComissao
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 0
+        end
+      end
+      object gbComOut: TsGroupBox
+        Left = 335
+        Top = 3
+        Width = 65
+        Height = 38
+        Caption = 'Com. Out.'
+        TabOrder = 4
+        SkinData.SkinSection = 'GROUPBOX'
+        object edComissaoOutros: TDBEdit
+          Left = 8
+          Top = 14
+          Width = 49
+          Height = 21
+          AutoSize = False
+          DataField = 'ComissaoOutros'
+          DataSource = dsGradeComissao
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 0
+        end
+      end
+    end
+  end
+  object mmGradeComissao: TRxMemoryData
+    AutoCalcFields = False
+    FieldDefs = <
+      item
+        Name = 'NR_CONEXAO'
+        DataType = ftInteger
+      end
+      item
+        Name = 'REPRESENTANTE'
+        DataType = ftString
+        Size = 100
+      end
+      item
+        Name = 'DATA_CONEXAO'
+        DataType = ftDate
+      end
+      item
+        Name = 'HORA'
+        DataType = ftTime
+      end
+      item
+        Name = 'QTDE_PEDIDOS'
+        DataType = ftInteger
+      end
+      item
+        Name = 'QTDE_VISITAS_NEGATIVAS'
+        DataType = ftInteger
+      end
+      item
+        Name = 'check'
+        DataType = ftBoolean
+      end>
+    Left = 96
+    Top = 136
+    object mmGradeComissaocheck: TBooleanField
+      FieldName = 'check'
+    end
+    object mmGradeComissaoTipo: TStringField
+      FieldName = 'Tipo'
+      Size = 1
+    end
+    object mmGradeComissaoInicio: TFloatField
+      FieldName = 'Inicio'
+      DisplayFormat = '##0.00'
+    end
+    object mmGradeComissaoFim: TFloatField
+      FieldName = 'Fim'
+      DisplayFormat = '##0.00'
+    end
+    object mmGradeComissaoComissaoInterno: TFloatField
+      FieldName = 'ComissaoInterno'
+      DisplayFormat = '##0.00'
+    end
+    object mmGradeComissaoComissaoOutros: TFloatField
+      FieldName = 'ComissaoOutros'
+      DisplayFormat = '##0.00'
+    end
+  end
+  object dsGradeComissao: TDataSource
+    AutoEdit = False
+    DataSet = mmGradeComissao
+    Left = 128
+    Top = 136
+  end
+end

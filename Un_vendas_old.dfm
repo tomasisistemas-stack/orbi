@@ -1,0 +1,393 @@
+object Fr_vendas: TFr_vendas
+  Left = 232
+  Top = 102
+  Width = 646
+  Height = 605
+  Caption = 'Controle de Vendas'
+  Color = clBtnFace
+  BorderIcons = [biSystemMenu]
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  KeyPreview = True
+  Menu = MainMenu1
+  OldCreateOrder = False
+  Position = poScreenCenter
+  PixelsPerInch = 96
+  TextHeight = 13
+  object GroupBox1: TsGroupBox
+    Left = 3
+    Top = 75
+    Width = 633
+    Height = 53
+    Caption = 'Cliente'
+    TabOrder = 0
+    object lb_nom_sucursal: tsLabel
+      Left = 111
+      Top = 26
+      Width = 9
+      Height = 13
+      Caption = '...'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clNavy
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentFont = False
+    end
+    object SpeedButton1: TsSpeedButton
+      Left = 13
+      Top = 19
+      Width = 25
+      Height = 25
+      Hint = 
+        'Mostra dados adicionais sobre o cliente'#13#10'tais como endere'#231'o, tel' +
+        'efone e etc....'
+      Glyph.Data = {
+        36030000424D3603000000000000360000002800000010000000100000000100
+        18000000000000030000120B0000120B00000000000000000000FF00FFFF00FF
+        A59380A59380A59380FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
+        FFFF00FFFF00FFFF00FF18741DCAC5AADBCFC8DBD0C4F2DFCBA59380A59380A5
+        9380A59380FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF158A2DCADABB
+        DDD1CCD2CFCCFFF2E0FFF0DAFFEBD0FFE8C6FFE6BEA59380A59380A59380FF00
+        FFFF00FFFF00FFFF00FF00710EBBD5B4D7CCCBD2CFCCF1E7DA70685F70685FD2
+        B9A5E2C6AAE5C6A3FFDDAFA59380FF00FFFF00FFFF00FFFF00FF006F0398BA95
+        D9CFD2D2CFCCE9E3DAD4C9BDD0C9B270685F70685F70685FF9D2AFA59380FF00
+        FFFF00FFFF00FFFF00FF00680082A980D5CED1D2CFCCEAE6E270685F3B7F3410
+        5F10105C101B6718105D100F5E0F0F5F0FFF00FFFF00FFFF00FF006200699C6A
+        D3CFD2D2CFCCD9D5D68CA1850C690D087C08009700038C03067B060970090C66
+        0C0F5F0F0F5E0F096109FF00FF468347D2CFCCD2CFCCD7D6D52579280E6D120A
+        A214049D08009900009A00009B00009D00009D00017A01026302FF00FF317531
+        D2CFCCFFFBFF6B986A0F61111AAC3213AC280DA61B07A00D029B03009900009C
+        00008500006500FF00FFFF00FF0E5E0ED2CFCCEBF2E914661720A03D24BC481D
+        B63B17B02F11AA220BA31505A10A008A00006600FF00FFFF00FFFF00FF055D05
+        B9B4B83E833F157C2633CD682DC55C27BF4F21B9411AB33515B02B0B9B170168
+        01FF00FFFF00FFFF00FFFF00FF04640451734F1464172FC76233CB6732CF682F
+        CC622AC95726BF4C1BAC35046F07FF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
+        156D1C2A72393BA0603A975A399A5A37AA6037A25C2BC559087810FF00FFFF00
+        FFFF00FFFF00FFFF00FFFF00FFFF00FF454A433F57422D5A302F623533603A32
+        7341376B43118220FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
+        FF00FF454A43454A43454A4343504543514538563AFF00FFFF00FFFF00FFFF00
+        FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
+        00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF}
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object PRcod_sucursal: TsComboEdit
+      Left = 39
+      Top = 21
+      Width = 66
+      Height = 21
+      Glyph.Data = {
+        36030000424D3603000000000000360000002800000010000000100000000100
+        18000000000000030000120B0000120B00000000000000000000FF00FFFF00FF
+        FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
+        FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
+        00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
+        FF00FFFF00FFFF00FFFF00FFFF00FF0975A7075C840C6F9DFF00FFFF00FFFF00
+        FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF0670A43F
+        9AB86E533B15212618769FFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
+        FF00FFFF00FFFF00FF0670A431CDFF50A8BFFFDAA07C5F451B3B4CFF00FF0052
+        86005286FF00FFFF00FFFF00FFFF00FFFF00FF0670A42FBFF028ACDF59D2FE78
+        C9E7E3BB8FD7A8792832391D7BAB0052860052860A587EFF00FFFF00FFFF00FF
+        0670A443D0FE6CDEFF5CB4DBAEDDF3F1FFFFDEDBD59B88732C5F765FBDE665BF
+        E083756117161504557F0C7BAE2998C877DDFFA3E5FFCFF1FFDBF0F95AA9C8B1
+        D8E98BCAE5379AC61AABDA4AD0FF2EB8E7D0BE9D7C5639023B57086C9F0670A4
+        CDEBF9FAFFFFF2FCFFDBF5FF60BDE00697C6008EBC0089B80BA9D534C7FA33CF
+        FF7EB8BF8B6B4C0142620670A4BCDBEA0670A4A1D2E693D9F772DBFF53D6FF33
+        C0F1189CCE058CBC00A0CB1FB5E437CBFC23B1E51A6687025F8FFF00FF0670A4
+        0670A40670A426A1D226ADE031C2F537C9FB34C4F72AB5E7128DBE0172A10F7B
+        AFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF0E85B80C7EB213
+        93C50B8DC0006C9FFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
+        FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
+        FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
+        00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
+        FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
+        FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
+        00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF}
+      NumGlyphs = 1
+      TabOrder = 0
+    end
+  end
+  object GroupBox2: TsGroupBox
+    Left = 3
+    Top = 128
+    Width = 633
+    Height = 62
+    TabOrder = 1
+    object Label1: tsLabel
+      Left = 12
+      Top = 18
+      Width = 51
+      Height = 13
+      Caption = 'Finalidade:'
+    end
+    object Label10: tsLabel
+      Left = 84
+      Top = 19
+      Width = 51
+      Height = 13
+      Caption = 'Finalidade:'
+    end
+    object ComboBox1: TComboBox
+      Left = 10
+      Top = 32
+      Width = 39
+      Height = 21
+      Style = csDropDownList
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clRed
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ItemHeight = 13
+      ParentFont = False
+      TabOrder = 0
+      Items.Strings = (
+        'NOVO'
+        'RENOVA'#199#195'O'
+        'SUBSTITUI'#199#195'O'
+        'ALTERA'#199#195'O'
+        'ENDOSSO'
+        'RENOVA'#199#195'O/OUTRA COMPANHIA')
+    end
+    object ComboBox2: TComboBox
+      Left = 82
+      Top = 33
+      Width = 39
+      Height = 21
+      Style = csDropDownList
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clRed
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ItemHeight = 13
+      ParentFont = False
+      TabOrder = 1
+      Items.Strings = (
+        'NOVO'
+        'RENOVA'#199#195'O'
+        'SUBSTITUI'#199#195'O'
+        'ALTERA'#199#195'O'
+        'ENDOSSO'
+        'RENOVA'#199#195'O/OUTRA COMPANHIA')
+    end
+  end
+  object GroupBox3: TsGroupBox
+    Left = 3
+    Top = 440
+    Width = 633
+    Height = 57
+    Color = clBtnShadow
+    ParentColor = False
+    TabOrder = 2
+    object Label13: tsLabel
+      Left = 337
+      Top = 12
+      Width = 50
+      Height = 13
+      Caption = 'Tot. Bruto:'
+    end
+    object Label14: tsLabel
+      Left = 434
+      Top = 12
+      Width = 49
+      Height = 13
+      Caption = 'Desconto:'
+    end
+    object Label15: tsLabel
+      Left = 500
+      Top = 12
+      Width = 53
+      Height = 13
+      Caption = 'Tot.Liquido'
+    end
+    object CurrencyEdit1: TsCurrencyEdit
+      Left = 335
+      Top = 24
+      Width = 82
+      Height = 21
+      AutoSize = False
+      TabOrder = 0
+    end
+    object CurrencyEdit2: TsCurrencyEdit
+      Left = 433
+      Top = 24
+      Width = 49
+      Height = 21
+      AutoSize = False
+      TabOrder = 1
+    end
+    object CurrencyEdit3: TsCurrencyEdit
+      Left = 496
+      Top = 24
+      Width = 82
+      Height = 21
+      AutoSize = False
+      TabOrder = 2
+    end
+  end
+  object Panel1: tsPanel
+    Left = 4
+    Top = 8
+    Width = 633
+    Height = 66
+    Color = clMoneyGreen
+    Ctl3D = True
+    ParentCtl3D = False
+    TabOrder = 3
+    object Label9: tsLabel
+      Left = 9
+      Top = 17
+      Width = 98
+      Height = 13
+      Caption = 'Numero Documento:'
+    end
+    object Label7: tsLabel
+      Left = 201
+      Top = 17
+      Width = 84
+      Height = 13
+      Caption = 'Data Documento:'
+    end
+    object Label11: tsLabel
+      Left = 52
+      Top = 42
+      Width = 52
+      Height = 13
+      Caption = 'Atendente:'
+    end
+    object Label12: tsLabel
+      Left = 186
+      Top = 44
+      Width = 9
+      Height = 13
+      Caption = '...'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clNavy
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentFont = False
+    end
+    object Edit1: TsEdit
+      Left = 114
+      Top = 12
+      Width = 75
+      Height = 21
+      MaxLength = 20
+      TabOrder = 0
+    end
+    object DateEdit1: TsDateEdit
+      Left = 298
+      Top = 12
+      Width = 91
+      Height = 21
+      NumGlyphs = 2
+      TabOrder = 1
+    end
+    object ComboEdit1: TsComboEdit
+      Left = 114
+      Top = 39
+      Width = 66
+      Height = 21
+      Glyph.Data = {
+        36030000424D3603000000000000360000002800000010000000100000000100
+        18000000000000030000120B0000120B00000000000000000000FF00FFFF00FF
+        FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
+        FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
+        00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
+        FF00FFFF00FFFF00FFFF00FFFF00FF0975A7075C840C6F9DFF00FFFF00FFFF00
+        FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF0670A43F
+        9AB86E533B15212618769FFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
+        FF00FFFF00FFFF00FF0670A431CDFF50A8BFFFDAA07C5F451B3B4CFF00FF0052
+        86005286FF00FFFF00FFFF00FFFF00FFFF00FF0670A42FBFF028ACDF59D2FE78
+        C9E7E3BB8FD7A8792832391D7BAB0052860052860A587EFF00FFFF00FFFF00FF
+        0670A443D0FE6CDEFF5CB4DBAEDDF3F1FFFFDEDBD59B88732C5F765FBDE665BF
+        E083756117161504557F0C7BAE2998C877DDFFA3E5FFCFF1FFDBF0F95AA9C8B1
+        D8E98BCAE5379AC61AABDA4AD0FF2EB8E7D0BE9D7C5639023B57086C9F0670A4
+        CDEBF9FAFFFFF2FCFFDBF5FF60BDE00697C6008EBC0089B80BA9D534C7FA33CF
+        FF7EB8BF8B6B4C0142620670A4BCDBEA0670A4A1D2E693D9F772DBFF53D6FF33
+        C0F1189CCE058CBC00A0CB1FB5E437CBFC23B1E51A6687025F8FFF00FF0670A4
+        0670A40670A426A1D226ADE031C2F537C9FB34C4F72AB5E7128DBE0172A10F7B
+        AFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF0E85B80C7EB213
+        93C50B8DC0006C9FFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
+        FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
+        FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
+        00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
+        FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
+        FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
+        00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF}
+      NumGlyphs = 1
+      TabOrder = 2
+    end
+  end
+  object GroupBox4: TsGroupBox
+    Left = 3
+    Top = 194
+    Width = 633
+    Height = 247
+    Caption = 'GroupBox2'
+    TabOrder = 4
+  end
+  object BitBtn1: TsBitBtn
+    Left = 48
+    Top = 504
+    Width = 75
+    Height = 25
+    Caption = 'Novo'
+    TabOrder = 5
+  end
+  object BitBtn2: TsBitBtn
+    Left = 128
+    Top = 504
+    Width = 75
+    Height = 25
+    Caption = 'Alterar'
+    TabOrder = 6
+  end
+  object BitBtn3: TsBitBtn
+    Left = 208
+    Top = 504
+    Width = 75
+    Height = 25
+    Caption = 'Gravar'
+    TabOrder = 7
+  end
+  object BitBtn4: TsBitBtn
+    Left = 288
+    Top = 504
+    Width = 75
+    Height = 25
+    Caption = 'Cancelar'
+    TabOrder = 8
+  end
+  object BitBtn5: TsBitBtn
+    Left = 368
+    Top = 504
+    Width = 75
+    Height = 25
+    Caption = 'Excluir'
+    TabOrder = 9
+  end
+  object BitBtn6: TsBitBtn
+    Left = 552
+    Top = 504
+    Width = 75
+    Height = 25
+    Caption = 'Sair'
+    TabOrder = 10
+  end
+  object MainMenu1: TMainMenu
+    Left = 480
+    object Atalho11: TMenuItem
+      Caption = 'Atalho 1'
+    end
+    object Atalho21: TMenuItem
+      Caption = 'Atalho2'
+    end
+  end
+end
