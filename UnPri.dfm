@@ -10280,13 +10280,20 @@ object FRPRI: TFRPRI
           Caption = 'Televendas'
           OnClick = t1Click
         end
+        object r2: TMenuItem
+          Caption = 'Ranking de Vendas'
+          object S6: TMenuItem
+            Caption = 'Simplificado'
+            OnClick = S6Click
+          end
+          object C9: TMenuItem
+            Caption = 'Completo'
+            OnClick = C9Click
+          end
+        end
         object p3: TMenuItem
           Caption = 'Movimenta'#231#227'o de Produtos'
           OnClick = p3Click
-        end
-        object r2: TMenuItem
-          Caption = 'Ranking de Vendas'
-          OnClick = r2Click
         end
         object c7: TMenuItem
           Caption = 'Clientes por Produtos'

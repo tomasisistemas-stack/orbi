@@ -291,10 +291,6 @@ object FrPalmConexao: TFrPalmConexao
       ImageIndex = 1
       SkinData.CustomColor = False
       SkinData.CustomFont = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Panel2: TsPanel
         Left = 0
         Top = 209
@@ -553,10 +549,6 @@ object FrPalmConexao: TFrPalmConexao
       Caption = 'Conex'#245'es'
       SkinData.CustomColor = False
       SkinData.CustomFont = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gdConexaoVendor: TDBGrid
         Left = 0
         Top = 0
@@ -743,17 +735,20 @@ object FrPalmConexao: TFrPalmConexao
     object q_itensqtd: TBCDField
       FieldName = 'qtd'
       Origin = 'qtd'
+      DisplayFormat = '#,###,##0.00'
       Precision = 15
       Size = 2
     end
     object q_itenspreco: TBCDField
       FieldName = 'preco'
       Origin = 'preco'
+      currency = True
       Precision = 15
     end
     object q_itenssub_total: TBCDField
       FieldName = 'sub_total'
       Origin = 'sub_total'
+      currency = True
       Precision = 15
     end
     object q_itensnr_pedido_palm: TStringField
@@ -765,6 +760,7 @@ object FrPalmConexao: TFrPalmConexao
     object q_itenspreco_bruto: TBCDField
       FieldName = 'preco_bruto'
       Origin = 'preco_bruto'
+      currency = True
       Precision = 15
       Size = 2
     end
@@ -773,6 +769,7 @@ object FrPalmConexao: TFrPalmConexao
       FieldName = 'perc_desc'
       Origin = 'perc_desc'
       ReadOnly = True
+      DisplayFormat = '##0.00'
       Precision = 64
       Size = 0
     end
@@ -1957,12 +1954,14 @@ object FrPalmConexao: TFrPalmConexao
     object q_pedidostot_bruto: TBCDField
       FieldName = 'tot_bruto'
       Origin = 'tot_bruto'
+      currency = True
       Precision = 15
       Size = 2
     end
     object q_pedidostot_liquido: TBCDField
       FieldName = 'tot_liquido'
       Origin = 'tot_liquido'
+      currency = True
       Precision = 15
     end
     object q_pedidosfop: TStringField

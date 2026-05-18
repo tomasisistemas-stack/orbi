@@ -22,7 +22,7 @@ object Fr_pedido_simplificado: TFr_pedido_simplificado
     Left = 0
     Top = 0
     Width = 1309
-    Height = 65
+    Height = 97
     Align = alTop
     Color = clWhite
     ParentBackground = False
@@ -49,25 +49,32 @@ object Fr_pedido_simplificado: TFr_pedido_simplificado
       Caption = 'Representante'
     end
     object lbFop: TLabel
-      Left = 837
-      Top = 12
+      Left = 16
+      Top = 55
       Width = 102
       Height = 13
       Caption = 'Forma de Pagamento'
     end
     object lbPrazo: TLabel
-      Left = 1041
-      Top = 12
+      Left = 477
+      Top = 55
       Width = 27
       Height = 13
       Caption = 'Prazo'
     end
     object Lb_orcamento: TLabel
-      Left = 1207
-      Top = 12
+      Left = 902
+      Top = 55
       Width = 53
       Height = 13
       Caption = 'Or'#231'amento'
+    end
+    object lbSupervisor: TLabel
+      Left = 902
+      Top = 11
+      Width = 51
+      Height = 13
+      Caption = 'Supervisor'
     end
     object LbNomCliente: TLabel
       Left = 212
@@ -97,9 +104,23 @@ object Fr_pedido_simplificado: TFr_pedido_simplificado
       Font.Style = [fsBold]
       ParentFont = False
     end
+    object LbNomSupervisor: TLabel
+      Left = 969
+      Top = 31
+      Width = 250
+      Height = 13
+      AutoSize = False
+      Caption = 'Descricao supervisor'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clNavy
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
     object LbNomFop: TLabel
-      Left = 895
-      Top = 32
+      Left = 74
+      Top = 75
       Width = 110
       Height = 13
       AutoSize = False
@@ -112,8 +133,8 @@ object Fr_pedido_simplificado: TFr_pedido_simplificado
       ParentFont = False
     end
     object LbNomPrazo: TLabel
-      Left = 1097
-      Top = 32
+      Left = 533
+      Top = 75
       Width = 100
       Height = 13
       AutoSize = False
@@ -158,13 +179,38 @@ object Fr_pedido_simplificado: TFr_pedido_simplificado
       GlyphMode.Blend = 0
       GlyphMode.Grayed = False
     end
-    object Prcod_fop: TsComboEdit
-      Left = 837
-      Top = 28
-      Width = 50
+    object Prcod_supervisor: TsComboEdit
+      Left = 902
+      Top = 27
+      Width = 60
       Height = 21
       AutoSize = False
       TabOrder = 3
+      Text = ''
+      OnExit = Prcod_supervisorExit
+      CheckOnExit = True
+      BoundLabel.Indent = 0
+      BoundLabel.Font.Charset = DEFAULT_CHARSET
+      BoundLabel.Font.Color = clWindowText
+      BoundLabel.Font.Height = -11
+      BoundLabel.Font.Name = 'Tahoma'
+      BoundLabel.Font.Style = []
+      BoundLabel.Layout = sclLeft
+      BoundLabel.MaxWidth = 0
+      BoundLabel.UseSkinColor = True
+      SkinData.SkinSection = 'EDIT'
+      OnButtonClick = Prcod_supervisorButtonClick
+      ClickKey = 120
+      GlyphMode.Blend = 0
+      GlyphMode.Grayed = False
+    end
+    object Prcod_fop: TsComboEdit
+      Left = 18
+      Top = 71
+      Width = 50
+      Height = 21
+      AutoSize = False
+      TabOrder = 4
       Text = ''
       OnExit = Prcod_fopExit
       CheckOnExit = True
@@ -184,12 +230,12 @@ object Fr_pedido_simplificado: TFr_pedido_simplificado
       GlyphMode.Grayed = False
     end
     object Prcod_prazo_pgto: TsComboEdit
-      Left = 1041
-      Top = 28
+      Left = 477
+      Top = 71
       Width = 50
       Height = 21
       AutoSize = False
-      TabOrder = 4
+      TabOrder = 5
       Text = ''
       OnExit = Prcod_prazo_pgtoExit
       CheckOnExit = True
@@ -209,13 +255,13 @@ object Fr_pedido_simplificado: TFr_pedido_simplificado
       GlyphMode.Grayed = False
     end
     object Prorcamento: TComboBox
-      Left = 1207
-      Top = 28
+      Left = 902
+      Top = 71
       Width = 57
       Height = 21
       Style = csDropDownList
       ItemIndex = 0
-      TabOrder = 5
+      TabOrder = 6
       Text = 'N'#227'o'
       Items.Strings = (
         'N'#227'o'
@@ -248,16 +294,16 @@ object Fr_pedido_simplificado: TFr_pedido_simplificado
   end
   object pnItem: TPanel
     Left = 939
-    Top = 65
+    Top = 97
     Width = 370
-    Height = 605
+    Height = 573
     Align = alRight
     Color = clWhite
     ParentBackground = False
     TabOrder = 1
     DesignSize = (
       370
-      605)
+      573)
     object lbCodProduto: TLabel
       Left = 16
       Top = 9
@@ -418,7 +464,7 @@ object Fr_pedido_simplificado: TFr_pedido_simplificado
       Width = 62
       Height = 25
       Caption = 'Grv. Item'
-      TabOrder = 5
+      TabOrder = 6
       OnClick = btGraItemClick
     end
     object btAltItem: TButton
@@ -427,7 +473,7 @@ object Fr_pedido_simplificado: TFr_pedido_simplificado
       Width = 62
       Height = 25
       Caption = 'Alt. Item'
-      TabOrder = 6
+      TabOrder = 5
       OnClick = btAltItemClick
     end
     object btExcItem: TButton
@@ -577,9 +623,9 @@ object Fr_pedido_simplificado: TFr_pedido_simplificado
   end
   object pngeral: TPanel
     Left = 0
-    Top = 65
+    Top = 97
     Width = 939
-    Height = 605
+    Height = 573
     Align = alClient
     Color = clWhite
     ParentBackground = False
@@ -588,7 +634,7 @@ object Fr_pedido_simplificado: TFr_pedido_simplificado
       Left = 1
       Top = 1
       Width = 937
-      Height = 562
+      Height = 530
       Align = alClient
       DataSource = dsItens
       DrawingStyle = gdsGradient
@@ -658,7 +704,7 @@ object Fr_pedido_simplificado: TFr_pedido_simplificado
     end
     object pnGeralRod: TPanel
       Left = 1
-      Top = 563
+      Top = 531
       Width = 937
       Height = 41
       Align = alBottom

@@ -88,6 +88,9 @@ type
     LbComissaoPerc: TLabel;
     LbComissaoValor: TLabel;
     qItenssub_total_bruto: TFMTBCDField;
+    lbSupervisor: TLabel;
+    LbNomSupervisor: TLabel;
+    Prcod_supervisor: TsComboEdit;
     procedure FormCreate(Sender: TObject);
     procedure btCarregarClick(Sender: TObject);
     procedure btNovoClick(Sender: TObject);
@@ -105,10 +108,12 @@ type
     procedure MeCodProdutoButtonClick(Sender: TObject);
     procedure Prcod_representanteButtonClick(Sender: TObject);
     procedure Prcod_clienteButtonClick(Sender: TObject);
+    procedure Prcod_supervisorButtonClick(Sender: TObject);
     procedure Prcod_fopButtonClick(Sender: TObject);
     procedure Prcod_prazo_pgtoButtonClick(Sender: TObject);
     procedure MeQtdChange(Sender: TObject);
     procedure Prcod_clienteExit(Sender: TObject);
+    procedure Prcod_supervisorExit(Sender: TObject);
     procedure Prcod_representanteExit(Sender: TObject);
     procedure Prcod_fopExit(Sender: TObject);
     procedure Prcod_prazo_pgtoExit(Sender: TObject);
@@ -138,6 +143,7 @@ type
     FPrecoVendaProduto: Double;
     FTotalBruto: Double;
     FTotalLiquido: Double;
+    FDesconto: Double;
     procedure LimparTela;
     procedure LimparDigitacaoItem;
     procedure CarregarItemSelecionado;
@@ -156,6 +162,7 @@ type
     function BuscarCodigoLocalizar(const APesquisa, ATitulo: string): string;
     procedure CarregarNomeCliente;
     procedure CarregarNomeRepresentante;
+    procedure CarregarNomeSupervisor;
     procedure CarregarNomeFop;
     procedure CarregarNomePrazo;
     procedure CarregaFoto(const AProduto: string);
@@ -353,10 +360,12 @@ procedure TFr_pedido_simplificado.LimparTela;
 begin
   Prcod_cliente.Clear;
   Prcod_representante.Clear;
+  Prcod_supervisor.Clear;
   Prcod_fop.Clear;
   Prcod_prazo_pgto.Clear;
   LbNomCliente.Caption := '';
   LbNomRepresentante.Caption := '';
+  LbNomSupervisor.Caption := '';
   LbNomFop.Caption := '';
   LbNomPrazo.Caption := '';
   Prorcamento.ItemIndex := 0;
@@ -909,7 +918,7 @@ begin
 
   qPedido.Close;
   qPedido.SQL.Text :=
-    'select v.numdoc, v.cod_cliente, v.cod_representante, v.cod_fop, v.cod_prazo_pgto, v.observacoes_pedido, coalesce(v.faturado, ''0'') as faturado, coalesce(v.orcamento, ''0'') as orcamento ' +
+    'select v.numdoc, v.cod_cliente, v.cod_representante, v.cod_supervisor, v.cod_fop, v.cod_prazo_pgto, v.observacoes_pedido, coalesce(v.faturado, ''0'') as faturado, coalesce(v.orcamento, ''0'') as orcamento ' +
     'from vendas1 v where v.numdoc = :numdoc';
   qPedido.ParamByName('numdoc').AsInteger := StrToIntDef(NumeroAtual,0);
   qPedido.Open;
@@ -924,6 +933,7 @@ begin
 
   Prcod_cliente.Text := qPedido.FieldByName('cod_cliente').AsString;
   Prcod_representante.Text := qPedido.FieldByName('cod_representante').AsString;
+  Prcod_supervisor.Text := qPedido.FieldByName('cod_supervisor').AsString;
   Prcod_fop.Text := qPedido.FieldByName('cod_fop').AsString;
   Prcod_prazo_pgto.Text := qPedido.FieldByName('cod_prazo_pgto').AsString;
   if qPedido.FieldByName('orcamento').AsString = '1' then
@@ -934,6 +944,7 @@ begin
 
   CarregarNomeCliente;
   CarregarNomeRepresentante;
+  CarregarNomeSupervisor;
   CarregarNomeFop;
   CarregarNomePrazo;
 
@@ -1031,12 +1042,15 @@ begin
   AtualizarBotoes;
 
   if (FRPRI.TipUsu = '0') then
+  begin
     Prcod_representante.ReadOnly := true;
+    Prcod_supervisor.ReadOnly := true;
+  end;
 end;
 
 procedure TFr_pedido_simplificado.btGravarClick(Sender: TObject);
 var
-  NumDoc, processo: string;
+  NumDoc, processo, SupervisorSql: string;
   Q: TFDQuery;
 begin
   if dao.CN.InTransaction then
@@ -1079,41 +1093,61 @@ begin
     Exit;
   end;
 
+  if Trim(Prcod_fop.Text) = '' then
+  begin
+    ShowMessage('Informe a forma de pagamento.');
+    Prcod_fop.SetFocus;
+    Exit;
+  end;
+
+  if Trim(Prcod_prazo_pgto.Text) = '' then
+  begin
+    ShowMessage('Informe o prazo.');
+    Prcod_prazo_pgto.SetFocus;
+    Exit;
+  end;
+
+  if Trim(Prcod_supervisor.Text) = '' then
+    SupervisorSql := 'null'
+  else
+    SupervisorSql := QuotedStr(Trim(Prcod_supervisor.Text));
+
   Q := TFDQuery.Create(nil);
   try
     Q.Connection := dao.CN;
     if not dao.CN.InTransaction then
       dao.CN.StartTransaction;
     try
-    if FNovo then
-    begin
-      processo := FMFUN.GerarProcessoPedido;
-      FMFUN.AlterarProcessoPedido('À Digitar', NumDoc);
-
-      Q.SQL.Text := 'insert into vendas1 (numdoc, cod_empresa, cod_usuario, dtadoc, dta_emissao, dta_saida, empresa_faturar, cod_cliente, cod_representante, cod_fop, cod_prazo_pgto, orcamento, processo_id, faturado, tot_bruto, tot_liquido, pedido_vendedor) values (' +
-        QuotedStr(NumDoc) + ',' + QuotedStr('0') + ',' + QuotedStr(cod_usuario) + ',' +
-        QuotedStr(FormatDateTime('dd.mm.yyyy', dao.DtaSerDt)) + ',' + QuotedStr(FormatDateTime('dd.mm.yyyy', dao.DtaSerDt)) + ',' +
-        QuotedStr(FormatDateTime('dd.mm.yyyy', dao.DtaSerDt)) + ',' + QuotedStr('0') + ',' + QuotedStr(Trim(Prcod_cliente.Text)) + ',' +
-        QuotedStr(Trim(Prcod_representante.Text)) + ',' + QuotedStr(Trim(Prcod_fop.Text)) + ',' + QuotedStr(Trim(Prcod_prazo_pgto.Text)) + ',' +
-        QuotedStr(IntToStr(Prorcamento.ItemIndex)) + ',' + processo + ',' + QuotedStr('0') + ',' +
-        StringReplace(FloatToStr(FTotalBruto), ',', '.', [rfReplaceAll]) + ',' +
-        StringReplace(FloatToStr(FTotalLiquido), ',', '.', [rfReplaceAll]) + ', 1)';
-      Q.ExecSQL;
-    end
-    else
-    begin
-      Q.SQL.Text := 'update vendas1 set cod_cliente = ' + QuotedStr(Trim(Prcod_cliente.Text)) +
-        ', cod_representante = ' + QuotedStr(Trim(Prcod_representante.Text)) +
-        ', cod_fop = ' + QuotedStr(Trim(Prcod_fop.Text)) +
-        ', cod_prazo_pgto = ' + QuotedStr(Trim(Prcod_prazo_pgto.Text)) +
-        ', orcamento = ' + QuotedStr(IntToStr(Prorcamento.ItemIndex)) +
-        ', cod_empresa = ' + QuotedStr('0') +
-        ', cod_usuario = ' + QuotedStr(cod_usuario) +
-        ', empresa_faturar = ' + QuotedStr('0') +
-        ', tot_bruto = ' + StringReplace(FloatToStr(FTotalBruto), ',', '.', [rfReplaceAll]) +
-        ', tot_liquido = '+ StringReplace(FloatToStr(FTotalLiquido), ',', '.', [rfReplaceAll]) +
-        ' where numdoc = ' + QuotedStr(NumDoc);
-      Q.ExecSQL;
+      if FNovo then
+      begin
+        Q.SQL.Text := 'insert into vendas1 (numdoc, cod_empresa, cod_usuario, dtadoc, dta_emissao, dta_saida, empresa_faturar, cod_cliente, cod_representante, cod_supervisor, cod_fop, cod_prazo_pgto, orcamento, '+
+                      ' faturado, tot_bruto, tot_liquido, desconto, pedido_vendedor) values (' +
+          QuotedStr(NumDoc) + ',' + QuotedStr('0') + ',' + QuotedStr(cod_usuario) + ',' +
+          QuotedStr(FormatDateTime('dd.mm.yyyy', dao.DtaSerDt)) + ',' + QuotedStr(FormatDateTime('dd.mm.yyyy', dao.DtaSerDt)) + ',' +
+          QuotedStr(FormatDateTime('dd.mm.yyyy', dao.DtaSerDt)) + ',' + QuotedStr('0') + ',' + QuotedStr(Trim(Prcod_cliente.Text)) + ',' +
+          QuotedStr(Trim(Prcod_representante.Text)) + ',' + SupervisorSql + ',' + QuotedStr(Trim(Prcod_fop.Text)) + ',' + QuotedStr(Trim(Prcod_prazo_pgto.Text)) + ',' +
+          QuotedStr(IntToStr(Prorcamento.ItemIndex)) + ',' + QuotedStr('0') + ',' +
+          StringReplace(FloatToStr(FTotalBruto), ',', '.', [rfReplaceAll]) + ',' +
+          StringReplace(FloatToStr(FTotalLiquido), ',', '.', [rfReplaceAll])+ ',' +
+          StringReplace(FloatToStr(FDesconto), ',', '.', [rfReplaceAll]) + ', 1)';
+        Q.ExecSQL;
+      end
+      else
+      begin
+        Q.SQL.Text := 'update vendas1 set cod_cliente = ' + QuotedStr(Trim(Prcod_cliente.Text)) +
+          ', cod_representante = ' + QuotedStr(Trim(Prcod_representante.Text)) +
+          ', cod_supervisor = ' + SupervisorSql +
+          ', cod_fop = ' + QuotedStr(Trim(Prcod_fop.Text)) +
+          ', cod_prazo_pgto = ' + QuotedStr(Trim(Prcod_prazo_pgto.Text)) +
+          ', orcamento = ' + QuotedStr(IntToStr(Prorcamento.ItemIndex)) +
+          ', cod_empresa = ' + QuotedStr('0') +
+          ', cod_usuario = ' + QuotedStr(cod_usuario) +
+          ', empresa_faturar = ' + QuotedStr('0') +
+          ', tot_bruto = ' + StringReplace(FloatToStr(FTotalBruto), ',', '.', [rfReplaceAll]) +
+          ', tot_liquido = '+ StringReplace(FloatToStr(FTotalLiquido), ',', '.', [rfReplaceAll]) +
+          ', desconto = '+ StringReplace(FloatToStr(FDesconto), ',', '.', [rfReplaceAll]) +
+          ' where numdoc = ' + QuotedStr(NumDoc);
+        Q.ExecSQL;
       end;
 
       Q.SQL.Text := 'delete from vendas2 where numdoc = ' + QuotedStr(NumDoc);
@@ -1144,6 +1178,12 @@ begin
       end;
     end;
   finally
+    if FNovo then
+    begin
+      processo := FMFUN.GerarProcessoPedido;
+      FMFUN.GravarProcessoPedido('À Digitar', processo, NumDoc);
+    end;
+    FMFUN.AtualizaDadosComissaoDesconto(NumDoc);
     Q.Free;
   end;
   FEmEdicao := False;
@@ -1494,6 +1534,59 @@ begin
   CarregarNomeRepresentante;
 end;
 
+procedure TFr_pedido_simplificado.Prcod_supervisorButtonClick(Sender: TObject);
+var
+  Campos_combo: array of string;
+  I: Integer;
+  ChamouFormOld, ChamouPesquisaOld, ChamouCadastroOld: string;
+begin
+  Application.CreateForm(TFr_localizar, Fr_localizar);
+  try
+    ChamouFormOld := chamou_form;
+    ChamouPesquisaOld := chamou_pesquisa;
+    ChamouCadastroOld := chamou_cadastro;
+    Fr_localizar.Caption := 'Localizar Supervisor';
+    chamou_pesquisa := 'fr_supervisor';
+    chamou_form := 'fr_pedido_simplificado_supervisor';
+    chamou_cadastro := 'fr_supervisor';
+    Fr_localizar.BT_cadastro.Caption := 'Cadastro de' + #13 + 'Supervisor';
+    Fr_localizar.BT_cadastro.Visible := True;
+    Fr_localizar.CBcampos.Items.Clear;
+    SetLength(Campos_combo, 5);
+    Campos_combo[0] := 'Codigo';
+    Campos_combo[1] := 'Nome';
+    Campos_combo[2] := 'Empresa';
+    Campos_combo[3] := 'CNPJ';
+    Campos_combo[4] := 'CPF';
+    for I := 0 to High(Campos_combo) do
+      Fr_localizar.CBcampos.Items.Add(Campos_combo[I]);
+    Fr_localizar.CBcampos.ItemIndex := 1;
+    Fr_localizar.loc_representante('');
+    Fr_localizar.ShowModal;
+    if not Fr_localizar.mmLocalizar.IsEmpty then
+    begin
+      Prcod_supervisor.Text := Fr_localizar.mmLocalizar.FieldByName('id').AsString;
+      LbNomSupervisor.Caption := Fr_localizar.mmLocalizar.FieldByName('nom_representante').AsString;
+    end;
+  finally
+    Fr_localizar.Free;
+    chamou_form := ChamouFormOld;
+    chamou_pesquisa := ChamouPesquisaOld;
+    chamou_cadastro := ChamouCadastroOld;
+  end;
+  CarregarNomeSupervisor;
+end;
+procedure TFr_pedido_simplificado.Prcod_supervisorExit(Sender: TObject);
+begin
+  if (Trim(Prcod_supervisor.Text) <> '') and (not FMFUN.verificaNumerico(Prcod_supervisor.Text)) then
+  begin
+    ShowMessage('Dado tem que ser sempre Numerico!');
+    Prcod_supervisor.SetFocus;
+    Exit;
+  end;
+  CarregarNomeSupervisor;
+end;
+
 procedure TFr_pedido_simplificado.qItensAfterScroll(DataSet: TDataSet);
 begin
   if DataSet <> mmItens then
@@ -1608,34 +1701,27 @@ begin
 end;
 
 procedure TFr_pedido_simplificado.Prcod_fopExit(Sender: TObject);
+var
+  prazo_padrao : string;
 begin
   CarregarNomeFop;
   if Trim(Prcod_fop.Text) <> '' then
   begin
-    dao.Geral1('select coalesce(avista, ''N'') as avista, coalesce(prazo_padrao, 0) as prazo_padrao from fop where ativo = ''S'' and cod_fop = ' + QuotedStr(Trim(Prcod_fop.Text)));
-    if not dao.q1.IsEmpty then
+    dao.Geral1('select coalesce(avista, ''N'') as avista, prazo_padrao from fop where ativo = ''S'' and cod_fop = ' + QuotedStr(Trim(Prcod_fop.Text)));
+    prazo_padrao := dao.q1.fieldbyname('prazo_padrao').AsString;
+    if (prazo_padrao <> '') then
     begin
-      if Trim(dao.q1.FieldByName('prazo_padrao').AsString) <> '' then
-      begin
-        Prcod_prazo_pgto.Text := Trim(dao.q1.FieldByName('prazo_padrao').AsString);
-        Prcod_prazo_pgtoExit(Self);
-        Prcod_prazo_pgto.Enabled := False;
-        Prorcamento.SetFocus;
-      end
-      else if SameText(dao.q1.FieldByName('avista').AsString, 'S') then
-      begin
-        Prcod_prazo_pgto.Text := '00';
-        Prcod_prazo_pgtoExit(Self);
-        Prcod_prazo_pgto.Enabled := False;
-        Prorcamento.SetFocus;
-      end
-      else begin
-        Prcod_prazo_pgto.Enabled := True;
-        Prcod_prazo_pgto.SetFocus;
-      end;
-    end;
+      dao.Geral4('SELECT a.ID FROM PRAZO a where a.id = ' + prazo_padrao);
+      Prcod_prazo_pgto.Text := dao.q4.fieldbyname('id').AsString;
+      Prcod_prazo_pgtoExit(Self);
+      Prcod_prazo_pgto.Enabled := false;
+      Prorcamento.SetFocus;
+    end
+    else
+      Prcod_prazo_pgto.Enabled := true;
   end
-  else begin
+  else
+  begin
     Prcod_prazo_pgto.Enabled := True;
     Prcod_prazo_pgto.SetFocus;
   end;
@@ -1727,6 +1813,13 @@ begin
       mmItens.First;
       while not mmItens.Eof do
       begin
+        if mmItens.FieldByName('sub_total_bruto').AsFloat = 0 then
+        begin
+          mmItens.edit;
+          mmItens.FieldByName('sub_total_bruto').AsFloat := mmItens.FieldByName('preco_base').AsFloat * mmItens.FieldByName('qtd').AsFloat;
+          mmItens.post;
+        end;
+
         FTotalLiquido := FTotalLiquido + mmItens.FieldByName('sub_total').AsFloat;
         FTotalBruto := FTotalBruto + mmItens.FieldByName('sub_total_bruto').AsFloat;
         mmItens.Next;
@@ -1736,6 +1829,8 @@ begin
     end;
   end;
   LbTotalLiquidoPedido.Caption := 'Total Liquido: ' + FormatFloat('#,##0.00', FTotalLiquido);
+  FDesconto := ((FTotalBruto - FTotalLiquido) / FTotalBruto) * 100;
+  AtualizarResumoPedido;
   Self.Refresh;
 end;
 
@@ -1841,9 +1936,24 @@ procedure TFr_pedido_simplificado.CarregarNomeRepresentante;
 begin
   LbNomRepresentante.Caption := '';
   if Trim(Prcod_representante.Text) = '' then Exit;
-  dao.Geral1('select nom_representante from representante where id = ' + QuotedStr(Trim(Prcod_representante.Text)));
+  dao.Geral1('select nom_representante from representante where ativo = ''S'' and funcionario in (''0'', ''1'') and  id = ' + QuotedStr(Trim(Prcod_representante.Text)));
   if not dao.q1.IsEmpty then
     LbNomRepresentante.Caption := dao.q1.FieldByName('nom_representante').AsString;
+end;
+
+procedure TFr_pedido_simplificado.CarregarNomeSupervisor;
+begin
+  LbNomSupervisor.Caption := '';
+  if Trim(Prcod_supervisor.Text) = '' then Exit;
+  dao.Geral1('select nom_representante from representante where ativo = ''S'' and funcionario in (''4'') and id = ' + QuotedStr(Trim(Prcod_supervisor.Text)));
+  if not dao.q1.IsEmpty then
+    LbNomSupervisor.Caption := dao.q1.FieldByName('nom_representante').AsString
+  else
+  begin
+    dao.msg('Registro nao Encontrado!');
+    Prcod_supervisor.Clear;
+    Prcod_supervisor.SetFocus;
+  end;
 end;
 
 procedure TFr_pedido_simplificado.CarregarNomeFop;
@@ -1868,45 +1978,74 @@ procedure TFr_pedido_simplificado.AtualizarResumoPedido;
 var
   Perc, Valor, DescPedido: Double;
   St: string;
+  tipo_func: integer;
 begin
   Perc := 0;
   Valor := 0;
-  DescPedido := 0;
   St := '-';
 
   FProcessoIdAtual := '';
   FCodFatAtual := '';
   FStatusAtual := '-';
 
-  if NumeroAtual <> '' then
-  begin
-    dao.Geral1('select coalesce(v1.perc_comissao,0) as perc_comissao, ' +
-              'coalesce(v1.vlr_comissao,0) as vlr_comissao, ' +
-              'coalesce(v1.desconto,0) as desconto_pedido, ' +
-              'coalesce(pp.status, ' + QuotedStr('') + ') as status_pedido, ' +
-              'coalesce(cast(v1.processo_id as varchar(20)), ' + QuotedStr('') + ') as processo_id, ' +
-              'coalesce(v1.faturado, ' + QuotedStr('0') + ') as cod_fat ' +
-              'from vendas1 v1 ' +
-              'left join processo_pedido pp on pp.id = v1.processo_id ' +
-              'where v1.numdoc = ' + QuotedStr(NumeroAtual));
-    if not dao.q1.IsEmpty then
-    begin
-      Perc := dao.q1.FieldByName('perc_comissao').AsFloat;
-      Valor := dao.q1.FieldByName('vlr_comissao').AsFloat;
-      DescPedido := dao.q1.FieldByName('desconto_pedido').AsFloat;
-      St := Trim(dao.q1.FieldByName('status_pedido').AsString);
-      FProcessoIdAtual := Trim(dao.q1.FieldByName('processo_id').AsString);
-      FCodFatAtual := Trim(dao.q1.FieldByName('cod_fat').AsString);
-      if St = '' then
-        St := '-';
-      FStatusAtual := St;
-    end;
-  end;
 
-  LbDescontoPedido.Caption := 'Desconto Pedido %: ' + FormatFloat('#,##0.00', DescPedido);
-  LbComissaoPerc.Caption := 'Comissao %: ' + FormatFloat('#,##0.00', Perc);
-  LbComissaoValor.Caption := 'Comissao R$: ' + FormatFloat('#,##0.00', Valor);
-  LbStatusPedido.Caption := 'Status: ' + St;
+  if FTotalBruto = 0 then Exit;
+
+
+  if Prcod_representante.Text <> '' then
+  begin
+    dao.Geral5('select funcionario from  representante where id = '+Prcod_representante.Text);
+    tipo_func := dao.q5.FieldByName('funcionario').AsInteger;
+
+    FormatSettings.DecimalSeparator := '.';
+    dao.Geral5('select perc_comissao_func, perc_comissao_terc from escala_comissao where  desconto <= '+FormatFloat('#.00', FDesconto)+' order by desconto desc limit 1');
+    FormatSettings.DecimalSeparator := ',';
+    case tipo_func of
+      0 : Perc := dao.q5.FieldByName('perc_comissao_terc').AsFloat;
+      1 : Perc := dao.q5.FieldByName('perc_comissao_func').AsFloat;
+    end;
+
+    Valor := FTotalLiquido * (Perc / 100);
+
+
+    if NumeroAtual <> '' then
+    begin
+      dao.Geral1('select coalesce(pp.status, ' + QuotedStr('') + ') as status_pedido, ' +
+                'coalesce(cast(v1.processo_id as varchar(20)), ' + QuotedStr('') + ') as processo_id, ' +
+                'coalesce(v1.faturado, ' + QuotedStr('0') + ') as cod_fat ' +
+                'from vendas1 v1 ' +
+                'left join processo_pedido pp on pp.id = v1.processo_id ' +
+                'where v1.numdoc = ' + QuotedStr(NumeroAtual));
+      if not dao.q1.IsEmpty then
+      begin
+        FProcessoIdAtual := Trim(dao.q1.FieldByName('processo_id').AsString);
+
+        if FProcessoIdAtual = '' then
+        begin
+          FProcessoIdAtual := FMFUN.GerarProcessoPedido;
+
+          dao.Exec_sql.SQL.Text := 'update vendas1 set processo_id = '+FProcessoIdAtual+' where numdoc = '+NumeroAtual;
+          dao.Exec_sql.ExecSQL;
+
+          FMFUN.GravarProcessoPedido('À Digitar', FProcessoIdAtual, NumeroAtual);
+          St := 'À Digitar';
+        end
+        else begin
+          St := Trim(dao.q1.FieldByName('status_pedido').AsString);
+          FCodFatAtual := Trim(dao.q1.FieldByName('cod_fat').AsString);
+          if St = '' then
+            St := '-';
+        end;
+
+        FStatusAtual := St;
+      end;
+    end;
+
+    LbDescontoPedido.Caption := 'Desconto Pedido %: ' + FormatFloat('#,##0.00', FDesconto);
+    LbComissaoPerc.Caption := 'Comissao %: ' + FormatFloat('#,##0.00', Perc);
+    LbComissaoValor.Caption := 'Comissao R$: ' + FormatFloat('#,##0.00', Valor);
+    LbStatusPedido.Caption := 'Status: ' + St;
+    end;
   AtualizarBotoes;
 end;
 

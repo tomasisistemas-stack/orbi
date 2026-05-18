@@ -433,7 +433,6 @@ type
     lb_valor_st: tsLabel;
     mmVendas2NAO_VALIDAR_MARGEM: TStringField;
     BtAltTransp: TSpeedButton;
-    I2: TMenuItem;
     M1: TMenuItem;
     pgNFE: TsPageControl;
     TabDadosNFE: TsTabSheet;
@@ -485,7 +484,6 @@ type
     btnExcNfeDev: TSpeedButton;
     btnInsNfeDev: TSpeedButton;
     btnCanNfeDev: TSpeedButton;
-    L1: TMenuItem;
     L2: TMenuItem;
     mmVendas2CEST: TStringField;
     gbDesconto: TsGroupBox;
@@ -2133,7 +2131,14 @@ begin
       else
         Prcod_prazo_pgto.Enabled := true;
 
-      if dao.q5.fieldbyname('nom_fop').AsString = 'ATIVO IMOBILIZADO' then
+      if (dao.q5.fieldbyname('nom_fop').AsString = 'ATIVO IMOBILIZADO') or
+         (dao.q5.fieldbyname('nom_fop').AsString = 'AMOSTRA') or
+         (dao.q5.fieldbyname('nom_fop').AsString = 'TRANSFERENCIA') or
+         (dao.q5.fieldbyname('nom_fop').AsString = 'TROCA') or
+         (dao.q5.fieldbyname('nom_fop').AsString = 'PERMUTA') or
+         (dao.q5.fieldbyname('nom_fop').AsString = 'DEVOLUÇÃO') or
+         (dao.q5.fieldbyname('nom_fop').AsString = 'CONSIGNAÇÃO') or
+         (dao.q5.fieldbyname('nom_fop').AsString = 'BONIFICAÇÃO') then
       begin
         ChecaCFOP;
         CFOPTROCA(true);
@@ -2458,6 +2463,14 @@ procedure TFr_vendas_industria2.CFOPTROCA(alterar_itens : boolean);
           mmVendas2COD_FISCAL_ITEM.Text := '6917';
       end;
 
+      if (Lbnom_fop.Caption = 'AMOSTRA') then
+      begin
+        if UF_Cliente = UF_Emissor then
+          mmVendas2COD_FISCAL_ITEM.Text := '5911'
+        else
+          mmVendas2COD_FISCAL_ITEM.Text := '6911';
+      end;
+
       if (Lbnom_fop.Caption = 'BONIFICAÇÃO') then
       begin
         FaturamentoAvulso1.Visible := true;
@@ -2622,6 +2635,42 @@ begin
         else
           Prcod_fiscal.Text := '6551';
       end;
+      if (Lbnom_fop.Caption = 'AMOSTRA') then
+      begin
+        if UF_Cliente = UF_Emissor then
+          Prcod_fiscal.Text := '5911'
+        else
+          Prcod_fiscal.Text := '6911';
+      end;
+      if (Lbnom_fop.Caption = 'TROCA') or (Lbnom_fop.Caption = 'PERMUTA') then
+      begin
+        cst := '00';
+        if UF_Cliente = UF_Emissor then
+          Prcod_fiscal.Text := '5949'
+        else
+          Prcod_fiscal.Text := '6949';
+      end;
+      if (Lbnom_fop.Caption = 'DEVOLUÇÃO') then
+      begin
+        if UF_Cliente = UF_Emissor then
+          Prcod_fiscal.Text := '5202'
+        else
+          Prcod_fiscal.Text := '6202';
+      end;
+      if (Lbnom_fop.Caption = 'CONSIGNAÇÃO') then
+      begin
+        if UF_Cliente = UF_Emissor then
+          Prcod_fiscal.Text := '5917'
+        else
+          Prcod_fiscal.Text := '6917';
+      end;
+      if (Lbnom_fop.Caption = 'BONIFICAÇÃO') then
+      begin
+        if UF_Cliente = UF_Emissor then
+          Prcod_fiscal.Text := '5910'
+        else
+          Prcod_fiscal.Text := '6910';
+      end
     end
   end;
   Result := cfop_st;
@@ -2996,7 +3045,7 @@ begin
 			   '   P.TINTA_BASE, ' + #13 + 
 			   '   P.QTD_RESERVADO, ' + #13 + 
 			   '   P.CUSTO, ' + #13 + 
-			   '   P.CUSTO_TOTAL, ' + #13 + 
+			   '   P.CUSTO_TOTAL, ' + #13 +
 			   '   P.LUCRO, ' + #13 + 
 			   '   coalesce( ' + #13 + 
 			   '     (SELECT PR.DESCONTO_MAXIMO ' + #13 + 
@@ -3016,7 +3065,7 @@ begin
                '   ) AS DESCONTO_MAXIMO, ' + #13 + 
 			   '   COALESCE(COALESCE(N.CODIGO, P.NCM), G.NCM) AS NCM, ' + #13 +
 			   '   COALESCE(M.MVA, 0) AS MVA, ' + #13 + 
-			   '   COALESCE(M.ALIQ_ICMS_INTERNA, 0) AS ALIQ_ICMS_INTERNA, ' + #13 + 
+			   '   COALESCE(M.ALIQ_ICMS_INTERNA, 0) AS ALIQ_ICMS_INTERNA, ' + #13 +
 			   '   N.IPI_ALIQUOTA, ' + #13 + 
 			   '   case when COALESCE(NC.COD_FISCAL_PRODUTO, p.COD_FISCAL_PRODUTO) is not null then COALESCE(NC.TRIB_ICMS, COALESCE(P.TRIB_ICMS, N.TRIB_ICMS)) else N.TRIB_ICMS END AS TRIB_ICMS, ' + #13 + 
 			   '   P.PROMOCAO, ' + #13 +
@@ -3031,7 +3080,7 @@ begin
 			   ' LEFT OUTER JOIN GRUPO G ON (G.COD_GRUPO = P.COD_GRUPO) ' + #13 + 
 			   ' LEFT OUTER JOIN NCM N ON (N.CODIGO = coalesce(P.NCM, G.NCM) AND N.CEST = coalesce(p.cest, g.cest)) ' + #13 + 
 			   ' LEFT OUTER JOIN CLIENTE_NCM NC ON (N.CODIGO = NC.NCM AND N.CEST = NC.CEST AND NC.COD_CLIENTE = ' + Prcod_cliente.Text + ' ) ' + #13 + 
-			   ' LEFT OUTER JOIN MVA M ON  ( ' + #13 + 
+			   ' LEFT OUTER JOIN MVA M ON  ( ' + #13 +
 			   '  ( M.NCM = N.CODIGO ' + #13 + 
 			   '    OR M.NCM = substring(n.CODIGO from 1 for 9) ' + #13 + 
 			   '    OR M.NCM = substring(n.CODIGO from 1 for 8) ' + #13 + 
@@ -3299,6 +3348,13 @@ begin
         cod_fiscal := '6551';
     end;
 
+    if (Lbnom_fop.Caption = 'AMOSTRA') then
+    begin
+      if UF_Cliente = UF_Emissor then
+        cod_fiscal := '5911'
+      else
+        cod_fiscal := '6911';
+    end;
 
     mmVendas2TRIB_ICMS.Text := cst;
     mmVendas2COD_FISCAL_ITEM.Text := cod_fiscal;
@@ -5107,6 +5163,37 @@ var
   comissao, qtd_est_reservado: real;
   desconto_valor, desconto_valor_geral, vlr_bc, vlricm, vlr_bc_st, VLR_ICMS_ST, preco_cs, trib_icms, enviado: string;
   IsComplementar: Boolean;
+  function NumSql(const AValor: string): string;
+  begin
+    Result := Trim(AValor);
+    if Result = '' then
+      Result := '0'
+    else if Pos(',', Result) > 0 then
+    begin
+      Result := FMFUN.BuscaTroca(Result, '.', '');
+      Result := FMFUN.BuscaTroca(Result, ',', '.');
+    end;
+    if Trim(Result) = '' then
+      Result := '0';
+  end;
+  procedure ExecSqlPedido(const ACmd: string);
+  begin
+    if Trim(ACmd) = '' then
+      Exit;
+    try
+      with dao.Exec_sql do
+      begin
+        Prepared := False;
+        Close;
+        SQL.Clear;
+        SQL.Add(ACmd);
+        ExecSQL;
+      end;
+    except
+      on E: Exception do
+        raise Exception.Create(E.Message + #13#13 + 'SQL: ' + ACmd);
+    end;
+  end;
 begin
   IsComplementar := (prTipoNFe.ItemIndex = 1);
 
@@ -5250,7 +5337,9 @@ begin
         Prnumdoc.Text := id_pedido;
 
       except
-        dao.cn.Rollback;
+        if dao.cn.InTransaction then
+          dao.cn.Rollback;
+        raise;
       end;
 
     end;
@@ -5263,11 +5352,13 @@ begin
       if not (dao.cn.InTransaction) then
         dao.cn.StartTransaction;
 
-      dao.Execsql('DELETE FROM VENDAS2 WHERE  NUMDOC = ' + Prnumdoc.Text);
+      ExecSqlPedido('DELETE FROM VENDAS2 WHERE  NUMDOC = ' + Prnumdoc.Text);
       dao.cn.Commit;
 
     except
-      dao.cn.Rollback;
+      if dao.cn.InTransaction then
+        dao.cn.Rollback;
+      raise;
     end;
 
     if not mmVendas2.IsEmpty then
@@ -5275,6 +5366,8 @@ begin
       mmVendas2.DisableControls;
       mmVendas2.First;
       try
+        if not (dao.cn.InTransaction) then
+          dao.cn.StartTransaction;
         WindowList := DisableTaskWindows(fm_splash.Handle);
         fm_splash.ggProgress.MaxValue := mmVendas2.RecordCount;
         fm_splash.lbStatus.Caption := 'Atualizando os Itens do Pedido...';
@@ -5312,38 +5405,37 @@ begin
           if mmVendas2VLR_COMISSAO.AsString = '' then
             vlr_comissao := ', null'
           else
-            vlr_comissao := ', ' + FMFUN.BuscaTroca(mmVendas2VLR_COMISSAO.AsString, ',', '.');
+            vlr_comissao := ', ' + NumSql(mmVendas2VLR_COMISSAO.AsString);
 
           if mmVendas2DESCONTO_VALOR.AsString = '' then
             desconto_valor := ', null'
           else
-            desconto_valor := ', ' + FMFUN.BuscaTroca(mmVendas2DESCONTO_VALOR.AsString, ',', '.');
+            desconto_valor := ', ' + NumSql(mmVendas2DESCONTO_VALOR.AsString);
 
           if mmVendas2PERC_COMISSAO.AsString = '' then
             perc_comissao := ', null'
           else
-            perc_comissao := ', ' + FMFUN.BuscaTroca(mmVendas2PERC_COMISSAO.AsString, ',', '.');
+            perc_comissao := ', ' + NumSql(mmVendas2PERC_COMISSAO.AsString);
 
           if mmVendas2PRECO_BASE.AsString = '' then
             preco_cs := ', null'
           else
-            preco_cs := ', ' + FMFUN.BuscaTroca(mmVendas2PRECO_BASE.AsString, ',', '.');
+            preco_cs := ', ' + NumSql(mmVendas2PRECO_BASE.AsString);
 
           if mmVendas2TRIB_ICMS.AsString = '' then
             trib_icms := ', null'
           else
-            trib_icms := ', ' + FMFUN.BuscaTroca(mmVendas2TRIB_ICMS.AsString, ',', '.');
+            trib_icms := ', ' + NumSql(mmVendas2TRIB_ICMS.AsString);
 
           if mmVendas2DESCONTO_VALOR_GERAL.AsString = '' then
             desconto_valor_geral := ', null'
           else
-            desconto_valor_geral := ', ' + FMFUN.BuscaTroca(mmVendas2DESCONTO_VALOR_GERAL.AsString, ',', '.');
+            desconto_valor_geral := ', ' + NumSql(mmVendas2DESCONTO_VALOR_GERAL.AsString);
 
           sql_vendas2 := 'INSERT INTO VENDAS2 (NUMDOC, COD_PRODUTO, QTD, ' + ' PRECO, PRECO_CUSTO, SUB_TOTAL, DESCONTO, DESCONTO_VALOR, VOLUME, PRECO_BRUTO, PRECO_BASE, PERC_COMISSAO, VLR_COMISSAO, ' + ' COD_FISCAL_ITEM, ICMS_ITEM, VLR_ICMS_ST, VLR_BC_ST, VLR_ICMS_ITEM, NCM, VLR_BC, IPI_ITEM, VLR_IPI_ITEM, ' + ' VLR_AGR_ITEM, TRIB_ICMS, CESTA_BASICA, COD_SUPERVISOR, PROMOCAO, DESCONTO_MAX, NAO_VALIDAR_MARGEM, CEST, DESCONTO_VALOR_GERAL) ' + ' VALUES (' + Prnumdoc.Text + ', ' + mmVendas2COD_PRODUTO.AsString
-            + ', ' + FMFUN.BuscaTroca(mmVendas2QTD.AsString, ',', '.') + ', ' + FMFUN.BuscaTroca(mmVendas2PRECO_LIQUIDO.AsString, ',', '.') + ', ' + FMFUN.BuscaTroca(mmVendas2PRECO_CUSTO.AsString, ',', '.') + ', ' + FMFUN.BuscaTroca(mmVendas2SUB_TOTAL.AsString, ',', '.') + ', ' + FMFUN.BuscaTroca(mmVendas2DESCONTO.AsString, ',', '.') + desconto_valor + ', ' + FMFUN.BuscaTroca(mmVendas2VOLUME.AsString, ',', '.') + ', ' + FMFUN.BuscaTroca(mmVendas2PRECO_VENDA.AsString, ',', '.') + preco_cs + perc_comissao +
-            vlr_comissao + ', ' + QuotedStr(mmVendas2COD_FISCAL_ITEM.AsString) + ', ' + FMFUN.BuscaTroca(mmVendas2ICMS_ITEM.AsString, ',', '.') + ', ' + FMFUN.BuscaTroca(mmVendas2VLR_ICMS_ST.AsString, ',', '.') + ', ' + FMFUN.BuscaTroca(mmVendas2VLR_BC_ST.AsString, ',', '.') + ', ' + FMFUN.BuscaTroca(mmVendas2VLR_ICMS_ITEM.AsString, ',', '.') + ', ' + QuotedStr(mmVendas2NCM.AsString) + ', ' + FMFUN.BuscaTroca(mmVendas2VLR_BC.AsString, ',', '.') + ', ' + FMFUN.BuscaTroca(mmVendas2IPI_ITEM.AsString, ',', '.') + ', ' + FMFUN.BuscaTroca
-            (mmVendas2VLR_IPI_ITEM.AsString, ',', '.') + ', ' + FMFUN.BuscaTroca(mmVendas2VLR_AGR_ITEM.AsString, ',', '.') + trib_icms + ', ' + QuotedStr(cesta_basica) + supervisor + ', ' + QuotedStr(mmVendas2PROMOCAO.AsString) + ', ' + FMFUN.BuscaTroca(mmVendas2DESCONTO_MAXIMO.AsString, ',', '.') + ', ' + QuotedStr(mmVendas2NAO_VALIDAR_MARGEM.AsString) + ', ' + QuotedStr(mmVendas2CEST.AsString) + desconto_valor_geral + ')';
-          dao.Execsql(sql_vendas2);
+            + ', ' + NumSql(mmVendas2QTD.AsString) + ', ' + NumSql(mmVendas2PRECO_LIQUIDO.AsString) + ', ' + NumSql(mmVendas2PRECO_CUSTO.AsString) + ', ' + NumSql(mmVendas2SUB_TOTAL.AsString) + ', ' + NumSql(mmVendas2DESCONTO.AsString) + desconto_valor + ', ' + NumSql(mmVendas2VOLUME.AsString) + ', ' + NumSql(mmVendas2PRECO_VENDA.AsString) + preco_cs + perc_comissao +
+            vlr_comissao + ', ' + QuotedStr(mmVendas2COD_FISCAL_ITEM.AsString) + ', ' + NumSql(mmVendas2ICMS_ITEM.AsString) + ', ' + NumSql(mmVendas2VLR_ICMS_ST.AsString) + ', ' + NumSql(mmVendas2VLR_BC_ST.AsString) + ', ' + NumSql(mmVendas2VLR_ICMS_ITEM.AsString) + ', ' + QuotedStr(mmVendas2NCM.AsString) + ', ' + NumSql(mmVendas2VLR_BC.AsString) + ', ' + NumSql(mmVendas2IPI_ITEM.AsString) + ', ' + NumSql(mmVendas2VLR_IPI_ITEM.AsString) + ', ' + NumSql(mmVendas2VLR_AGR_ITEM.AsString) + trib_icms + ', ' + QuotedStr(cesta_basica) + supervisor + ', ' + QuotedStr(mmVendas2PROMOCAO.AsString) + ', ' + NumSql(mmVendas2DESCONTO_MAXIMO.AsString) + ', ' + QuotedStr(mmVendas2NAO_VALIDAR_MARGEM.AsString) + ', ' + QuotedStr(mmVendas2CEST.AsString) + desconto_valor_geral + ')';
+          ExecSqlPedido(sql_vendas2);
 
           // id_item := dao.insert('Me', 'vendas2', 'id', Fr_vendas_industria2, 'gen_venda2');
           fm_splash.ggProgress.AddProgress(1);
@@ -5352,7 +5444,14 @@ begin
         end;
         dao.cn.Commit;
       except
-        dao.cn.Rollback;
+        if dao.cn.InTransaction then
+          dao.cn.Rollback;
+        mmVendas2.EnableControls;
+        carregando_item := false;
+        EnableTaskWindows(WindowList);
+        fm_splash.Hide;
+        pnWait.Visible := false;
+        raise;
       end;
       mmVendas2.EnableControls;
       mmVendas2.First;
@@ -5384,20 +5483,34 @@ begin
       if not ((FRPRI.TipUsu = '0') or (FRPRI.TipUsu = '1') or representacao) then
         ChecaCFOP;
 
-    try
-      if not (dao.cn.InTransaction) then
+    if not modo_insert then
+    begin
+      try
+        if dao.cn.InTransaction then
+          dao.cn.Rollback;
         dao.cn.StartTransaction;
-      if not modo_insert then
         dao.update('vendas1', 'numdoc', Prnumdoc.Text, 'Pr', Fr_vendas_industria2);
+        dao.cn.Commit;
+      except
+        if dao.cn.InTransaction then
+          dao.cn.Rollback;
+        raise;
+      end;
+    end;
+
+    try
+      if dao.cn.InTransaction then
+        dao.cn.Rollback;
+      dao.cn.StartTransaction;
 
       { marca o status do pedido como não faturado }
       if (FRPRI.TipUsu = '0') then
-        dao.Execsql('update vendas1 set faturado=' + QuotedStr('0') + ', pedido_vendedor =' + QuotedStr('1') + ' where numdoc = ' + QuotedStr(Prnumdoc.Text))
+        ExecSqlPedido('update vendas1 set faturado=' + QuotedStr('0') + ', pedido_vendedor =' + QuotedStr('1') + ' where numdoc = ' + QuotedStr(Prnumdoc.Text))
       else
-        dao.Execsql('update vendas1 set faturado=' + QuotedStr('0') + ' where numdoc = ' + QuotedStr(Prnumdoc.Text));
+        ExecSqlPedido('update vendas1 set faturado=' + QuotedStr('0') + ' where numdoc = ' + QuotedStr(Prnumdoc.Text));
 
       // Grava a Comissão no Vendas1
-      dao.Execsql('update vendas1 set vlr_comissao =' + FMFUN.prepara_valor(edTotComissao.Text) + ', perc_comissao = ' + FMFUN.prepara_valor(edPercComissao.Text) + ' where numdoc =' + QuotedStr(Prnumdoc.Text));
+      ExecSqlPedido('update vendas1 set vlr_comissao =' + NumSql(edTotComissao.Text) + ', perc_comissao = ' + NumSql(edPercComissao.Text) + ' where numdoc =' + QuotedStr(Prnumdoc.Text));
 
       { Grava os valores de icms e ST }
 
@@ -5423,14 +5536,16 @@ begin
       else
         VLR_ICMS_ST := '0';
 
-      dao.Execsql('update vendas1 set vlr_bc_icms=' + vlr_bc + ' ,vlr_icms=' + vlricm + ' ,VLR_BC_ICMS_ST=' + vlr_bc_st + ' ,VLR_ST=' + VLR_ICMS_ST + ' where numdoc=' + QuotedStr(Prnumdoc.Text));
+      ExecSqlPedido('update vendas1 set vlr_bc_icms=' + vlr_bc + ' ,vlr_icms=' + vlricm + ' ,VLR_BC_ICMS_ST=' + vlr_bc_st + ' ,VLR_ST=' + VLR_ICMS_ST + ' where numdoc=' + QuotedStr(Prnumdoc.Text));
 
       if Prvolume_nota.Value = 0 then
-        dao.Execsql('update vendas1 set volume_nota = 0 where numdoc=' + QuotedStr(Prnumdoc.Text));
+        ExecSqlPedido('update vendas1 set volume_nota = 0 where numdoc=' + QuotedStr(Prnumdoc.Text));
 
       dao.cn.Commit;
     except
-      dao.cn.Rollback;
+      if dao.cn.InTransaction then
+        dao.cn.Rollback;
+      raise;
     end;
 
     readonly_true('Pr');
@@ -5454,22 +5569,24 @@ begin
     try
       if not (dao.cn.InTransaction) then
         dao.cn.StartTransaction;
-      dao.Execsql('update vendas1 set ATUALIZAR_ESTOQUE = ''0'', cod_usuario = ' + cod_usuario + ' where numdoc = ' + QuotedStr(Prnumdoc.Text));
+      ExecSqlPedido('update vendas1 set ATUALIZAR_ESTOQUE = ''0'', cod_usuario = ' + cod_usuario + ' where numdoc = ' + QuotedStr(Prnumdoc.Text));
 
       if mform <> 'vendas_devolucoes' then
       begin
-        dao.Execsql('DELETE FROM CLIENTE_VISITAS WHERE COD_CLIENTE = ' + Prcod_cliente.Text + ' AND DATA = ' + QuotedStr(FormatDateTime('DD.MM.YYYY', Prdtadoc.Date)));
+        ExecSqlPedido('DELETE FROM CLIENTE_VISITAS WHERE COD_CLIENTE = ' + Prcod_cliente.Text + ' AND DATA = ' + QuotedStr(FormatDateTime('DD.MM.YYYY', Prdtadoc.Date)));
 
         if FRPRI.modulo_vendedor then
           enviado := 'N'
         else
           enviado := 'S';
 
-        dao.Execsql('INSERT INTO CLIENTE_VISITAS (COD_CLIENTE, DATA, VENDEU, VALOR_PEDIDO, ENVIADO) ' + 'SELECT V1.COD_CLIENTE, V1.DTADOC, ''S'' as vendeu, SUM(V1.TOT_LIQUIDO) AS TOT_LIQUIDO, ' + QuotedStr(enviado) + ' AS ENVIADO ' + 'FROM VENDAS1 V1 ' + 'WHERE V1.COD_CLIENTE = ' + Prcod_cliente.Text + ' AND V1.DTADOC = ' + QuotedStr(FormatDateTime('DD.MM.YYYY', Prdtadoc.Date)) + 'GROUP BY COD_CLIENTE, DTADOC, VENDEU, ENVIADO; ');
+        ExecSqlPedido('INSERT INTO CLIENTE_VISITAS (COD_CLIENTE, DATA, VENDEU, VALOR_PEDIDO, ENVIADO) ' + 'SELECT V1.COD_CLIENTE, V1.DTADOC, ''S'' as vendeu, SUM(V1.TOT_LIQUIDO) AS TOT_LIQUIDO, ' + QuotedStr(enviado) + ' AS ENVIADO ' + 'FROM VENDAS1 V1 ' + 'WHERE V1.COD_CLIENTE = ' + Prcod_cliente.Text + ' AND V1.DTADOC = ' + QuotedStr(FormatDateTime('DD.MM.YYYY', Prdtadoc.Date)) + 'GROUP BY COD_CLIENTE, DTADOC, VENDEU, ENVIADO; ');
       end;
       dao.cn.Commit;
     except
-      dao.cn.Rollback;
+      if dao.cn.InTransaction then
+        dao.cn.Rollback;
+      raise;
     end;
 
   except
@@ -13517,18 +13634,39 @@ end;
 function TFr_vendas_industria2.ChecarEmailCliente(cliente, tipo: string): boolean;
 var
   ajustar_cliente: boolean;
-  mensagem: string;
+  mensagem, emailEndNfe, nfeEmail: string;
 begin
+  Result := false;
   ajustar_cliente := false;
-  dao.Geral4('SELECT EMAIL, EMAIL_END_NFE, NFE_EMAIL FROM CLIENTE WHERE COD_CLIENTE = ' + Prcod_cliente.Text);
+  emailEndNfe := '';
+  nfeEmail := '';
 
-  if dao.q4.fieldbyname('EMAIL_END_NFE').IsNull then
+  if dao.cn.InTransaction then
+    dao.cn.Rollback;
+
+  try
+    dao.cn.StartTransaction;
+    dao.Geral4('SELECT EMAIL, EMAIL_END_NFE, NFE_EMAIL FROM CLIENTE WHERE COD_CLIENTE = ' + Prcod_cliente.Text);
+    if not dao.q4.IsEmpty then
+    begin
+      emailEndNfe := dao.q4.fieldbyname('EMAIL_END_NFE').AsString;
+      nfeEmail := dao.q4.fieldbyname('NFE_EMAIL').AsString;
+    end;
+    dao.q4.Close;
+    dao.cn.Commit;
+  except
+    if dao.cn.InTransaction then
+      dao.cn.Rollback;
+    raise;
+  end;
+
+  if Trim(emailEndNfe) = '' then
   begin
     showmessage('Email do Cliente para NFe não Definido no Cadastro de Clientes!');
     ajustar_cliente := true;
   end;
 
-  if dao.q4.fieldbyname('NFE_EMAIL').AsString <> 'S' then
+  if nfeEmail <> 'S' then
   begin
     showmessage('Opção de Envio da NFe no Cadastro de Clientes não Definida!');
     ajustar_cliente := true;
@@ -13537,7 +13675,7 @@ begin
   if ajustar_cliente = false then
   begin
     if tipo = 'nfe' then
-      mensagem := 'Email de NFe à ser enviado para: ' + dao.q4.fieldbyname('EMAIL_END_NFE').AsString + '. Desejas Alterar?';
+      mensagem := 'Email de NFe à ser enviado para: ' + emailEndNfe + '. Desejas Alterar?';
 
     if MessageDlg(mensagem, mtConfirmation, [mbYes, mbno], 0) = mryes then
       ajustar_cliente := true;
@@ -15758,27 +15896,78 @@ begin
     Exit;
 
   path := ExtractFilePath(Application.ExeName);
-    cmd := 'SELECT a.NR_CONEXAO, a.COD_REPRESENTANTE, a.DATA_CONEXAO, a.HORA_CONEXAO, a.QTDE_PEDIDOS, a.QTDE_VISITAS_NEGATIVAS, a.CHECADO, cast(a.USUARIO_CHECOU||''-''||u.NOME as varchar(200)) as USUARIO_CHECOU, a.DATA_HORA_CHECADO, '
-      + ' v1.NUMDOC, v1.numdoc_destino, v1.DTADOC, cast(c.COD_CLIENTE||''-''||c.NOM_CLIENTE as varchar(200)) as cliente, c.ENDERECO, c.telefone, c.NR_ENDERECO, c.CEP, cast(cid.NOM_CIDADE||''-''||cid.UF as varchar(200)) as cidade, '
-      + ' C.CNPJ, C.IE, C.RG,C.CPF, C.EMAIL, v1.TOT_BRUTO, cast(v1.TOT_LIQUIDO as Numeric(15,2)) as tot_liquido, '
-      + ' cast(v1.COD_FOP||''-''||f.NOM_FOP as varchar(200)) as fop, cast(v1.COD_REPRESENTANTE||''-''||r.NOM_REPRESENTANTE as varchar(200)) as representante, p.PRAZO, v1.NR_PEDIDO_PALM, v1.PALM_NR_CONEXAO, v1.OBSERVACOES_PEDIDO, '
-      + ' v2.ID, v2.NUMDOC, cast(v2.COD_PRODUTO||''-''||pr.NOM_PRODUTO as varchar(200)) as produto, pr.unidade, v2.QTD, v2.PRECO, v2.SUB_TOTAL, v2.NR_PEDIDO_PALM, v2.PRECO_BRUTO, (((v2.PRECO_BRUTO - v2.PRECO)/v2.PRECO_BRUTO) * 100) AS PERC_DESC, v2.VOLUME, '
-      + ' '''' as NCM, ' +
-      ' 0  as VLR_ICMS_ST, ' +
-      ' 0  as perc_st, ' +
-      ' pr.codigo_barra ' + ' FROM PALM_LOTE a ' +
-      ' inner join tbusu u on (u.CODUSU = a.USUARIO_CHECOU) ' +
-      ' inner join vendas1 v1 on (v1.PALM_NR_CONEXAO = a.NR_CONEXAO)' +
-      ' inner join vendas2 v2 on (v2.NUMDOC = v1.NUMDOC)' +
-      ' LEFT OUTER join CLIENTE c on (c.COD_CLIENTE = v1.COD_CLIENTE)' +
-      ' LEFT OUTER join Cidades cid on (cid.COD_Cidade = c.COD_cidade)' +
-      ' LEFT OUTER join REPRESENTANTE r on (r.id = v1.COD_REPRESENTANTE)' +
-      ' LEFT OUTER join prazo p on (p.ID = v1.COD_PRAZO_PGTO) ' +
-      ' LEFT OUTER join fop f on (f.COD_FOP = v1.COD_FOP) ' +
-      ' LEFT OUTER join produto pr on (pr.COD_PRODUTO = v2.COD_PRODUTO) '+
-      'WHERE 1 = 1  '+
-      'and v1.numdoc = '+pedido +
-      ' order by  a.COD_REPRESENTANTE, a.NR_CONEXAO, v1.numdoc, pr.ord_pauta, v2.VOLUME  ';
+  cmd :=
+    'SELECT a.NR_CONEXAO, ' +
+    '       a.COD_REPRESENTANTE, ' +
+    '       a.DATA_CONEXAO, ' +
+    '       a.HORA_CONEXAO, ' +
+    '       a.QTDE_PEDIDOS, ' +
+    '       a.QTDE_VISITAS_NEGATIVAS, ' +
+    '       a.CHECADO, ' +
+    '       cast (a.USUARIO_CHECOU || ''-'' || u.NOME as varchar(200)) as USUARIO_CHECOU, ' +
+    '       a.DATA_HORA_CHECADO, ' +
+    '       v1.NUMDOC, ' +
+    '       v1.NUMDOC_DESTINO, ' +
+    '       v1.DTADOC, ' +
+    '       cast (c.COD_CLIENTE || ''-'' || c.NOM_CLIENTE as varchar(200)) as CLIENTE, ' +
+    '       c.ENDERECO, ' +
+    '       c.TELEFONE, ' +
+    '       c.NR_ENDERECO, ' +
+    '       c.CEP, ' +
+    '       cast (cid.NOM_CIDADE || ''-'' || cid.UF as varchar(200)) as CIDADE, ' +
+    '       c.CNPJ, ' +
+    '       c.IE, ' +
+    '       c.RG, ' +
+    '       c.CPF, ' +
+    '       c.EMAIL, ' +
+    '       v1.TOT_BRUTO, ' +
+    '       cast (v1.TOT_LIQUIDO as Numeric(15,2)) as TOT_LIQUIDO, ' +
+    '       cast (v1.COD_FOP || ''-'' || f.NOM_FOP as varchar(200)) as FOP, ' +
+    '       cast (v1.COD_REPRESENTANTE || ''-'' || r.NOM_REPRESENTANTE as varchar(200)) as REPRESENTANTE, ' +
+    '       p.PRAZO, ' +
+    '       v1.NR_PEDIDO_PALM, ' +
+    '       v1.PALM_NR_CONEXAO, ' +
+    '       v1.OBSERVACOES_PEDIDO, ' +
+    '       v2.ID, ' +
+    '       v2.NUMDOC, ' +
+    '       cast (v2.COD_PRODUTO || ''-'' || pr.NOM_PRODUTO || '' '' || ' +
+    '             coalesce(case ' +
+    '                        when pf.COD_PRODUTO is not null then ' +
+    '                          ''[Cód Forn.: '' || pf.COD_PRODUTO_FORNECEDOR||'']'' ' +
+    '                      end, '''') as varchar(200)) as PRODUTO, ' +
+    '       pr.UNIDADE, ' +
+    '       v2.QTD, ' +
+    '       v2.PRECO, ' +
+    '       v2.SUB_TOTAL, ' +
+    '       v2.NR_PEDIDO_PALM, ' +
+    '       v2.PRECO_BRUTO, ' +
+    '       (((v2.PRECO_BRUTO - v2.PRECO) / v2.PRECO_BRUTO) * 100) AS PERC_DESC, ' +
+    '       v2.VOLUME, ' +
+    '       '''' as NCM, ' +
+    '       0 as VLR_ICMS_ST, ' +
+    '       0 as PERC_ST, ' +
+    '       pr.CODIGO_BARRA ' +
+    'FROM VENDAS1 v1 ' +
+    '     INNER JOIN VENDAS2 v2 ON (v2.NUMDOC = v1.NUMDOC) ' +
+    '     LEFT OUTER JOIN PALM_LOTE a ON (v1.PALM_NR_CONEXAO = a.NR_CONEXAO) ' +
+    '     LEFT OUTER JOIN TBUSU u ON (u.CODUSU = COALESCE(a.USUARIO_CHECOU, V1.USUARIO_CHECOU_PEDIDO_VENDEDOR)) ' +
+    '     LEFT OUTER JOIN CLIENTE c ON (c.COD_CLIENTE = v1.COD_CLIENTE) ' +
+    '     LEFT OUTER JOIN CIDADES cid ON (cid.COD_CIDADE = c.COD_CIDADE) ' +
+    '     LEFT OUTER JOIN REPRESENTANTE r ON (r.ID = v1.COD_REPRESENTANTE) ' +
+    '     LEFT OUTER JOIN PRAZO p ON (p.ID = v1.COD_PRAZO_PGTO) ' +
+    '     LEFT OUTER JOIN FOP f ON (f.COD_FOP = v1.COD_FOP) ' +
+    '     INNER JOIN PRODUTO pr ON (pr.COD_PRODUTO = v2.COD_PRODUTO) ' +
+    '     INNER JOIN PRODUTO_FORNECEDOR pf ON pf.COD_PRODUTO = pr.COD_PRODUTO ' +
+    '     INNER JOIN FORNECEDOR fr ON fr.COD_FORNECEDOR = pf.COD_FORNECEDOR ' +
+    '                               AND pr.FORNECEDOR_PRINCIPAL = fr.COD_FORNECEDOR ' +
+    'WHERE 1 = 1 ' +
+    '  and v1.numdoc = '+pedido +
+    'ORDER BY a.COD_REPRESENTANTE, ' +
+    '         a.NR_CONEXAO, ' +
+    '         v1.NUMDOC, ' +
+    '         pr.ORD_PAUTA, ' +
+    '         v2.VOLUME';
+
 
   with dm.q_palm_pedidos do
   begin
@@ -15788,12 +15977,7 @@ begin
     Open;
   end;
 
-  if COM_ST then
-    relatorio := 'pedido_email.fr3'
-  else if COM_DESC then
-    relatorio := 'pedido_sem_st.fr3'
-  else
-    relatorio := 'pedido_sem_st_sem_desconto.fr3';
+  relatorio := 'pedido_sem_st_sem_desconto.fr3';
 
   if not (fR_RELATORIO.LoadFromFile(path + 'Relatorios\' + relatorio)) then
   begin

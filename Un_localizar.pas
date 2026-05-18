@@ -3419,6 +3419,17 @@ begin
     end;
     close;
   end
+  else if chamou_form = 'fr_pedido_simplificado_supervisor' then
+  begin
+    if not Qu_localizar.IsEmpty then
+    begin
+      Fr_pedido_simplificado.Prcod_supervisor.Text :=
+        mmLocalizar.fieldbyname('id').AsString;
+      Fr_pedido_simplificado.LbNomSupervisor.caption :=
+        mmLocalizar.fieldbyname('nom_representante').AsString;
+    end;
+    close;
+  end
   else if chamou_form = 'fr_complemento_cliente' then
   begin
     if not Qu_localizar.IsEmpty then
@@ -6011,12 +6022,15 @@ begin
   if ((chamou_form = 'fr_opc_relatorio_supervisor') or
     (chamou_form = 'fr_opc_relatorio_representante') or
     (chamou_form = 'fr_pedido_representante') or
-    (chamou_form = 'fr_pedido_simplificado_representante') or
     (chamou_form = 'fr_pedido_supervisor')) then
     cmd := cmd +
       ' where r.ativo = ''S'' and r.funcionario in (''0'', ''1'', ''4'') '
   else if chamou_form <> 'fr_representante' then
     cmd := cmd + ' where r.ativo = ''S'' '
+  else if (chamou_form = 'fr_pedido_simplificado_supervisor') then
+    cmd := cmd + ' where r.ativo = ''S'' and r.funcionario in (''4'') '
+  else if (chamou_form = 'fr_pedido_simplificado_representante') then
+    cmd := cmd + ' where r.ativo = ''S'' and r.funcionario in (''0'', ''1'') '
   else begin
     cmd := cmd + ' where 1 = 1 ';
 

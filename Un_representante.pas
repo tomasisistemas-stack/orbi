@@ -1685,7 +1685,7 @@ end;
 
 procedure TFr_representante.AnalisaVendas;
 begin
-  dm.q_metas.close;
+{  dm.q_metas.close;
 
   dm.q_metas.sql.Text := 'SELECT ' +
                          '  mr.id, ' +
@@ -1725,7 +1725,7 @@ begin
   end;
 
   mmAnaliseVendas.First;
-
+ }
 end;
 
 procedure TFr_representante.btnImprimirClick(Sender: TObject);
