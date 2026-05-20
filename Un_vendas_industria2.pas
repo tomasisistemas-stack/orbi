@@ -2249,7 +2249,10 @@ begin
          (dao.q5.fieldbyname('nom_fop').AsString = 'TRANSFERENCIA') or
          (dao.q5.fieldbyname('nom_fop').AsString = 'TROCA') or
          (dao.q5.fieldbyname('nom_fop').AsString = 'PERMUTA') or
+<<<<<<< HEAD
          (dao.q5.fieldbyname('nom_fop').AsString = 'CONSERTO') or
+=======
+>>>>>>> ea249b0eb181edecb8a4b97e553e293fa1d1b47d
          (dao.q5.fieldbyname('nom_fop').AsString = 'DEVOLU플O') or
          (dao.q5.fieldbyname('nom_fop').AsString = 'CONSIGNA플O') or
          (dao.q5.fieldbyname('nom_fop').AsString = 'BONIFICA플O') then
@@ -2765,6 +2768,7 @@ begin
         else
           Prcod_fiscal.Text := '6949';
       end;
+<<<<<<< HEAD
       if (Lbnom_fop.Caption = 'CONSERTO') then
       begin
         cst := '00';
@@ -2772,6 +2776,15 @@ begin
       end;
       if (Lbnom_fop.Caption = 'DEVOLU플O') then
         Prcod_fiscal.Text := '5202';
+=======
+      if (Lbnom_fop.Caption = 'DEVOLU플O') then
+      begin
+        if UF_Cliente = UF_Emissor then
+          Prcod_fiscal.Text := '5202'
+        else
+          Prcod_fiscal.Text := '6202';
+      end;
+>>>>>>> ea249b0eb181edecb8a4b97e553e293fa1d1b47d
       if (Lbnom_fop.Caption = 'CONSIGNA플O') then
       begin
         if UF_Cliente = UF_Emissor then
@@ -3480,9 +3493,12 @@ begin
       else
         cod_fiscal := '6911';
     end;
+<<<<<<< HEAD
 
     if (Lbnom_fop.Caption = 'DEVOLU플O') then
       cod_fiscal := '5202';
+=======
+>>>>>>> ea249b0eb181edecb8a4b97e553e293fa1d1b47d
 
     mmVendas2TRIB_ICMS.Text := cst;
     mmVendas2COD_FISCAL_ITEM.Text := cod_fiscal;

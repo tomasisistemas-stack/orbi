@@ -5,7 +5,11 @@
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppName=ORBI
+<<<<<<< HEAD
 AppVersion=2.00.69
+=======
+AppVersion=2.00.68
+>>>>>>> ea249b0eb181edecb8a4b97e553e293fa1d1b47d
 AppPublisher=TOMASI SISTEMAS DE INFORMAÇÃO
 DefaultDirName=C:\ORBI
 DefaultGroupName=ORBI
