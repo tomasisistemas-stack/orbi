@@ -193,7 +193,8 @@ begin
     ' inner join REPRESENTANTE r on (r.id = a.COD_REPRESENTANTE) ' +
     ' left  join prazo p on (p.ID = a.COD_PRAZO_PGTO) ' +
     ' left join fop f on (f.COD_FOP = a.COD_FOP) ' +
-    ' where a.orcamento = 0 and a.pedido_vendedor is not null and cast(a.DTADOC as date) >= (current_date - 30) '
+    ' where a.orcamento = 0 and a.pedido_vendedor is not null and cast(a.DTADOC as date) >= (current_date - 30) ' +
+    '      AND COALESCE((SELECT PP.STATUS FROM PROCESSO_PEDIDO pp WHERE pp.ID = a.PROCESSO_ID), ''À Conferir'') <> ''À Digitar'' '
     + ' order by numdoc desc';
   q_pedidos.Open;
 end;

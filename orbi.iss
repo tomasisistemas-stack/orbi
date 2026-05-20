@@ -5,7 +5,7 @@
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppName=ORBI
-AppVersion=2.00.64
+AppVersion=2.00.69
 AppPublisher=TOMASI SISTEMAS DE INFORMAÇÃO
 DefaultDirName=C:\ORBI
 DefaultGroupName=ORBI
@@ -56,4 +56,5 @@ Source: "C:\Tomasi Sistemas\orbi\Schemas\*"; DestDir: "{app}\Schemas\"; Flags: i
 [Icons]
 Name: "{group}\ORBI"; Filename: "{app}\Orbi.exe"
 
-
+[Run]
+Filename: "{app}\Orbi.exe"; Description: "Abrir o ORBI"; Flags: nowait postinstall skipifsilent

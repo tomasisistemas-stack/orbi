@@ -38,7 +38,6 @@ object Fr_vendas_industria2: TFr_vendas_industria2
     ParentColor = False
     TabOrder = 0
     SkinData.SkinSection = 'GROUPBOX'
-    ExplicitTop = -6
     DesignSize = (
       1272
       241)
@@ -108,8 +107,8 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       Font.Style = []
     end
     object Lbnom_cliente: TsLabel
-      Left = 119
-      Top = 66
+      Left = 115
+      Top = 62
       Width = 788
       Height = 13
       AutoSize = False
@@ -1527,8 +1526,8 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       end
     end
     object Prcod_cliente: TsComboEdit
-      Left = 36
-      Top = 65
+      Left = 32
+      Top = 59
       Width = 80
       Height = 21
       AutoSize = False
@@ -9782,7 +9781,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
     Left = 152
     Top = 160
     Bitmap = {
-      494C010101005009500910001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101006409640910001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -9942,16 +9941,6 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           ShortCut = 16500
           OnClick = M1Click
         end
-        object I2: TMenuItem
-          Caption = 'Laser Com ST'
-          ShortCut = 16505
-          OnClick = I2Click
-        end
-        object L1: TMenuItem
-          Caption = 'Laser Com Desconto'
-          ShortCut = 16506
-          OnClick = L1Click
-        end
         object L2: TMenuItem
           Caption = 'Laser Sem Desconto'
           ShortCut = 16507
@@ -10081,424 +10070,40 @@ object Fr_vendas_industria2: TFr_vendas_industria2
     Tag = 1
     Version = '6.9.3'
     DotMatrixReport = False
-    EngineOptions.DoublePass = True
+    EngineOptions.PrintIfEmpty = False
     IniFile = '\Software\Fast Reports'
     PreviewOptions.Buttons = [pbPrint, pbLoad, pbSave, pbExport, pbZoom, pbFind, pbOutline, pbPageSetup, pbTools, pbEdit, pbNavigator, pbExportQuick]
     PreviewOptions.Zoom = 1.000000000000000000
     PrintOptions.Printer = 'Default'
     PrintOptions.PrintOnSheet = 0
-    ReportOptions.CreateDate = 40401.475989294000000000
-    ReportOptions.LastChange = 46091.505112187500000000
+    ReportOptions.CreateDate = 40180.423318680600000000
+    ReportOptions.LastChange = 46157.386623101860000000
     ScriptLanguage = 'PascalScript'
     ScriptText.Strings = (
-      
-        'procedure DadosProdutosHeaderOnBeforePrint(Sender: TfrxComponent' +
-        ');'
+      'var linhas, linha_final : integer;'
+      ''
+      'procedure GroupHeader2OnAfterPrint(Sender: TfrxComponent);'
       'begin'
-      '  if Engine.FinalPass then'
-      '    set('#39'LinhasImpressas'#39',0);'
+      '      linha_final := DetailData1.DataSet.RecNo;'
       'end;'
       ''
-      'procedure EmitenteOnBeforePrint(Sender: TfrxComponent);'
+      'procedure GroupHeader2OnBeforePrint(Sender: TfrxComponent);'
       'begin'
-      '  if Engine.FinalPass then'
+      '  linhas := DetailData1.DataSet.RecNo - linha_final;'
+      '//  showmessage(floattostr(linhas));'
+      
+        '  if ((engine.freespace) < (GroupHeader2.height + (DetailData1.h' +
+        'eight * (linhas+1)) + (GroupFooter2.height))) then'
       '  begin'
-      '    if Trim(VarToStr(<Parametros."Imagem">)) <> '#39#39' then'
-      '    begin'
-      '      if Trim(VarToStr(<Parametros."LogoExpandido">)) = '#39'1'#39' then'
-      '      begin'
-      '        MemEmitente.Font.Color := clWhite;'
-      '        MemDadosEmitente.Visible := False;'
-      '        imgLogo.Top := 5;'
-      
-        '        imgLogo.Height := memDadosEmitente.Height + (memDadosEmi' +
-        'tente.Top - imgLogo.Top);'
-      
-        '        imgLogo.Width := memDadosEmitente.Width + (memDadosEmite' +
-        'nte.Left - imgLogo.Left);'
-      '      end;'
-      '    end'
-      '    else'
-      '    begin'
-      '      MemDadosEmitente.Left := MemEmitente.Left;'
-      '      MemDadosEmitente.Width := MemEmitente.Width;'
-      '      imgLogo.Visible := False;'
-      '    end;'
-      ''
-      
-        '    BarCodeContigencia.Visible := Trim(VarToStr(<Parametros."Con' +
-        'tingencia_ID">)) <> '#39#39';'
-      '  end;'
-      'end;'
-      ''
-      ''
-      'procedure ImpostoOnBeforePrint(Sender: TfrxComponent);'
-      'begin'
-      '  if Engine.FinalPass then'
-      '  begin'
-      
-        '    if (StrToFloat(VarToStr(<CalculoImposto."VTotTrib">)) = 0) t' +
-        'hen'
-      '    begin'
-      '     QuadroVTOTTRIB.Visible:=False;'
-      '     memVTOTTRIB.Visible:=False;'
-      ''
-      '     QuadroVST.Left := QuadroVST.Left+QuadroVTOTTRIB.Width;'
-      '     memVST.Left := QuadroVST.Left;'
-      ''
-      '     QuadroVBCST.Left := QuadroVBCST.Left+QuadroVTOTTRIB.Width;'
-      '     memVBCST.Left := QuadroVBCST.Left;'
-      ''
-      
-        '     QuadroVBC.Width := QuadroVBC.Width+(QuadroVTOTTRIB.Width/2)' +
-        ';'
-      '     memVBC.Width := QuadroVBC.Width;'
-      '     QuadroVICMS.Left := QuadroVBC.Width;'
-      ''
-      '     memVICMS.Left := QuadroVICMS.Left;'
-      
-        '     QuadroVICMS.Width := QuadroVICMS.Width+(QuadroVTOTTRIB.Widt' +
-        'h/2);'
-      '     memVICMS.Width := QuadroVICMS.Width;'
-      '   end;'
-      '  end;'
-      'end;'
-      ''
-      ''
-      'procedure FaturaOnBeforePrint(Sender: TfrxComponent);'
-      'begin'
-      '  Fatura.Visible     := ( VarToStr(<Fatura."iForma">) <> '#39'2'#39');'
-      
-        '  MemoFatura.Visible := ( Trim( VarToStr(<Fatura."nfat">)) <> '#39#39 +
-        ');'
-      'end;'
-      ''
-      'procedure Page1OnBeforePrint(Sender: TfrxComponent);'
-      'var'
-      '  wTamRodapeMinimo : Double;'
-      'begin'
-      '  InicializaPosicaoCanhoto();'
-      ''
-      '  MarcaDagua.Height := 1122.52;'
-      '  if ( DadosAdicionais.Visible ) then'
-      '    wTamRodapeMinimo := DadosAdicionais.Height;'
-      ''
-      '  if   ('
-      '                ( Trim(VarToStr(<ISSQN."vBC">)) = '#39#39' ) or'
-      '                ( Trim(VarToStr(<ISSQN."vBC">)) ='#39'0'#39') and'
-      '                ( Trim(VarToStr(<ISSQN."vISS">)) = '#39#39' ) or'
-      '                ( Trim(VarToStr(<ISSQN."vISS">)) ='#39'0'#39') and'
-      '                ( Trim(VarToStr(<ISSQN."vServ">)) = '#39#39' ) or'
-      '                ( Trim(VarToStr(<ISSQN."vServ">)) ='#39'0'#39')'
-      '       )  then'
-      '  begin'
-      '    ISSQN.visible := False;'
+      '//    showmessage(floattostr(linhas));'
+      '    engine.NewPage;'
       '  end'
-      '  else'
-      '  begin'
-      '    ISSQN.visible := True;'
-      '    wTamRodapeMinimo := wTamRodapeMinimo + ISSQN.Height;'
-      '  end;'
-      ''
-      '  if CanhotoRodape.Visible then'
-      '    wTamRodapeMinimo := wTamRodapeMinimo + CanhotoRodape.Height;'
-      ''
-      '  if CanhotoRodapeBarra.Visible then'
-      
-        '    wTamRodapeMinimo := wTamRodapeMinimo + CanhotoRodapeBarra.He' +
-        'ight;'
-      ''
-      '  set('#39'TamRodapeMinimo'#39', wTamRodapeMinimo );'
-      ''
-      
-        '  //se propriedade ImprimeDescAcrescItem configurado para [nunca' +
-        ' {= 1}] mostrar campo de desconto no item,'
-      
-        '  //  ou mostrar [apenas quando valor > 0 {= 2}] e n'#227'o houver de' +
-        'sconto, desabilita coluna de desconto no item'
-      '  if not Engine.FinalPass then'
-      '  begin'
-      '    if ('
-      
-        '         (Trim(VarToStr(<Parametros."ImprimeDescAcrescItem">)) =' +
-        ' '#39'1'#39') or'
-      '         ('
-      
-        '            (Trim(VarToStr(<Parametros."ImprimeDescAcrescItem">)' +
-        ') = '#39'2'#39') and'
-      '            (StrToFloat(VarToStr(<CalculoImposto."VDesc">)) = 0)'
-      '         )'
-      '       ) and'
-      '      memTitItDesconto.Visible'
-      '    then'
-      '    begin'
-      '      memTitItDesconto.Visible := False;'
-      '      memItDesconto.Visible := False;'
-      '      memCdItDesconto.Visible := False;'
-      ''
-      
-        '      memTitvUnCom.Left := memTitvUnCom.Left + memTitItDesconto.' +
-        'Width;'
-      '      memvUnCom.Left := memvUnCom.Left + memItDesconto.Width;'
-      
-        '      memCdvUnCom.Left := memCdvUnCom.Left + memCdItDesconto.Wid' +
-        'th;'
-      ''
-      
-        '      memTitqCom.Left := memTitqCom.Left + memTitItDesconto.Widt' +
-        'h;'
-      '      memqCom.Left := memqCom.Left + memItDesconto.Width;'
-      '      memCdqCom.Left := memCdqCom.Left + memCdItDesconto.Width;'
-      ''
-      
-        '      memTitItUnd.Left := memTitItUnd.Left + memTitItDesconto.Wi' +
-        'dth;'
-      '      memItUnd.Left := memItUnd.Left + memItDesconto.Width;'
-      
-        '      memCdItUnd.Left := memCdItUnd.Left + memCdItDesconto.Width' +
-        ';'
-      ''
-      
-        '      memTitItCFOP.Left := memTitItCFOP.Left + memTitItDesconto.' +
-        'Width;'
-      '      memItCFOP.Left := memItCFOP.Left + memItDesconto.Width;'
-      
-        '      memCdItCFOP.Left := memCdItCFOP.Left + memCdItDesconto.Wid' +
-        'th;'
-      ''
-      
-        '      memTitItCST.Left := memTitItCST.Left + memTitItDesconto.Wi' +
-        'dth;'
-      '      memItCST.Left := memItCST.Left + memItDesconto.Width;'
-      
-        '      memCdItCST.Left := memCdItCST.Left + memCdItDesconto.Width' +
-        ';'
-      ''
-      
-        '      memTitItNCM.Left := memTitItNCM.Left + memTitItDesconto.Wi' +
-        'dth;'
-      '      memItNCM.Left := memItNCM.Left + memItDesconto.Width;'
-      
-        '      memCdItNCM.Left := memCdItNCM.Left + memCdItDesconto.Width' +
-        ';'
-      ''
-      
-        '      memTitItDesc.Width := memTitItDesc.Width + memTitItDescont' +
-        'o.Width;'
-      '      memItDesc.Width := memItDesc.Width + memItDesconto.Width;'
-      
-        '      memCdItDesc.Width := memCdItDesc.Width + memCdItDesconto.W' +
-        'idth;'
-      '    end'
-      '    else if not memTitItDesconto.Visible then'
-      '    begin'
-      '      memTitItDesconto.Visible := True;'
-      '      memItDesconto.Visible := True;'
-      '      memCdItDesconto.Visible := True;'
-      ''
-      
-        '      memTitvUnCom.Left := memTitvUnCom.Left - memTitItDesconto.' +
-        'Width;'
-      '      memvUnCom.Left := memvUnCom.Left - memItDesconto.Width;'
-      
-        '      memCdvUnCom.Left := memCdvUnCom.Left - memCdItDesconto.Wid' +
-        'th;'
-      ''
-      
-        '      memTitqCom.Left := memTitqCom.Left - memTitItDesconto.Widt' +
-        'h;'
-      '      memqCom.Left := memqCom.Left - memItDesconto.Width;'
-      '      memCdqCom.Left := memCdqCom.Left - memCdItDesconto.Width;'
-      ''
-      
-        '      memTitItUnd.Left := memTitItUnd.Left - memTitItDesconto.Wi' +
-        'dth;'
-      '      memItUnd.Left := memItUnd.Left - memItDesconto.Width;'
-      
-        '      memCdItUnd.Left := memCdItUnd.Left - memCdItDesconto.Width' +
-        ';'
-      ''
-      
-        '      memTitItCFOP.Left := memTitItCFOP.Left - memTitItDesconto.' +
-        'Width;'
-      '      memItCFOP.Left := memItCFOP.Left - memItDesconto.Width;'
-      
-        '      memCdItCFOP.Left := memCdItCFOP.Left - memCdItDesconto.Wid' +
-        'th;'
-      ''
-      
-        '      memTitItCST.Left := memTitItCST.Left - memTitItDesconto.Wi' +
-        'dth;'
-      '      memItCST.Left := memItCST.Left - memItDesconto.Width;'
-      
-        '      memCdItCST.Left := memCdItCST.Left - memCdItDesconto.Width' +
-        ';'
-      ''
-      
-        '      memTitItNCM.Left := memTitItNCM.Left - memTitItDesconto.Wi' +
-        'dth;'
-      '      memItNCM.Left := memItNCM.Left - memItDesconto.Width;'
-      
-        '      memCdItNCM.Left := memCdItNCM.Left - memCdItDesconto.Width' +
-        ';'
-      ''
-      
-        '      memTitItDesc.Width := memTitItDesc.Width - memTitItDescont' +
-        'o.Width;'
-      '      memItDesc.Width := memItDesc.Width - memItDesconto.Width;'
-      
-        '      memCdItDesc.Width := memCdItDesc.Width - memCdItDesconto.W' +
-        'idth;'
-      '    end;'
-      '  end;'
-      'end;'
-      ''
-      
-        'procedure DadosProdutosFooterOnBeforePrint(Sender: TfrxComponent' +
-        ');'
-      'var'
-      '  wTamRodapeMinimo, n, nBands, nInfAdicionais : double;'
-      'begin'
-      '  wTamRodapeMinimo := get('#39'TamRodapeMinimo'#39');'
-      
-        '  nBands := ChildCorpoBottom.Height + DadosProdutosFooter.Height' +
-        ';'
-      '  n := wTamRodapeMinimo + nBands;'
-      ''
-      
-        '  // Se h?ontinua? dos dados adicionais e j?erminou de imprimir ' +
-        'os produtos'
-      
-        '  // Verifica se a continua? dos dados adicionais cabe na mesma ' +
-        'p?na'
-      '  if (<PAGE> > 1) then'
-      '  begin'
-      
-        '    if ( ContDadosAdicionais.Visible ) and ( DadosProdutos.DataS' +
-        'et.Eof ) then'
-      '    begin'
-      
-        '      if ( Engine.FreeSpace >= ( n + memContInfAdicionais.CalcHe' +
-        'ight ) ) then'
-      '        n := n + memContInfAdicionais.CalcHeight;'
-      '    end;'
-      '  end;'
-      ''
-      '  while ((Engine.FreeSpace - ChildCorpo.Height ) >= n ) do'
-      '    Engine.ShowBand(ChildCorpo);'
-      ''
-      '  Engine.ShowBand(ChildCorpoBottom);'
-      ''
-      '  if (<PAGE> = 1) then'
-      '  begin'
-      '    if ISSQN.visible then'
-      '    begin'
-      '      Engine.ShowBand(ISSQN);'
-      '      wTamRodapeMinimo := wTamRodapeMinimo - ISSQN.Height;'
-      '    end;'
-      ''
-      '    if DadosAdicionais.Visible then'
-      '    begin'
-      '      Engine.ShowBand(DadosAdicionais);'
-      
-        '      wTamRodapeMinimo := wTamRodapeMinimo - DadosAdicionais.Hei' +
-        'ght;'
-      '    end;'
-      ''
-      '    if CanhotoRodape.Visible then'
-      '    begin'
-      '      Engine.ShowBand(CanhotoRodape);'
-      
-        '      wTamRodapeMinimo := wTamRodapeMinimo - CanhotoRodape.Heigh' +
-        't;'
-      '    end;'
-      '    if CanhotoRodapeBarra.Visible then'
-      '    begin'
-      '      Engine.ShowBand(CanhotoRodapeBarra);'
-      
-        '      wTamRodapeMinimo := wTamRodapeMinimo - CanhotoRodapeBarra.' +
-        'Height;'
-      '    end;'
-      '  end;'
-      '  set('#39'TamRodapeMinimo'#39', wTamRodapeMinimo);'
-      'end;'
-      ''
-      ''
-      'procedure DadosProdutosOnAfterPrint(Sender: TfrxComponent);'
-      'begin'
-      '  if Engine.FinalPass then'
-      '    set('#39'LinhasImpressas'#39',StrToInt(get('#39'LinhasImpressas'#39'))+1);'
-      'end;'
-      ''
-      ''
-      'procedure DadosProdutosOnAfterCalcHeight(Sender: TfrxComponent);'
-      'var'
-      '  wTamRodapeMinimo : Double;'
-      'begin'
-      
-        '  wTamRodapeMinimo := get('#39'TamRodapeMinimo'#39') + DadosProdutos.Hei' +
-        'ght + ChildCorpoBottom.Height;'
-      ''
-      '  if ( Engine.FreeSpace < wTamRodapeMinimo ) then'
-      '    Engine.ShowBand( DadosProdutosFooter )'
-      
-        '  else if (StrToInt(VarToStr(<Parametros."LinhasPorPagina">)) > ' +
-        '0) then'
-      '  begin'
-      
-        '    if (StrToInt(get('#39'LinhasImpressas'#39')) = StrToInt(VarToStr(<Pa' +
-        'rametros."LinhasPorPagina">))) then'
-      '      Engine.ShowBand(DadosProdutosFooter);'
-      '  end;'
-      'end;'
-      ''
-      'procedure DadosAdicionaisOnAfterPrint(Sender: TfrxComponent);'
-      'begin'
-      
-        '  ContDadosAdicionais.Visible := ( Trim(memContInfAdicionais.Lin' +
-        'es.Text) <> '#39#39' );'
-      'end;'
-      ''
-      'procedure InicializaPosicaoCanhoto();'
-      'begin'
-      
-        '  if Trim(VarToStr( <Parametros."poscanhotolayout"> )) = '#39'0'#39' the' +
-        'n'
-      '  begin'
-      '    if Trim(VarToStr( <Parametros."poscanhoto"> )) = '#39'2'#39' then'
-      '       CanhotoCabecalho.Visible := true'
-      '    else'
-      
-        '       CanhotoCabecalho.Visible := <Parametros."poscanhoto"> = '#39 +
-        '0'#39';'
-      ''
-      '    CanhotoCabecalho.Child       := CanhotoCabecalhoPadrao;'
-      '    CanhtoCabecalhoBarra.visible := false;'
-      
-        '    CanhotoRodape.Visible        := <Parametros."poscanhoto"> = ' +
-        #39'1'#39';'
-      '    CanhotoRodapeBarra.Visible   := false;'
-      '  end'
-      '  else'
-      '  begin'
-      '    if Trim(VarToStr( <Parametros."poscanhoto"> )) = '#39'2'#39' then'
-      '       CanhotoCabecalho.Visible := true'
-      '    else'
-      
-        '       CanhotoCabecalho.Visible := <Parametros."poscanhoto"> = '#39 +
-        '0'#39';'
-      ''
-      '    CanhotoCabecalho.Child         := CanhtoCabecalhoBarra;'
-      '    CanhotoCabecalhoPadrao.visible := false;'
-      '    CanhotoRodape.Visible          := false;'
-      
-        '    CanhotoRodapeBarra.Visible     := <Parametros."poscanhoto"> ' +
-        '= '#39'1'#39';'
+      '  else begin'
+      '//    GroupFooter2.height := 5;'
       '  end;'
       'end;'
       ''
       'begin'
-      ''
       ''
       'end.')
     OnGetValue = fR_RELATORIOGetValue
@@ -10507,5261 +10112,973 @@ object Fr_vendas_industria2: TFr_vendas_industria2
     Top = 160
     Datasets = <
       item
-        DataSetName = 'Identificacao'
+        DataSet = Dm.dst_configuracao
+        DataSetName = 'dst_configuracao'
       end
       item
-        DataSetName = 'Emitente'
-      end
-      item
-        DataSetName = 'Destinatario'
-      end
-      item
-        DataSetName = 'DadosProdutos'
-      end
-      item
-        DataSetName = 'Parametros'
-      end
-      item
-        DataSetName = 'Duplicatas'
-      end
-      item
-        DataSetName = 'CalculoImposto'
-      end
-      item
-        DataSetName = 'Transportador'
-      end
-      item
-        DataSetName = 'Veiculo'
-      end
-      item
-        DataSetName = 'Volumes'
-      end
-      item
-        DataSetName = 'Eventos'
-      end
-      item
-        DataSetName = 'ISSQN'
-      end
-      item
-        DataSetName = 'Fatura'
-      end
-      item
-        DataSetName = 'LocalRetirada'
-      end
-      item
-        DataSetName = 'LocalEntrega'
-      end
-      item
-        DataSetName = 'InformacoesAdicionais'
-      end
-      item
-        DataSetName = 'Pagamento'
-      end
-      item
-        DataSetName = 'Inutilizacao'
+        DataSet = Dm.dst_palm_pedidos
+        DataSetName = 'dst_palm_pedidos'
       end>
-    Variables = <
-      item
-        Name = ' User'
-        Value = Null
-      end
-      item
-        Name = 'LinhasImpressas'
-        Value = Null
-      end
-      item
-        Name = 'NumeroPagina'
-        Value = Null
-      end
-      item
-        Name = 'TamRodapeMinimo'
-        Value = Null
-      end
-      item
-        Name = 'TamObsPrevisto'
-        Value = Null
-      end
-      item
-        Name = 'TamObsNormal'
-        Value = Null
-      end>
+    Variables = <>
     Style = <>
     object Data: TfrxDataPage
       Height = 1000.000000000000000000
       Width = 1000.000000000000000000
     end
     object Page1: TfrxReportPage
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Arial'
+      Font.Style = []
       PaperWidth = 210.000000000000000000
       PaperHeight = 297.000000000000000000
       PaperSize = 9
-      LeftMargin = 6.000000000000000000
-      RightMargin = 7.000000000000000000
-      TopMargin = 7.000000000000000000
-      BottomMargin = 7.000000000000000000
-      BackPictureVisible = False
+      LeftMargin = 10.000000000000000000
+      RightMargin = 10.000000000000000000
+      TopMargin = 10.000000000000000000
+      BottomMargin = 10.000000000000000000
       Frame.Typ = []
-      LargeDesignHeight = True
       MirrorMode = []
-      OnBeforePrint = 'Page1OnBeforePrint'
-      object DadosProdutos: TfrxMasterData
+      object ReportTitle1: TfrxReportTitle
         FillType = ftBrush
         Frame.Typ = []
-        Height = 11.338582680000000000
-        Top = 1557.166360000000000000
-        Width = 744.567410000000000000
-        OnAfterCalcHeight = 'DadosProdutosOnAfterCalcHeight'
-        OnAfterPrint = 'DadosProdutosOnAfterPrint'
-        OnBeforePrint = 'DadosProdutosOnBeforePrint'
-        DataSetName = 'DadosProdutos'
-        RowCount = 0
-        Stretched = True
-        object Memo131: TfrxMemoView
-          AllowVectorExport = True
-          Width = 60.472480000000000000
-          Height = 11.338582680000000000
-          StretchMode = smMaxHeight
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftBottom]
-          Frame.Width = 0.500000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            '[DadosProdutos."CProd"]')
-          ParentFont = False
-        end
-        object memItDesc: TfrxMemoView
-          AllowVectorExport = True
-          Left = 60.472480000000000000
-          Width = 221.480314960000000000
-          Height = 11.338582680000000000
-          StretchMode = smMaxHeight
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftBottom]
-          Frame.Width = 0.500000000000000000
-          HAlign = haBlock
-          Memo.UTF8W = (
-            '[DadosProdutos."DescricaoProduto"]')
-          ParentFont = False
-        end
-        object memItNCM: TfrxMemoView
-          AllowVectorExport = True
-          Left = 281.905477640000000000
-          Width = 37.795300000000000000
-          Height = 11.338582680000000000
-          StretchMode = smMaxHeight
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftBottom]
-          Frame.Width = 0.500000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            '[DadosProdutos."NCM"]')
-          ParentFont = False
-          WordWrap = False
-        end
-        object memItCST: TfrxMemoView
-          AllowVectorExport = True
-          Left = 319.700753230000000000
-          Width = 26.456695350000000000
-          Height = 11.338582680000000000
-          StretchMode = smMaxHeight
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftBottom]
-          Frame.Width = 0.500000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            '[DadosProdutos."ORIGEM"][DadosProdutos."CST"]')
-          ParentFont = False
-          WordWrap = False
-        end
-        object memItCFOP: TfrxMemoView
-          AllowVectorExport = True
-          Left = 346.157446140000000000
-          Width = 24.566929130000000000
-          Height = 11.338582680000000000
-          StretchMode = smMaxHeight
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftBottom]
-          Frame.Width = 0.500000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            '[DadosProdutos."CFOP"]')
-          ParentFont = False
-          WordWrap = False
-        end
-        object memItUnd: TfrxMemoView
-          AllowVectorExport = True
-          Left = 370.724433860000000000
-          Width = 22.677180000000000000
-          Height = 11.338582680000000000
-          StretchMode = smMaxHeight
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftBottom]
-          Frame.Width = 0.500000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            '[DadosProdutos."Unidade"]')
-          ParentFont = False
-        end
-        object memqCom: TfrxMemoView
-          AllowVectorExport = True
-          Left = 393.401599210000000000
-          Width = 51.023634250000000000
-          Height = 11.338582680000000000
-          StretchMode = smMaxHeight
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftBottom]
-          Frame.Width = 0.500000000000000000
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[DadosProdutos."Quantidade"]')
-          ParentFont = False
-        end
-        object memvUnCom: TfrxMemoView
-          AllowVectorExport = True
-          Left = 444.425480000000000000
-          Width = 45.354360000000000000
-          Height = 11.338582680000000000
-          StretchMode = smMaxHeight
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftBottom]
-          Frame.Width = 0.500000000000000000
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[DadosProdutos."ValorUnitario"]')
-          ParentFont = False
-        end
-        object memItDesconto: TfrxMemoView
-          AllowVectorExport = True
-          Left = 489.960629920000000000
-          Width = 39.307086610000000000
-          Height = 11.338582680000000000
-          StretchMode = smMaxHeight
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftRight, ftBottom]
-          Frame.Width = 0.500000000000000000
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[DadosProdutos."vDesc"]')
-          ParentFont = False
-        end
-        object Memo140: TfrxMemoView
-          AllowVectorExport = True
-          Left = 529.134200000000000000
-          Width = 45.354360000000000000
-          Height = 11.338582680000000000
-          StretchMode = smMaxHeight
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftRight, ftBottom]
-          Frame.Width = 0.500000000000000000
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[DadosProdutos."VProd"]')
-          ParentFont = False
-        end
-        object Memo141: TfrxMemoView
-          AllowVectorExport = True
-          Left = 574.488560000000000000
-          Width = 45.354360000000000000
-          Height = 11.338582680000000000
-          StretchMode = smMaxHeight
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftBottom]
-          Frame.Width = 0.500000000000000000
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[DadosProdutos."VBC"]')
-          ParentFont = False
-        end
-        object Memo142: TfrxMemoView
-          AllowVectorExport = True
-          Left = 619.842920000000000000
-          Width = 41.574803150000000000
-          Height = 11.338582680000000000
-          StretchMode = smMaxHeight
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftBottom]
-          Frame.Width = 0.500000000000000000
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[DadosProdutos."VICMS"]')
-          ParentFont = False
-        end
-        object Memo143: TfrxMemoView
-          AllowVectorExport = True
-          Left = 661.417322830000000000
-          Width = 41.574830000000000000
-          Height = 11.338582680000000000
-          StretchMode = smMaxHeight
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftBottom]
-          Frame.Width = 0.500000000000000000
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[DadosProdutos."VIPI"]')
-          ParentFont = False
-        end
-        object Memo144: TfrxMemoView
-          AllowVectorExport = True
-          Left = 702.992125980000000000
-          Width = 20.787401570000000000
-          Height = 11.338582680000000000
-          StretchMode = smMaxHeight
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftBottom]
-          Frame.Width = 0.500000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            '[DadosProdutos."PICMS"]')
-          ParentFont = False
-          WordWrap = False
-        end
-        object Memo145: TfrxMemoView
-          AllowVectorExport = True
-          Left = 723.779527560000000000
-          Width = 20.787401570000000000
-          Height = 11.338582680000000000
-          StretchMode = smMaxHeight
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftBottom]
-          Frame.Width = 0.500000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            '[DadosProdutos."PIPI"]')
-          ParentFont = False
-          WordWrap = False
-        end
-      end
-      object CanhotoCabecalho: TfrxReportTitle
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 3.779527559055120000
+        Height = 7.559060000000000000
         Top = 18.897650000000000000
-        Width = 744.567410000000000000
-        Child = fR_RELATORIO.CanhotoCabecalhoPadrao
-        KeepChild = True
+        Width = 718.110700000000000000
       end
-      object Emitente: TfrxPageHeader
+      object MasterData1: TfrxMasterData
         FillType = ftBrush
         Frame.Typ = []
-        Height = 173.858362910000000000
-        Top = 268.346630000000000000
-        Width = 744.567410000000000000
-        OnBeforePrint = 'EmitenteOnBeforePrint'
-        object BarCodeContigencia: TfrxBarCodeView
-          AllowVectorExport = True
-          ShiftMode = smWhenOverlapped
-          Left = 469.764070000000000000
-          Top = 84.370130000000000000
-          Width = 234.000000000000000000
-          Height = 34.015745590000000000
-          BarType = bcCode128C
-          DataField = 'Contingencia_ID'
-          DataSetName = 'Parametros'
-          Frame.Typ = []
-          Rotation = 0
-          ShowText = False
-          TestLine = False
-          Text = '123456789012345678901234567890123456'
-          WideBarRatio = 2.000000000000000000
-          Zoom = 1.000000000000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -12
-          Font.Name = 'Arial'
-          Font.Style = []
-          ColorBar = clBlack
-        end
-        object memConsultaAutenticidade: TfrxMemoView
-          AllowVectorExport = True
-          Left = 423.307360000000000000
-          Top = 79.370130000000000000
-          Width = 321.260050000000000000
-          Height = 41.574805590000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            '[Parametros."ConsultaAutenticidade"]')
-          ParentFont = False
-          VAlign = vaCenter
-        end
+        Height = 22.677180000000000000
+        Top = 211.653680000000000000
+        Width = 718.110700000000000000
+        DataSet = Dm.dst_palm_pedidos
+        DataSetName = 'dst_palm_pedidos'
+        RowCount = 0
+      end
+      object PageFooter1: TfrxPageFooter
+        FillType = ftBrush
+        Frame.Typ = []
+        Height = 22.677180000000000000
+        Top = 665.197280000000000000
+        Width = 718.110700000000000000
         object Memo1: TfrxMemoView
           AllowVectorExport = True
-          Left = 423.307360000000000000
-          Width = 321.259842520000000000
-          Height = 49.133890000000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Arial'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          ParentFont = False
-        end
-        object BarCodeChave: TfrxBarCodeView
-          AllowVectorExport = True
-          Left = 445.677177560000000000
-          Top = 5.559060000000000000
-          Width = 278.000000000000000000
-          Height = 37.795275590000000000
-          BarType = bcCode128C
-          DataField = 'Id'
-          DataSetName = 'Identificacao'
+          Left = 642.520100000000000000
+          Width = 75.590600000000000000
+          Height = 18.897650000000000000
           Frame.Typ = []
-          Rotation = 0
-          ShowText = False
-          TestLine = False
-          Text = '12345678901234567890123456789012345678901234'
-          WideBarRatio = 2.000000000000000000
-          Zoom = 1.000000000000000000
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[Page#]')
+        end
+      end
+      object PageHeader1: TfrxPageHeader
+        FillType = ftBrush
+        Frame.Typ = []
+        Height = 102.047310000000000000
+        Top = 49.133890000000000000
+        Width = 718.110700000000000000
+        object SysMemo1: TfrxSysMemoView
+          AllowVectorExport = True
+          Left = 616.842920000000000000
+          Top = 1.000000000000000000
+          Width = 94.488250000000000000
+          Height = 15.118120000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
+          Font.Height = -9
           Font.Name = 'Arial'
           Font.Style = []
-          ColorBar = clBlack
-        end
-        object Memo6: TfrxMemoView
-          AllowVectorExport = True
-          Left = 423.307360000000000000
-          Top = 49.133890000000000000
-          Width = 321.260050000000000000
-          Height = 30.236240000000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
+          Frame.Typ = []
+          HAlign = haRight
           Memo.UTF8W = (
-            'CHAVE DE ACESSO')
+            '[DATE]')
           ParentFont = False
         end
-        object Memo8: TfrxMemoView
+        object SysMemo2: TfrxSysMemoView
           AllowVectorExport = True
-          Left = 423.307360000000000000
-          Top = 56.692913390000000000
-          Width = 321.260050000000000000
+          Left = 573.488560000000000000
+          Top = 19.897650000000000000
+          Width = 139.842610000000000000
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -12
-          Font.Name = 'Times New Roman'
-          Font.Style = [fsBold]
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            '[Identificacao."Chave"]')
-          ParentFont = False
-          VAlign = vaBottom
-        end
-        object Memo9: TfrxMemoView
-          AllowVectorExport = True
-          Left = 309.921460000000000000
-          Width = 113.385826770000000000
-          Height = 120.944960000000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -16
-          Font.Name = 'Times New Roman'
-          Font.Style = [fsBold]
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            'DANFE2')
-          ParentFont = False
-        end
-        object memEmitente: TfrxMemoView
-          AllowVectorExport = True
-          Width = 309.921460000000000000
-          Height = 120.944960000000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -16
-          Font.Name = 'Times New Roman'
-          Font.Style = [fsBold]
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapX = 1.000000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            '[Emitente."XNome"]')
-          ParentFont = False
-        end
-        object memDadosEmitente: TfrxMemoView
-          AllowVectorExport = True
-          Left = 100.826840000000000000
-          Top = 37.795275590000000000
-          Width = 207.874020630000000000
-          Height = 81.259842520000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
+          Font.Height = -9
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 1.000000000000000000
-          HAlign = haCenter
+          HAlign = haRight
           Memo.UTF8W = (
-            '[Emitente."DADOS_ENDERECO"]')
-          ParentFont = False
-          VAlign = vaCenter
-        end
-        object Memo12: TfrxMemoView
-          AllowVectorExport = True
-          Left = 313.157700000000000000
-          Top = 16.897650000000000000
-          Width = 105.826840000000000000
-          Height = 22.677180000000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            'Documento Auxiliar da '
-            'Nota Fiscal Eletr'#244'nica')
-          ParentFont = False
-          VAlign = vaCenter
-        end
-        object Memo13: TfrxMemoView
-          AllowVectorExport = True
-          Left = 316.716760000000000000
-          Top = 70.811070000000000000
-          Width = 98.267780000000000000
-          Height = 49.133890000000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -13
-          Font.Name = 'Times New Roman'
-          Font.Style = [fsBold]
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          Memo.UTF8W = (
-            'N'#186' [Identificacao."NNF"]'
-            'S'#233'rie [Identificacao."Serie" #n#000]'
-            'Folha [Page]/[TotalPages]')
-          ParentFont = False
-          WordWrap = False
-          Formats = <
-            item
-            end
-            item
-            end
-            item
-            end
-            item
-            end>
-        end
-        object Memo15: TfrxMemoView
-          AllowVectorExport = True
-          Left = 313.716760000000000000
-          Top = 45.354360000000000000
-          Width = 75.590600000000000000
-          Height = 22.677180000000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          Memo.UTF8W = (
-            '0 - ENTRADA'
-            '1 - SA'#205'DA')
-          ParentFont = False
-          VAlign = vaCenter
-        end
-        object Memo16: TfrxMemoView
-          AllowVectorExport = True
-          Left = 389.748300000000000000
-          Top = 45.354330710000000000
-          Width = 22.677165350000000000
-          Height = 22.677165350000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -13
-          Font.Name = 'Times New Roman'
-          Font.Style = [fsBold]
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            '[Identificacao."TpNF"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-        object Memo19: TfrxMemoView
-          AllowVectorExport = True
-          Top = 120.944960000000000000
-          Width = 423.307360000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'NATUREZA DA OPERA'#199#195'O')
-          ParentFont = False
-        end
-        object Memo20: TfrxMemoView
-          AllowVectorExport = True
-          Top = 129.259842520000000000
-          Width = 423.307360000000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          Memo.UTF8W = (
-            '[Identificacao."NatOp"]')
-          ParentFont = False
-          VAlign = vaBottom
-        end
-        object Memo21: TfrxMemoView
-          AllowVectorExport = True
-          Left = 423.307360000000000000
-          Top = 120.944960000000000000
-          Width = 321.260050000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            '[Parametros."Contingencia_Descricao"]')
-          ParentFont = False
-        end
-        object Memo22: TfrxMemoView
-          AllowVectorExport = True
-          Left = 423.307360000000000000
-          Top = 129.259842520000000000
-          Width = 321.260050000000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = [fsBold]
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            '[Parametros."Contingencia_Valor"]')
-          ParentFont = False
-          VAlign = vaBottom
-        end
-        object Memo23: TfrxMemoView
-          AllowVectorExport = True
-          Top = 147.401670000000000000
-          Width = 253.228510000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'INSCRI'#199#195'O ESTADUAL')
+            '[PAGE#] de [TOTALPAGES#]')
           ParentFont = False
         end
         object Memo24: TfrxMemoView
           AllowVectorExport = True
-          Top = 156.850410790000000000
-          Width = 253.228510000000000000
-          Height = 17.007874020000000000
+          Left = 7.559060000000000000
+          Top = 67.354359999999990000
+          Width = 710.551640000000000000
+          Height = 18.897650000000000000
+          DisplayFormat.DecimalSeparator = ','
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
+          Font.Height = -13
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
           Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
+          HAlign = haCenter
           Memo.UTF8W = (
-            '[Emitente."IE"]')
-          ParentFont = False
-          VAlign = vaBottom
-        end
-        object Memo25: TfrxMemoView
-          AllowVectorExport = True
-          Left = 253.228510000000000000
-          Top = 147.401670000000000000
-          Width = 253.228510000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'INSCRI'#199#195'O ESTADUAL DO SUBSTITUTO TRIBUT'#193'RIO')
+            'Listagem de  Pedido')
           ParentFont = False
         end
-        object Memo26: TfrxMemoView
+        object Picture1: TfrxPictureView
           AllowVectorExport = True
-          Left = 253.228510000000000000
-          Top = 156.850410790000000000
-          Width = 253.228510000000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          Memo.UTF8W = (
-            '[Emitente."IEST"]')
-          ParentFont = False
-          VAlign = vaBottom
-        end
-        object Memo27: TfrxMemoView
-          AllowVectorExport = True
-          Left = 506.457020000000000000
-          Top = 147.401670000000000000
-          Width = 238.110390000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'CNPJ / CPF')
-          ParentFont = False
-        end
-        object Memo28: TfrxMemoView
-          AllowVectorExport = True
-          Left = 506.457020000000000000
-          Top = 156.850410790000000000
-          Width = 238.110390000000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          Memo.UTF8W = (
-            '[Emitente."CNPJ"]')
-          ParentFont = False
-          VAlign = vaBottom
-        end
-        object imgLogo: TfrxPictureView
-          AllowVectorExport = True
-          Left = 1.889763780000000000
-          Top = 37.795275590000000000
-          Width = 98.267711650000000000
-          Height = 81.259842520000000000
+          Left = 3.779530000000000000
+          Width = 99.180580000000000000
+          Height = 101.149040000000000000
           Center = True
-          DataField = 'LogoCarregado'
-          DataSetName = 'Parametros'
+          DataField = 'LOGO'
+          DataSet = Dm.dst_configuracao
+          DataSetName = 'dst_configuracao'
           Frame.Typ = []
-          HightQuality = True
+          HightQuality = False
           Transparent = False
           TransparentColor = clWhite
         end
       end
-      object Rodape: TfrxPageFooter
+      object GroupHeader1: TfrxGroupHeader
         FillType = ftBrush
         Frame.Typ = []
-        Height = 17.897518190000000000
-        Top = 2229.922700000000000000
-        Width = 744.567410000000000000
-        object memDataHora: TfrxMemoView
-          Align = baLeft
+        Height = 22.677180000000000000
+        Top = 257.008040000000000000
+        Width = 718.110700000000000000
+        Condition = 'dst_palm_pedidos."COD_REPRESENTANTE"'
+        KeepTogether = True
+        ReprintOnNewPage = True
+        object Memo9: TfrxMemoView
           AllowVectorExport = True
-          Width = 461.102660000000000000
-          Height = 13.228346460000000000
-          Font.Charset = ANSI_CHARSET
+          Left = 3.779530000000000000
+          Top = 3.779529999999990000
+          Width = 86.929190000000000000
+          Height = 15.118120000000000000
+          DataSet = Dm.dst_vendas1
+          DataSetName = 'dst_vendas1'
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
+          Font.Height = -11
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
-          Frame.Width = 0.500000000000000000
           Memo.UTF8W = (
-            
-              'DATA E HORA DA IMPRESS'#195'O: [Date #ddd/mm/yyyy] [Time #dhh:mm:ss] ' +
-              '[Parametros."Usuario"]')
+            'Representante:')
           ParentFont = False
         end
-        object memSistema: TfrxMemoView
-          Align = baRight
+        object Memo10: TfrxMemoView
           AllowVectorExport = True
-          Left = 453.543600000000000000
-          Width = 291.023810000000000000
-          Height = 13.228346460000000000
-          Font.Charset = ANSI_CHARSET
+          Left = 94.488250000000000000
+          Top = 3.779529999999990000
+          Width = 608.504330000000000000
+          Height = 15.118120000000000000
+          DataField = 'REPRESENTANTE'
+          DataSet = Dm.dst_palm_pedidos
+          DataSetName = 'dst_palm_pedidos'
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
           Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          HAlign = haRight
           Memo.UTF8W = (
-            '[Parametros."Sistema"]')
+            '[dst_palm_pedidos."REPRESENTANTE"]')
           ParentFont = False
         end
       end
-      object Destinatario: TfrxMasterData
+      object DetailData1: TfrxDetailData
         FillType = ftBrush
         Frame.Typ = []
-        Height = 96.267762910000000000
-        Top = 502.677490000000000000
-        Width = 744.567410000000000000
-        DataSetName = 'Identificacao'
-        RowCount = 1
-        object Memo29: TfrxMemoView
-          AllowVectorExport = True
-          Top = 16.897650000000000000
-          Width = 468.661720000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'NOME / RAZ'#195'O SOCIAL')
-          ParentFont = False
-        end
-        object Memo30: TfrxMemoView
-          AllowVectorExport = True
-          Top = 26.346390790000000000
-          Width = 464.882190000000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          Memo.UTF8W = (
-            '[Destinatario."XNome"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo31: TfrxMemoView
-          AllowVectorExport = True
-          Left = 631.181510000000000000
-          Top = 16.897650000000000000
-          Width = 113.385900000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'DATA DA EMISS'#195'O')
-          ParentFont = False
-        end
-        object Memo32: TfrxMemoView
-          AllowVectorExport = True
-          Left = 631.181510000000000000
-          Top = 26.346390790000000000
-          Width = 113.385900000000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            '[Identificacao."DEmi"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo33: TfrxMemoView
-          AllowVectorExport = True
-          Left = 631.181510000000000000
-          Top = 43.354360000000000000
-          Width = 113.385900000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'DATA DA SA'#205'DA')
-          ParentFont = False
-        end
-        object Memo34: TfrxMemoView
-          AllowVectorExport = True
-          Left = 631.181510000000000000
-          Top = 52.803100790000000000
-          Width = 113.385900000000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            '[Identificacao."DSaiEnt"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo35: TfrxMemoView
-          AllowVectorExport = True
-          Left = 631.181510000000000000
-          Top = 69.811070000000000000
-          Width = 113.385900000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'HORA DA SA'#205'DA')
-          ParentFont = False
-        end
-        object Memo36: TfrxMemoView
-          AllowVectorExport = True
-          Left = 631.181510000000000000
-          Top = 79.259810790000000000
-          Width = 113.385900000000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            '[Identificacao."HoraSaida"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo37: TfrxMemoView
-          AllowVectorExport = True
-          Left = 468.661720000000000000
-          Top = 16.897650000000000000
-          Width = 162.519790000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'CNPJ / CPF')
-          ParentFont = False
-        end
-        object Memo38: TfrxMemoView
-          AllowVectorExport = True
-          Left = 468.661720000000000000
-          Top = 26.346390790000000000
-          Width = 162.519790000000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          Memo.UTF8W = (
-            '[Destinatario."CNPJCPF"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo39: TfrxMemoView
-          AllowVectorExport = True
-          Left = 555.590910000000000000
-          Top = 43.354360000000000000
-          Width = 75.590600000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'CEP')
-          ParentFont = False
-        end
-        object Memo40: TfrxMemoView
-          AllowVectorExport = True
-          Left = 555.590910000000000000
-          Top = 52.803100790000000000
-          Width = 75.590600000000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          Memo.UTF8W = (
-            '[Destinatario."CEP"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo41: TfrxMemoView
-          AllowVectorExport = True
-          Left = 385.512060000000000000
-          Top = 43.354360000000000000
-          Width = 170.078850000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'BAIRRO / DISTRITO')
-          ParentFont = False
-        end
+        Height = 13.228346456692900000
+        Top = 464.882190000000000000
+        Width = 718.110700000000000000
+        DataSet = Dm.dst_palm_pedidos
+        DataSetName = 'dst_palm_pedidos'
+        KeepChild = True
+        RowCount = 0
         object Memo42: TfrxMemoView
           AllowVectorExport = True
-          Left = 385.512060000000000000
-          Top = 52.803100790000000000
-          Width = 170.078850000000000000
-          Height = 17.007874020000000000
+          Left = 597.251997800000000000
+          Top = 0.779530000000023000
+          Width = 52.913420000000000000
+          Height = 11.338590000000000000
+          DataField = 'PRECO'
+          DataSet = Dm.dst_palm_pedidos
+          DataSetName = 'dst_palm_pedidos'
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.2m'
+          DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
           Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
+          HAlign = haRight
           Memo.UTF8W = (
-            '[Destinatario."XBairro"]')
+            '[dst_palm_pedidos."PRECO"]')
           ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
         end
         object Memo43: TfrxMemoView
           AllowVectorExport = True
-          Top = 43.354360000000000000
-          Width = 385.512060000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
+          Left = 447.889685670000000000
+          Top = 0.779530000000023000
+          Width = 49.133890000000000000
+          Height = 11.338590000000000000
+          DataField = 'QTD'
+          DataSet = Dm.dst_palm_pedidos
+          DataSetName = 'dst_palm_pedidos'
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.2n'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = []
+          HAlign = haRight
           Memo.UTF8W = (
-            'ENDERE'#199'O')
+            '[dst_palm_pedidos."QTD"]')
           ParentFont = False
         end
         object Memo44: TfrxMemoView
           AllowVectorExport = True
-          Top = 52.803100790000000000
-          Width = 381.732530000000000000
-          Height = 17.007874020000000000
+          Left = 652.740570000000000000
+          Top = 0.779530000000023000
+          Width = 60.472480000000000000
+          Height = 11.338590000000000000
+          DataField = 'SUB_TOTAL'
+          DataSet = Dm.dst_palm_pedidos
+          DataSetName = 'dst_palm_pedidos'
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.2m'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = []
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[dst_palm_pedidos."SUB_TOTAL"]')
+          ParentFont = False
+        end
+        object Memo12: TfrxMemoView
+          AllowVectorExport = True
+          Left = 499.692942680000000000
+          Top = 0.779530000000023000
+          Width = 52.913420000000000000
+          Height = 11.338590000000000000
+          DataSet = Dm.dst_palm_pedidos
+          DataSetName = 'dst_palm_pedidos'
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.2n'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = []
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[dst_palm_pedidos."UNIDADE"]/[dst_palm_pedidos."VOLUME"]')
+          ParentFont = False
+        end
+        object Memo27: TfrxMemoView
+          AllowVectorExport = True
+          Left = 391.645950000000000000
+          Width = 52.913420000000000000
+          Height = 11.338590000000000000
+          DataField = 'NCM'
+          DataSet = Dm.dst_palm_pedidos
+          DataSetName = 'dst_palm_pedidos'
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.2n'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = []
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[dst_palm_pedidos."NCM"]')
+          ParentFont = False
+        end
+        object Memo29: TfrxMemoView
+          AllowVectorExport = True
+          Left = 555.929500000000000000
+          Width = 37.795278030000000000
+          Height = 11.338590000000000000
+          DataField = 'PERC_DESC'
+          DataSet = Dm.dst_palm_pedidos
+          DataSetName = 'dst_palm_pedidos'
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.2n'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = []
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[dst_palm_pedidos."PERC_DESC"]')
+          ParentFont = False
+        end
+        object Memo36: TfrxMemoView
+          AllowVectorExport = True
+          Left = 3.779527560000000000
+          Width = 385.511699300000000000
+          Height = 12.269572130000000000
+          DataField = 'PRODUTO'
+          DataSet = Dm.dst_palm_pedidos
+          DataSetName = 'dst_palm_pedidos'
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = []
+          Memo.UTF8W = (
+            '[dst_palm_pedidos."PRODUTO"]')
+          ParentFont = False
+        end
+      end
+      object GroupHeader2: TfrxGroupHeader
+        FillType = ftBrush
+        Frame.Typ = []
+        Height = 141.401670000000000000
+        Top = 302.362400000000000000
+        Width = 718.110700000000000000
+        OnAfterPrint = 'GroupHeader2OnAfterPrint'
+        OnBeforePrint = 'GroupHeader2OnBeforePrint'
+        Condition = 'dst_palm_pedidos."NUMDOC"'
+        KeepChild = True
+        object Memo2: TfrxMemoView
+          AllowVectorExport = True
+          Left = 3.779530000000000000
+          Top = 0.118119999999976000
+          Width = 64.252010000000000000
+          Height = 15.118120000000000000
+          DisplayFormat.DecimalSeparator = ','
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -11
-          Font.Name = 'Times New Roman'
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = []
+          Memo.UTF8W = (
+            'N'#186' PEDIDO:')
+          ParentFont = False
+        end
+        object Memo4: TfrxMemoView
+          AllowVectorExport = True
+          Left = 3.559060000000000000
+          Top = 17.795300000000000000
+          Width = 68.031540000000000000
+          Height = 15.118120000000000000
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = []
+          Memo.UTF8W = (
+            'CLIENTE:')
+          ParentFont = False
+        end
+        object dst_vendas1NUMDOC: TfrxMemoView
+          AllowVectorExport = True
+          Left = 73.811070000000000000
+          Top = 0.755893309999976100
+          Width = 71.811070000000000000
+          Height = 15.118120000000000000
+          DataField = 'NUMDOC'
+          DataSet = Dm.dst_palm_pedidos
+          DataSetName = 'dst_palm_pedidos'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
+          Memo.UTF8W = (
+            '[dst_palm_pedidos."NUMDOC"]')
+          ParentFont = False
+        end
+        object dst_vendas1DTADOC: TfrxMemoView
+          AllowVectorExport = True
+          Left = 181.417440000000000000
+          Top = 0.755893309999976100
+          Width = 75.590600000000000000
+          Height = 15.118120000000000000
+          DataField = 'DTADOC'
+          DataSet = Dm.dst_palm_pedidos
+          DataSetName = 'dst_palm_pedidos'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          HAlign = haCenter
+          Memo.UTF8W = (
+            '[dst_palm_pedidos."DTADOC"]')
+          ParentFont = False
+        end
+        object dst_vendas1NOM_CLIENTE: TfrxMemoView
+          AllowVectorExport = True
+          Left = 74.590600000000000000
+          Top = 17.433073310000000000
+          Width = 657.638220000000000000
+          Height = 15.118120000000000000
+          DataField = 'CLIENTE'
+          DataSet = Dm.dst_palm_pedidos
+          DataSetName = 'dst_palm_pedidos'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          Memo.UTF8W = (
+            '[dst_palm_pedidos."CLIENTE"]')
+          ParentFont = False
+        end
+        object Memo35: TfrxMemoView
+          AllowVectorExport = True
+          Left = 3.779527560000000000
+          Top = 127.606370000000000000
+          Width = 385.512060000000000000
+          Height = 12.269572130000000000
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftBottom]
+          Memo.UTF8W = (
+            'Produto')
+          ParentFont = False
+        end
+        object Memo37: TfrxMemoView
+          AllowVectorExport = True
+          Left = 597.251997800000000000
+          Top = 128.385900000000000000
+          Width = 52.913420000000000000
+          Height = 11.338590000000000000
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftBottom]
+          HAlign = haRight
+          Memo.UTF8W = (
+            'Pre'#231'o')
+          ParentFont = False
+        end
+        object Memo38: TfrxMemoView
+          AllowVectorExport = True
+          Left = 447.889685670000000000
+          Top = 128.385900000000000000
+          Width = 49.133890000000000000
+          Height = 11.338590000000000000
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftBottom]
+          HAlign = haRight
+          Memo.UTF8W = (
+            'Quant.')
+          ParentFont = False
+        end
+        object Memo39: TfrxMemoView
+          AllowVectorExport = True
+          Left = 652.638220000000000000
+          Top = 128.385900000000000000
+          Width = 60.472480000000000000
+          Height = 11.338590000000000000
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftBottom]
+          HAlign = haRight
+          Memo.UTF8W = (
+            'Total Item')
+          ParentFont = False
+        end
+        object Memo6: TfrxMemoView
+          AllowVectorExport = True
+          Left = 499.692942680000000000
+          Top = 128.385900000000000000
+          Width = 52.913420000000000000
+          Height = 11.338590000000000000
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftBottom]
+          HAlign = haRight
+          Memo.UTF8W = (
+            'Unid\Volume')
+          ParentFont = False
+        end
+        object Memo3: TfrxMemoView
+          AllowVectorExport = True
+          Left = 3.779530000000000000
+          Top = 34.157526690000000000
+          Width = 68.031540000000000000
+          Height = 15.118120000000000000
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = []
+          Memo.UTF8W = (
+            'ENDERE'#199'O:')
+          ParentFont = False
+        end
+        object Memo19: TfrxMemoView
+          AllowVectorExport = True
+          Left = 74.811070000000000000
+          Top = 34.795300000000000000
+          Width = 638.740570000000000000
+          Height = 15.118120000000000000
+          DataSet = Dm.dst_palm_pedidos
+          DataSetName = 'dst_palm_pedidos'
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
           Memo.UTF8W = (
             
-              '[Destinatario."XLgr"], [Destinatario."Nro"]  [Destinatario."XCpl' +
-              '"]')
+              '[<dst_palm_pedidos."ENDERECO">], [<dst_palm_pedidos."NR_ENDERECO' +
+              '">]')
           ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
+        end
+        object Memo20: TfrxMemoView
+          AllowVectorExport = True
+          Left = 3.779530000000000000
+          Top = 51.913420000000000000
+          Width = 64.252010000000000000
+          Height = 15.118120000000000000
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = []
+          Memo.UTF8W = (
+            'CEP.:')
+          ParentFont = False
+        end
+        object Memo34: TfrxMemoView
+          AllowVectorExport = True
+          Left = 74.811070000000000000
+          Top = 51.551193310000000000
+          Width = 94.488250000000000000
+          Height = 15.118120000000000000
+          DataSet = Dm.dst_palm_pedidos
+          DataSetName = 'dst_palm_pedidos'
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          Memo.UTF8W = (
+            '[dst_palm_pedidos."CEP"]')
+          ParentFont = False
+        end
+        object Memo40: TfrxMemoView
+          AllowVectorExport = True
+          Left = 185.196970000000000000
+          Top = 51.496116690000000000
+          Width = 64.252010000000000000
+          Height = 15.118120000000000000
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = []
+          HAlign = haRight
+          Memo.UTF8W = (
+            'CIDADE:')
+          ParentFont = False
+        end
+        object Memo41: TfrxMemoView
+          AllowVectorExport = True
+          Left = 256.228510000000000000
+          Top = 51.133890000000000000
+          Width = 200.315090000000000000
+          Height = 15.118120000000000000
+          DataSet = Dm.dst_palm_pedidos
+          DataSetName = 'dst_palm_pedidos'
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          Memo.UTF8W = (
+            '[dst_palm_pedidos."CIDADE"]')
+          ParentFont = False
         end
         object Memo45: TfrxMemoView
           AllowVectorExport = True
-          Top = 69.811070000000000000
-          Width = 355.275820000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
+          Left = 3.779530000000000000
+          Top = 68.393766690000000000
+          Width = 64.252010000000000000
+          Height = 15.118120000000000000
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = []
           Memo.UTF8W = (
-            'MUNIC'#205'PIO')
+            'CNPJ\CPF:')
           ParentFont = False
         end
         object Memo46: TfrxMemoView
           AllowVectorExport = True
-          Top = 79.259810790000000000
-          Width = 351.496290000000000000
-          Height = 17.007874020000000000
+          Left = 74.811070000000000000
+          Top = 69.031540000000000000
+          Width = 147.401670000000000000
+          Height = 15.118120000000000000
+          DataSet = Dm.dst_palm_pedidos
+          DataSetName = 'dst_palm_pedidos'
+          DisplayFormat.DecimalSeparator = ','
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -11
-          Font.Name = 'Times New Roman'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
           Memo.UTF8W = (
-            '[Destinatario."XMun"]')
+            '[<dst_palm_pedidos."CNPJ">]\[<dst_palm_pedidos."CPF">]')
           ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
         end
         object Memo47: TfrxMemoView
           AllowVectorExport = True
-          Left = 355.275820000000000000
-          Top = 69.811070000000000000
-          Width = 30.236240000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
+          Left = 291.023810000000000000
+          Top = 68.393766690000000000
+          Width = 64.252010000000000000
+          Height = 15.118120000000000000
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = []
+          HAlign = haRight
           Memo.UTF8W = (
-            'UF')
+            'I.E.\RG:')
           ParentFont = False
         end
         object Memo48: TfrxMemoView
           AllowVectorExport = True
-          Left = 355.275820000000000000
-          Top = 79.259810790000000000
-          Width = 30.236240000000000000
-          Height = 17.007874020000000000
+          Left = 362.055350000000000000
+          Top = 68.031540000000000000
+          Width = 94.488250000000000000
+          Height = 15.118120000000000000
+          DataSet = Dm.dst_palm_pedidos
+          DataSetName = 'dst_palm_pedidos'
+          DisplayFormat.DecimalSeparator = ','
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -11
-          Font.Name = 'Times New Roman'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haCenter
           Memo.UTF8W = (
-            '[Destinatario."UF"]')
+            '[<dst_palm_pedidos."IE">]\[<dst_palm_pedidos."RG">]')
           ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
         end
         object Memo49: TfrxMemoView
           AllowVectorExport = True
-          Left = 385.512060000000000000
-          Top = 69.811070000000000000
-          Width = 113.385900000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
+          Left = 3.779530000000000000
+          Top = 85.929190000000000000
+          Width = 64.252010000000000000
+          Height = 15.118120000000000000
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = []
           Memo.UTF8W = (
-            'TELEFONE / FAX')
+            'EMAIL:')
           ParentFont = False
         end
         object Memo50: TfrxMemoView
           AllowVectorExport = True
-          Left = 385.512060000000000000
-          Top = 79.259810790000000000
-          Width = 113.385900000000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          Memo.UTF8W = (
-            '[Destinatario."Fone"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo51: TfrxMemoView
-          AllowVectorExport = True
-          Left = 498.897960000000000000
-          Top = 69.811070000000000000
-          Width = 132.283550000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'INSCRI'#199#195'O ESTADUAL')
-          ParentFont = False
-        end
-        object Memo52: TfrxMemoView
-          AllowVectorExport = True
-          Left = 498.897960000000000000
-          Top = 79.259810790000000000
-          Width = 132.283550000000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          Memo.UTF8W = (
-            '[Destinatario."IE"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo53: TfrxMemoView
-          AllowVectorExport = True
-          Top = 3.779530000000000000
-          Width = 430.866420000000000000
-          Height = 13.228344020000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = [fsBold]
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          Memo.UTF8W = (
-            'DESTINAT'#193'RIO / REMETENTE')
-          ParentFont = False
-          VAlign = vaBottom
-        end
-      end
-      object Fatura: TfrxMasterData
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 37.795278040000000000
-        Top = 861.732840000000000000
-        Width = 744.567410000000000000
-        OnBeforePrint = 'FaturaOnBeforePrint'
-        DataSetName = 'Fatura'
-        RowCount = 0
-        object Memo190: TfrxMemoView
-          AllowVectorExport = True
-          Top = 3.779527560000000000
-          Width = 430.866420000000000000
-          Height = 13.228344020000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = [fsBold]
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          Memo.UTF8W = (
-            'FATURA')
-          ParentFont = False
-          VAlign = vaBottom
-        end
-        object Memo7: TfrxMemoView
-          Align = baLeft
-          AllowVectorExport = True
-          Top = 17.007874020000000000
-          Width = 744.566929130000000000
-          Height = 20.787404020000000000
-          OnBeforePrint = 'Memo191OnBeforePrint'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapX = 3.000000000000000000
-          Memo.UTF8W = (
-            '[Fatura."Pagamento"]  ')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-          Formats = <
-            item
-            end
-            item
-            end
-            item
-            end
-            item
-            end
-            item
-            end>
-        end
-        object MemoFatura: TfrxMemoView
-          AllowVectorExport = True
-          Left = 128.503937010000000000
-          Top = 17.007874020000000000
-          Width = 616.062901810000000000
-          Height = 20.787404020000000000
-          OnBeforePrint = 'Memo191OnBeforePrint'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapX = 3.000000000000000000
-          Memo.UTF8W = (
-            
-              '  N'#250'mero:   [Fatura."nFat"]     -   Valor Original: R$ [Fatura."' +
-              'vOrig" #n%2,2n]    -   Valor Desconto:  R$ [Fatura."vDesc" #n%2,' +
-              '2n]    -   Valor L'#237'quido: R$ [Fatura."vLiq" #n%2,2n]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-          Formats = <
-            item
-            end
-            item
-            end
-            item
-            end
-            item
-            end>
-        end
-      end
-      object DadosProdutosHeader: TfrxGroupHeader
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 41.196850390000000000
-        Top = 1492.914350000000000000
-        Width = 744.567410000000000000
-        OnBeforePrint = 'DadosProdutosHeaderOnBeforePrint'
-        Condition = 'DadosProdutos."ChaveNFe"'
-        ReprintOnNewPage = True
-        ResetPageNumbers = True
-        StartNewPage = True
-        object Memo115: TfrxMemoView
-          AllowVectorExport = True
-          Top = 3.779530000000020000
-          Width = 430.866420000000000000
-          Height = 13.228344020000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = [fsBold]
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          Memo.UTF8W = (
-            'DADOS DOS PRODUTOS / SERVI'#199'OS')
-          ParentFont = False
-          VAlign = vaBottom
-        end
-        object Memo116: TfrxMemoView
-          AllowVectorExport = True
-          Top = 18.338592440000000000
-          Width = 60.472480000000000000
-          Height = 22.677162910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            'C'#211'DIGO'
-            'PRODUTO')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-        object memTitItDesc: TfrxMemoView
-          AllowVectorExport = True
-          Left = 60.472480000000000000
-          Top = 18.338592440000000000
-          Width = 221.480314960000000000
-          Height = 22.677162910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            'DESCRI'#199#195'O DO PRODUTO / SERVI'#199'O')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-        object memTitItNCM: TfrxMemoView
-          AllowVectorExport = True
-          Left = 281.905477640000000000
-          Top = 18.338592440000000000
-          Width = 37.795300000000000000
-          Height = 22.677162910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            'NCM/SH')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-        object memTitItCST: TfrxMemoView
-          AllowVectorExport = True
-          Left = 319.700753230000000000
-          Top = 18.338592440000000000
-          Width = 26.456695350000000000
-          Height = 22.677162910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            '[Emitente."DESCR_CST"]')
-          ParentFont = False
-          VAlign = vaCenter
-        end
-        object memTitItCFOP: TfrxMemoView
-          AllowVectorExport = True
-          Left = 346.157446140000000000
-          Top = 18.338592440000000000
-          Width = 24.566929130000000000
-          Height = 22.677167800000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            'CFOP')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-        object memTitItUnd: TfrxMemoView
-          AllowVectorExport = True
-          Left = 370.724433860000000000
-          Top = 18.338592440000000000
-          Width = 22.677180000000000000
-          Height = 22.677162910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            'UNID.')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-        object memTitQCom: TfrxMemoView
-          AllowVectorExport = True
-          Left = 393.401599210000000000
-          Top = 18.338592440000000000
-          Width = 51.023634250000000000
-          Height = 22.677162910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            'QTDE.')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-        object memTitvUnCom: TfrxMemoView
-          AllowVectorExport = True
-          Left = 444.425480000000000000
-          Top = 18.338592440000000000
-          Width = 45.354360000000000000
-          Height = 22.677162910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            'VALOR'
-            'UNIT'#193'RIO')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-        object memTitItDesconto: TfrxMemoView
-          AllowVectorExport = True
-          Left = 489.960629920000000000
-          Top = 18.338592440000000000
-          Width = 39.307086610000000000
-          Height = 22.677162910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            '[Parametros."Desconto"]'
-            'DESCONTO')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-        object Memo125: TfrxMemoView
-          AllowVectorExport = True
-          Left = 529.134200000000000000
-          Top = 18.338592440000000000
-          Width = 45.354360000000000000
-          Height = 22.677162910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            'VALOR'
-            '[Parametros."TotalLiquido"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-        object Memo126: TfrxMemoView
-          AllowVectorExport = True
-          Left = 574.488560000000000000
-          Top = 18.338592440000000000
-          Width = 45.354360000000000000
-          Height = 22.677162910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            'BASE DE '
-            'C'#193'LC. ICMS')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-        object Memo127: TfrxMemoView
-          AllowVectorExport = True
-          Left = 619.842920000000000000
-          Top = 18.338592440000000000
-          Width = 41.574803150000000000
-          Height = 22.677162910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            'VALOR'
-            'ICMS')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-        object Memo128: TfrxMemoView
-          AllowVectorExport = True
-          Left = 661.417322834646000000
-          Top = 18.338592440000000000
-          Width = 41.574803150000000000
-          Height = 22.677162910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            'VALOR'
-            'IPI')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-        object Memo129: TfrxMemoView
-          AllowVectorExport = True
-          Left = 702.992125980000000000
-          Top = 29.677182440000000000
-          Width = 20.787401574803100000
-          Height = 11.338572910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            'ICMS')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-        object Memo130: TfrxMemoView
-          AllowVectorExport = True
-          Left = 723.779527559055000000
-          Top = 29.677182440000000000
-          Width = 20.787401574803100000
-          Height = 11.338572910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            'IPI')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-        object Memo189: TfrxMemoView
-          AllowVectorExport = True
-          Left = 702.992123540000000000
-          Top = 18.338592440000000000
-          Width = 41.574830000000000000
-          Height = 11.338572910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            'AL'#205'Q. %')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-      end
-      object Imposto: TfrxMasterData
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 70.031525350000000000
-        Top = 1114.961350000000000000
-        Width = 744.567410000000000000
-        OnBeforePrint = 'ImpostoOnBeforePrint'
-        DataSetName = 'CalculoImposto'
-        RowCount = 1
-        object Memo58: TfrxMemoView
-          AllowVectorExport = True
-          Top = 3.779530000000020000
-          Width = 430.866420000000000000
-          Height = 13.228344020000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = [fsBold]
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          Memo.UTF8W = (
-            'C'#193'LCULO DO IMPOSTO')
-          ParentFont = False
-          VAlign = vaBottom
-        end
-        object QuadroVBC: TfrxMemoView
-          AllowVectorExport = True
-          Top = 17.118122440000000000
-          Width = 114.897637800000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'BASE DE C'#193'LCULO DO ICMS')
-          ParentFont = False
-        end
-        object memVBC: TfrxMemoView
-          AllowVectorExport = True
-          Top = 26.566863230000000000
-          Width = 114.897637800000000000
-          Height = 17.007874020000000000
+          Left = 74.811070000000000000
+          Top = 86.566963310000000000
+          Width = 381.732530000000000000
+          Height = 15.118120000000000000
+          DataSet = Dm.dst_palm_pedidos
+          DataSetName = 'dst_palm_pedidos'
           DisplayFormat.DecimalSeparator = ','
-          DisplayFormat.FormatStr = '%2.2n'
-          DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -11
-          Font.Name = 'Times New Roman'
+          Font.Name = 'Arial'
           Font.Style = []
           Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haRight
           Memo.UTF8W = (
-            '[CalculoImposto."VBC"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object QuadroVICMS: TfrxMemoView
-          AllowVectorExport = True
-          Left = 114.897637800000000000
-          Top = 17.118122440000000000
-          Width = 114.897637800000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'VALOR DO ICMS')
+            '[dst_palm_pedidos."EMAIL"]')
           ParentFont = False
         end
-        object memVICMS: TfrxMemoView
+        object Memo11: TfrxMemoView
           AllowVectorExport = True
-          Left = 114.897637800000000000
-          Top = 26.566863230000000000
-          Width = 114.897637800000000000
-          Height = 17.007874020000000000
+          Left = 3.779530000000000000
+          Top = 105.826840000000000000
+          Width = 98.267780000000000000
+          Height = 15.118120000000000000
           DisplayFormat.DecimalSeparator = ','
-          DisplayFormat.FormatStr = '%2.2n'
-          DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[CalculoImposto."VICMS"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object QuadroVBCST: TfrxMemoView
-          AllowVectorExport = True
-          Left = 229.795275590000000000
-          Top = 17.118122440000000000
-          Width = 128.504020000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'BASE DE C'#193'LCULO DO ICMS SUBST.')
-          ParentFont = False
-        end
-        object memVBCST: TfrxMemoView
-          AllowVectorExport = True
-          Left = 229.795275590000000000
-          Top = 26.566863230000000000
-          Width = 128.504020000000000000
-          Height = 17.007874020000000000
-          DisplayFormat.DecimalSeparator = ','
-          DisplayFormat.FormatStr = '%2.2n'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[CalculoImposto."VBCST"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object QuadrovST: TfrxMemoView
-          AllowVectorExport = True
-          Left = 358.299212600000000000
-          Top = 17.118122440000000000
-          Width = 113.385900000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'VALOR DO ICMS SUBST.')
-          ParentFont = False
-        end
-        object memVST: TfrxMemoView
-          AllowVectorExport = True
-          Left = 358.299212600000000000
-          Top = 26.566863230000000000
-          Width = 113.385900000000000000
-          Height = 17.007874020000000000
-          DisplayFormat.DecimalSeparator = ','
-          DisplayFormat.FormatStr = '%2.2n'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[CalculoImposto."VST"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo67: TfrxMemoView
-          AllowVectorExport = True
-          Left = 597.165740000000000000
-          Top = 17.118122440000000000
-          Width = 147.401670000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'VALOR TOTAL DOS PRODUTOS')
-          ParentFont = False
-        end
-        object Memo68: TfrxMemoView
-          AllowVectorExport = True
-          Left = 597.165740000000000000
-          Top = 25.566863230000000000
-          Width = 147.401670000000000000
-          Height = 17.007874020000000000
-          DisplayFormat.DecimalSeparator = ','
-          DisplayFormat.FormatStr = '%2.2n'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[CalculoImposto."VProd"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo69: TfrxMemoView
-          AllowVectorExport = True
-          Left = 459.590848000000000000
-          Top = 43.574832440000000000
-          Width = 137.574892000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'VALOR DO IPI')
-          ParentFont = False
-        end
-        object Memo70: TfrxMemoView
-          AllowVectorExport = True
-          Left = 459.590848000000000000
-          Top = 53.023573230000000000
-          Width = 137.574892000000000000
-          Height = 17.007874020000000000
-          DisplayFormat.DecimalSeparator = ','
-          DisplayFormat.FormatStr = '%2.2n'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[CalculoImposto."VIPI"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo71: TfrxMemoView
-          AllowVectorExport = True
-          Left = 329.575016000000000000
-          Top = 43.574832440000000000
-          Width = 130.015832000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'OUTRAS DESPESAS ACESS'#211'RIAS')
-          ParentFont = False
-        end
-        object Memo72: TfrxMemoView
-          AllowVectorExport = True
-          Left = 329.575016000000000000
-          Top = 53.023573230000000000
-          Width = 130.015832000000000000
-          Height = 17.007874020000000000
-          DisplayFormat.DecimalSeparator = ','
-          DisplayFormat.FormatStr = '%2.2n'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[CalculoImposto."VOutro"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo73: TfrxMemoView
-          AllowVectorExport = True
-          Left = 229.795424000000000000
-          Top = 43.574832440000000000
-          Width = 99.779592000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'DESCONTO')
-          ParentFont = False
-        end
-        object Memo74: TfrxMemoView
-          AllowVectorExport = True
-          Left = 229.795424000000000000
-          Top = 53.023573230000000000
-          Width = 99.779592000000000000
-          Height = 17.007874020000000000
-          DisplayFormat.DecimalSeparator = ','
-          DisplayFormat.FormatStr = '%2.2n'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[CalculoImposto."VDesc"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo75: TfrxMemoView
-          AllowVectorExport = True
-          Left = 114.897712000000000000
-          Top = 43.574832440000000000
-          Width = 114.897712000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'VALOR DO SEGURO')
-          ParentFont = False
-        end
-        object Memo76: TfrxMemoView
-          AllowVectorExport = True
-          Left = 114.897712000000000000
-          Top = 53.023573230000000000
-          Width = 114.897712000000000000
-          Height = 17.007874020000000000
-          DisplayFormat.DecimalSeparator = ','
-          DisplayFormat.FormatStr = '%2.2n'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[CalculoImposto."VSeg"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo77: TfrxMemoView
-          AllowVectorExport = True
-          Top = 43.574832440000000000
-          Width = 114.897712000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'VALOR DO FRETE')
-          ParentFont = False
-        end
-        object Memo78: TfrxMemoView
-          AllowVectorExport = True
-          Top = 53.023573230000000000
-          Width = 114.897712000000000000
-          Height = 17.007874020000000000
-          DisplayFormat.DecimalSeparator = ','
-          DisplayFormat.FormatStr = '%2.2n'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[CalculoImposto."VFrete"]')
-          ParentFont = False
-          WordWrap = False
-        end
-        object Memo79: TfrxMemoView
-          AllowVectorExport = True
-          Left = 597.165740000000000000
-          Top = 43.574832440000000000
-          Width = 147.401670000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'VALOR TOTAL DA NOTA')
-          ParentFont = False
-        end
-        object Memo80: TfrxMemoView
-          AllowVectorExport = True
-          Left = 597.165740000000000000
-          Top = 52.023573230000000000
-          Width = 147.401670000000000000
-          Height = 17.007874020000000000
-          DisplayFormat.DecimalSeparator = ','
-          DisplayFormat.FormatStr = '%2.2n'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[CalculoImposto."VNF"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object QuadroVTOTTRIB: TfrxMemoView
-          AllowVectorExport = True
-          Left = 471.685029610000000000
-          Top = 17.196850390000000000
-          Width = 125.480339370000000000
-          Height = 26.267716540000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'V.APROX. TRIBUTOS [CalculoImposto."VTribFonte"]')
-          ParentFont = False
-        end
-        object memVTOTTRIB: TfrxMemoView
-          AllowVectorExport = True
-          Left = 472.441250000000000000
-          Top = 26.645669290000000000
-          Width = 124.724490000000000000
-          Height = 17.007874020000000000
-          DisplayFormat.DecimalSeparator = ','
-          DisplayFormat.FormatStr = '%2.2n'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[CalculoImposto."VTotTrib"] ([CalculoImposto."VTribPerc"] %)')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-      end
-      object TransportadorVolumes: TfrxMasterData
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 69.921335510000000000
-        Top = 1209.449600000000000000
-        Width = 744.567410000000000000
-        DataSetName = 'Transportador'
-        RowCount = 1
-        object Memo82: TfrxMemoView
-          AllowVectorExport = True
-          Top = 3.779530000000020000
-          Width = 430.866420000000000000
-          Height = 13.228344020000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = [fsBold]
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          Memo.UTF8W = (
-            'TRANSPORTADOR / VOLUMES TRANSPORTADOS')
-          ParentFont = False
-        end
-        object Memo83: TfrxMemoView
-          AllowVectorExport = True
-          Left = 636.094512600000000000
-          Top = 17.007932600000000000
-          Width = 108.472433620000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'CNPJ / CPF')
-          ParentFont = False
-        end
-        object Memo84: TfrxMemoView
-          AllowVectorExport = True
-          Left = 636.094512600000000000
-          Top = 26.456673390000000000
-          Width = 108.472433620000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          Memo.UTF8W = (
-            '[Transportador."CNPJCPF"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo85: TfrxMemoView
-          AllowVectorExport = True
-          Left = 608.504330000000000000
-          Top = 17.007932600000000000
-          Width = 27.590548740000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'UF')
-          ParentFont = False
-        end
-        object Memo86: TfrxMemoView
-          AllowVectorExport = True
-          Left = 608.504330000000000000
-          Top = 26.456673390000000000
-          Width = 27.590548740000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            '[Veiculo."UF"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo87: TfrxMemoView
-          AllowVectorExport = True
-          Left = 529.133858270000000000
-          Top = 17.007932600000000000
-          Width = 79.370078740157500000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'PLACA DO VE'#205'CULO')
-          ParentFont = False
-        end
-        object Memo88: TfrxMemoView
-          AllowVectorExport = True
-          Left = 529.133858270000000000
-          Top = 26.456673390000000000
-          Width = 79.370078740157500000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          Memo.UTF8W = (
-            '[Veiculo."PLACA"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo89: TfrxMemoView
-          AllowVectorExport = True
-          Left = 449.763779530000000000
-          Top = 17.007932600000000000
-          Width = 79.370130000000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'C'#211'DIGO ANTT')
-          ParentFont = False
-        end
-        object Memo90: TfrxMemoView
-          AllowVectorExport = True
-          Left = 449.763779530000000000
-          Top = 26.456673390000000000
-          Width = 75.590600000000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          Memo.UTF8W = (
-            '[Veiculo."RNTC"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo91: TfrxMemoView
-          AllowVectorExport = True
-          Left = 347.716535433071000000
-          Top = 17.007932600000000000
-          Width = 102.047244094488000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'FRETE POR CONTA')
-          ParentFont = False
-        end
-        object Memo92: TfrxMemoView
-          AllowVectorExport = True
-          Left = 347.716535433071000000
-          Top = 26.456673390000000000
-          Width = 102.047244094488000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          Memo.UTF8W = (
-            '[Transportador."ModFrete"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo93: TfrxMemoView
-          AllowVectorExport = True
-          Top = 17.007932600000000000
-          Width = 347.716535433071000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'NOME / RAZ'#195'O SOCIAL')
-          ParentFont = False
-        end
-        object Memo94: TfrxMemoView
-          AllowVectorExport = True
-          Top = 26.456673390000000000
-          Width = 347.716535433071000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          Memo.UTF8W = (
-            '[Transportador."XNome"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo95: TfrxMemoView
-          AllowVectorExport = True
-          Left = 608.504330000000000000
-          Top = 43.464642600000000000
-          Width = 27.590548740000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'UF')
-          ParentFont = False
-        end
-        object Memo96: TfrxMemoView
-          AllowVectorExport = True
-          Left = 608.504330000000000000
-          Top = 52.913383390000000000
-          Width = 27.590548740000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            '[Transportador."UF"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo97: TfrxMemoView
-          AllowVectorExport = True
-          Left = 636.094512600000000000
-          Top = 43.464642600000000000
-          Width = 108.472433620000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'INSCRI'#199#195'O ESTADUAL')
-          ParentFont = False
-        end
-        object Memo98: TfrxMemoView
-          AllowVectorExport = True
-          Left = 636.094512600000000000
-          Top = 52.913383390000000000
-          Width = 108.472433620000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          Memo.UTF8W = (
-            '[Transportador."IE"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo99: TfrxMemoView
-          AllowVectorExport = True
-          Left = 355.275590551181000000
-          Top = 43.464642600000000000
-          Width = 253.228346456693000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'MUNIC'#205'PIO')
-          ParentFont = False
-        end
-        object Memo100: TfrxMemoView
-          AllowVectorExport = True
-          Left = 355.275590551181000000
-          Top = 52.913383390000000000
-          Width = 253.228346456693000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          Memo.UTF8W = (
-            '[Transportador."XMun"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo101: TfrxMemoView
-          AllowVectorExport = True
-          Top = 43.464642600000000000
-          Width = 355.275590550000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'ENDERE'#199'O')
-          ParentFont = False
-        end
-        object Memo102: TfrxMemoView
-          AllowVectorExport = True
-          Top = 52.913383390000000000
-          Width = 355.275590550000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          Memo.UTF8W = (
-            '[Transportador."XEnder"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-      end
-      object MarcaDagua: TfrxOverlay
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 117.170000000000000000
-        Top = 1353.071740000000000000
-        Width = 744.567410000000000000
-        object memWatermark: TfrxMemoView
-          Align = baClient
-          AllowVectorExport = True
-          Width = 744.567410000000000000
-          Height = 117.170000000000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = 14211288
-          Font.Height = -67
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = []
-          HAlign = haCenter
           Memo.UTF8W = (
-            '[Parametros."Mensagem0"]')
+            'Forma de Pagto.:')
           ParentFont = False
-          VAlign = vaCenter
         end
-      end
-      object ChildCorpo: TfrxChild
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 3.779527560000000000
-        Top = 1613.859310000000000000
-        Width = 744.567410000000000000
-        ToNRows = 0
-        ToNRowsMode = rmCount
-        object Memo161: TfrxMemoView
+        object Memo13: TfrxMemoView
           AllowVectorExport = True
-          Width = 60.472480000000000000
-          Height = 3.779527560000000000
-          StretchMode = smActualHeight
+          Left = 105.047310000000000000
+          Top = 106.464613310000000000
+          Width = 608.504330000000000000
+          Height = 15.118120000000000000
+          DataSet = Dm.dst_palm_pedidos
+          DataSetName = 'dst_palm_pedidos'
+          DisplayFormat.DecimalSeparator = ','
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          ParentFont = False
-        end
-        object memCdItDesc: TfrxMemoView
-          AllowVectorExport = True
-          Left = 60.472480000000000000
-          Width = 221.480314960000000000
-          Height = 3.779527560000000000
-          StretchMode = smActualHeight
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          ParentFont = False
-        end
-        object memCdITNCM: TfrxMemoView
-          AllowVectorExport = True
-          Left = 281.905690000000000000
-          Width = 37.795300000000000000
-          Height = 3.779527560000000000
-          StretchMode = smActualHeight
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          ParentFont = False
-        end
-        object memCdItCST: TfrxMemoView
-          AllowVectorExport = True
-          Left = 319.700990000000000000
-          Width = 26.456695350000000000
-          Height = 3.779527560000000000
-          StretchMode = smActualHeight
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          ParentFont = False
-        end
-        object memCdItCFOP: TfrxMemoView
-          AllowVectorExport = True
-          Left = 346.157504720000000000
-          Width = 24.566929130000000000
-          Height = 3.779527560000000000
-          StretchMode = smActualHeight
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          ParentFont = False
-        end
-        object memCdItUnd: TfrxMemoView
-          AllowVectorExport = True
-          Left = 370.724433860000000000
-          Width = 22.677180000000000000
-          Height = 3.779527560000000000
-          StretchMode = smActualHeight
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          HideZeros = True
-          ParentFont = False
-        end
-        object memCdqCom: TfrxMemoView
-          AllowVectorExport = True
-          Left = 393.401599210000000000
-          Width = 51.023634250000000000
-          Height = 3.779527560000000000
-          StretchMode = smActualHeight
-          DisplayFormat.FormatStr = ',0.00##'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haRight
-          HideZeros = True
-          ParentFont = False
-        end
-        object memCdvUnCom: TfrxMemoView
-          AllowVectorExport = True
-          Left = 444.425480000000000000
-          Width = 45.354360000000000000
-          Height = 3.779527560000000000
-          StretchMode = smActualHeight
-          DisplayFormat.FormatStr = ',0.00##'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haRight
-          HideZeros = True
-          ParentFont = False
-        end
-        object memCdItDesconto: TfrxMemoView
-          AllowVectorExport = True
-          Left = 489.826771650000000000
-          Width = 39.307086610000000000
-          Height = 3.779527560000000000
-          StretchMode = smActualHeight
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftRight]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          HideZeros = True
-          ParentFont = False
-        end
-        object Memo170: TfrxMemoView
-          AllowVectorExport = True
-          Left = 529.134200000000000000
-          Width = 45.354360000000000000
-          Height = 3.779527560000000000
-          StretchMode = smActualHeight
-          DisplayFormat.FormatStr = ',0.00##'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftRight]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haRight
-          HideZeros = True
-          ParentFont = False
-        end
-        object Memo171: TfrxMemoView
-          AllowVectorExport = True
-          Left = 574.488560000000000000
-          Width = 45.354360000000000000
-          Height = 3.779527560000000000
-          StretchMode = smActualHeight
-          DisplayFormat.FormatStr = ',0.00##'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haRight
-          HideZeros = True
-          ParentFont = False
-        end
-        object Memo172: TfrxMemoView
-          AllowVectorExport = True
-          Left = 619.842920000000000000
-          Width = 41.574803149606300000
-          Height = 3.779527560000000000
-          StretchMode = smActualHeight
-          DisplayFormat.FormatStr = ',0.00##'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haRight
-          HideZeros = True
-          ParentFont = False
-        end
-        object Memo173: TfrxMemoView
-          AllowVectorExport = True
-          Left = 661.417322834646000000
-          Width = 41.574803150000000000
-          Height = 3.779527560000000000
-          StretchMode = smActualHeight
-          DisplayFormat.FormatStr = ',0.00##'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haRight
-          HideZeros = True
-          ParentFont = False
-        end
-        object Memo174: TfrxMemoView
-          AllowVectorExport = True
-          Left = 702.992125980000000000
-          Width = 20.787401574803100000
-          Height = 3.779527560000000000
-          StretchMode = smActualHeight
-          DisplayFormat.FormatStr = ',0.00##'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haRight
-          HideZeros = True
-          ParentFont = False
-        end
-        object Memo175: TfrxMemoView
-          AllowVectorExport = True
-          Left = 723.779527559055000000
-          Width = 20.787401574803100000
-          Height = 3.779527560000000000
-          StretchMode = smActualHeight
-          DisplayFormat.FormatStr = ',0.00##'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haRight
-          HideZeros = True
-          ParentFont = False
-        end
-      end
-      object DadosProdutosFooter: TfrxGroupFooter
-        FillType = ftBrush
-        Frame.Typ = []
-        Top = 1591.182130000000000000
-        Width = 744.567410000000000000
-        OnBeforePrint = 'DadosProdutosFooterOnBeforePrint'
-      end
-      object ChildCorpoBottom: TfrxChild
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 3.779530000000000000
-        Top = 1640.316020000000000000
-        Width = 744.567410000000000000
-        ToNRows = 0
-        ToNRowsMode = rmCount
-        object Memo103: TfrxMemoView
-          Align = baClient
-          AllowVectorExport = True
-          Width = 744.567410000000000000
-          Height = 3.779530000000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -13
+          Font.Height = -11
           Font.Name = 'Arial'
           Font.Style = []
-          Frame.Typ = [ftTop]
-          ParentFont = False
-        end
-      end
-      object CanhotoRodape: TfrxChild
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 79.031515590000000000
-        Top = 1908.662650000000000000
-        Visible = False
-        Width = 744.567410000000000000
-        ToNRows = 0
-        ToNRowsMode = rmCount
-        object Memo59: TfrxMemoView
-          AllowVectorExport = True
-          Top = 11.000000000000000000
-          Width = 642.520100000000000000
-          Height = 37.795275590000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
+          Frame.Typ = []
           Memo.UTF8W = (
-            
-              'Recebemos de [Emitente."XNome"] os produtos e/ou servi'#231'os consta' +
-              'ntes da Nota Fiscal Eletr'#244'nica indicada ao lado. '
-            '[Parametros."ResumoCanhoto"]')
+            '[dst_palm_pedidos."FOP"] - [dst_palm_pedidos."PRAZO"] dias.')
           ParentFont = False
-          WordWrap = False
         end
-        object Memo60: TfrxMemoView
+        object Memo14: TfrxMemoView
           AllowVectorExport = True
-          Left = 143.622140000000000000
-          Top = 48.795275590000000000
-          Width = 498.897960000000000000
-          Height = 30.236240000000000000
-          Font.Charset = ANSI_CHARSET
+          Left = 461.102660000000000000
+          Top = 86.929190000000000000
+          Width = 64.252010000000000000
+          Height = 15.118120000000000000
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = []
+          HAlign = haRight
           Memo.UTF8W = (
-            'IDENTIFICA'#199#195'O E ASSINATURA DO RECEBEDOR')
+            'FONE:')
           ParentFont = False
         end
-        object Memo61: TfrxMemoView
+        object Memo16: TfrxMemoView
           AllowVectorExport = True
-          Top = 48.795275590000100000
-          Width = 143.622140000000000000
-          Height = 30.236240000000000000
-          Font.Charset = ANSI_CHARSET
+          Left = 532.134200000000000000
+          Top = 87.566963310000000000
+          Width = 381.732530000000000000
+          Height = 15.118120000000000000
+          DataSet = Dm.dst_palm_pedidos
+          DataSetName = 'dst_palm_pedidos'
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
+          Font.Height = -11
+          Font.Name = 'Arial'
           Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
+          Frame.Typ = []
           Memo.UTF8W = (
-            'DATA DO RECEBIMENTO')
+            '[dst_palm_pedidos."TELEFONE"]')
           ParentFont = False
         end
-        object Memo62: TfrxMemoView
+        object mmPedidoDestino: TfrxMemoView
           AllowVectorExport = True
           Left = 642.520100000000000000
-          Top = 11.000000000000000000
-          Width = 102.047212360000000000
-          Height = 68.031496060000000000
-          Font.Charset = ANSI_CHARSET
+          Width = 71.811070000000000000
+          Height = 15.118120000000000000
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -13
-          Font.Name = 'Times New Roman'
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = []
+          Frame.Typ = []
+          Memo.UTF8W = (
+            '[dst_palm_pedidos."NUMDOC_DESTINO"]')
+          ParentFont = False
+        end
+        object Memo26: TfrxMemoView
+          AllowVectorExport = True
+          Left = 391.645950000000000000
+          Top = 128.504020000000000000
+          Width = 52.913420000000000000
+          Height = 11.338590000000000000
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
           Font.Style = [fsBold]
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
+          Frame.Typ = [ftBottom]
           HAlign = haCenter
           Memo.UTF8W = (
-            'NF-e'
-            'N'#186' [Identificacao."NNF"]'
-            'S'#233'rie [Identificacao."Serie" #n#000]')
-          ParentFont = False
-          VAlign = vaCenter
-        end
-        object Line3: TfrxLineView
-          Align = baWidth
-          AllowVectorExport = True
-          Top = 4.929190000000000000
-          Width = 744.567410000000000000
-          Color = clBlack
-          Frame.Style = fsDot
-          Frame.Typ = [ftTop]
-          Frame.Width = 0.500000000000000000
-        end
-      end
-      object ISSQN: TfrxChild
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 43.354342910000000000
-        Top = 1666.772730000000000000
-        Width = 744.567410000000000000
-        ToNRows = 0
-        ToNRowsMode = rmCount
-        object Memo147: TfrxMemoView
-          AllowVectorExport = True
-          Width = 430.866420000000000000
-          Height = 13.228344020000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = [fsBold]
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          Memo.UTF8W = (
-            'C'#193'LCULO DO ISSQN')
-          ParentFont = False
-          VAlign = vaBottom
-        end
-        object Memo148: TfrxMemoView
-          AllowVectorExport = True
-          Top = 16.897650000000100000
-          Width = 217.322859060000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'INSCRI'#199#195'O MUNICIPAL')
+            'NCM')
           ParentFont = False
         end
-        object Memo149: TfrxMemoView
+        object Memo28: TfrxMemoView
           AllowVectorExport = True
-          Top = 26.346390790000000000
-          Width = 217.322859060000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          Memo.UTF8W = (
-            '[Emitente."IM"]')
-          ParentFont = False
-          VAlign = vaBottom
-        end
-        object Memo150: TfrxMemoView
-          AllowVectorExport = True
-          Left = 217.322859060000000000
-          Top = 16.897650000000100000
-          Width = 179.527559060000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'VALOR TOTAL DOS SERVI'#199'OS')
-          ParentFont = False
-        end
-        object Memo151: TfrxMemoView
-          AllowVectorExport = True
-          Left = 217.322859060000000000
-          Top = 26.346390790000000000
-          Width = 179.527559060000000000
-          Height = 17.007874020000000000
-          DisplayFormat.FormatStr = '%2.2n'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[ISSQN."VServ"]')
-          ParentFont = False
-          VAlign = vaBottom
-        end
-        object Memo152: TfrxMemoView
-          AllowVectorExport = True
-          Left = 396.850418110000000000
-          Top = 16.897650000000100000
-          Width = 179.527559060000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'BASE DE C'#193'LCULO DO ISSQN')
-          ParentFont = False
-        end
-        object Memo153: TfrxMemoView
-          AllowVectorExport = True
-          Left = 396.850418110000000000
-          Top = 26.346390790000000000
-          Width = 179.527559060000000000
-          Height = 17.007874020000000000
-          DisplayFormat.FormatStr = '%2.2n'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[ISSQN."VBC"]')
-          ParentFont = False
-          VAlign = vaBottom
-        end
-        object Memo154: TfrxMemoView
-          AllowVectorExport = True
-          Left = 576.377977170000000000
-          Top = 16.897650000000100000
-          Width = 168.188969060000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'VALOR TOTAL DO ISSQN')
-          ParentFont = False
-        end
-        object Memo155: TfrxMemoView
-          AllowVectorExport = True
-          Left = 576.377977170000000000
-          Top = 26.346390790000000000
-          Width = 164.409439060000000000
-          Height = 17.007874020000000000
-          DisplayFormat.FormatStr = '%2.2n'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[ISSQN."VISS"]')
-          ParentFont = False
-          VAlign = vaBottom
-        end
-      end
-      object DadosAdicionais: TfrxChild
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 150.850415670000000000
-        Top = 1734.804270000000000000
-        Width = 744.567410000000000000
-        OnAfterPrint = 'DadosAdicionaisOnAfterPrint'
-        AllowSplit = True
-        ToNRows = 0
-        ToNRowsMode = rmCount
-        object Memo66: TfrxMemoView
-          AllowVectorExport = True
-          Left = 487.559055120000000000
-          Top = 18.566946220000000000
-          Width = 257.007852050000000000
-          Height = 124.724409450000000000
-          StretchMode = smMaxHeight
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'RESERVADO AO FISCO')
-          ParentFont = False
-        end
-        object Memo137: TfrxMemoView
-          AllowVectorExport = True
-          Top = 18.566946220000000000
-          Width = 487.559055120000000000
-          Height = 124.724402130000000000
-          StretchMode = smMaxHeight
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'INFORMA'#199#213'ES COMPLEMENTARES')
-          ParentFont = False
-        end
-        object memObs: TfrxMemoView
-          AllowVectorExport = True
-          Top = 25.771629130000000000
-          Width = 485.669288900000000000
-          Height = 117.165354330000000000
-          AllowHTMLTags = True
-          FlowTo = fR_RELATORIO.memContInfAdicionais
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            '[Trim(<InformacoesAdicionais."OBS">)]')
-          ParentFont = False
-          WordBreak = True
-        end
-        object Memo146: TfrxMemoView
-          AllowVectorExport = True
-          Top = 3.779530000000020000
-          Width = 430.866420000000000000
-          Height = 13.228344020000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = [fsBold]
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          Memo.UTF8W = (
-            'DADOS ADICIONAIS')
-          ParentFont = False
-          VAlign = vaBottom
-        end
-        object Memo180: TfrxMemoView
-          AllowVectorExport = True
-          Left = 487.559370000000000000
-          Top = 25.700787400000000000
-          Width = 255.118110240000000000
-          Height = 117.165354330000000000
-          AllowHTMLTags = True
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            '[Trim(<InformacoesAdicionais."MensagemSEFAZ">)]')
-          ParentFont = False
-          WordBreak = True
-        end
-      end
-      object Duplicatas: TfrxMasterData
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 37.795300000000000000
-        Top = 963.780150000000000000
-        Width = 744.567410000000000000
-        Columns = 5
-        ColumnWidth = 148.913385826772000000
-        DataSetName = 'Duplicatas'
-        RowCount = 0
-        object Shape1: TfrxShapeView
-          Align = baClient
-          AllowVectorExport = True
-          Width = 744.567410000000000000
-          Height = 37.795300000000000000
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-        end
-        object Memo63: TfrxMemoView
-          AllowVectorExport = True
-          Width = 148.913385830000000000
-          Height = 37.795275590000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapX = 3.000000000000000000
-          Memo.UTF8W = (
-            'N'#250'mero'
-            'Vencimento'
-            'Valor')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-        object Memo138: TfrxMemoView
-          AllowVectorExport = True
-          Left = 56.692950000000000000
-          Width = 3.779530000000000000
-          Height = 37.795275590000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          LineSpacing = 3.000000000000000000
-          Memo.UTF8W = (
-            ':'
-            ':'
-            ':')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-        object Memo64: TfrxMemoView
-          AllowVectorExport = True
-          Left = 60.472480000000000000
-          Width = 86.929190000000000000
-          Height = 12.472440940000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 3.000000000000000000
-          Memo.UTF8W = (
-            '[Duplicatas."NDup"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-        object Memo65: TfrxMemoView
-          AllowVectorExport = True
-          Left = 60.472480000000000000
-          Top = 12.472440940000000000
-          Width = 86.929190000000000000
-          Height = 12.472440940000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 3.000000000000000000
-          Memo.UTF8W = (
-            '[Duplicatas."DVenc"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-        object Memo156: TfrxMemoView
-          AllowVectorExport = True
-          Left = 60.472480000000000000
-          Top = 24.944881890000000000
-          Width = 86.929190000000000000
-          Height = 12.472440940000000000
+          Left = 555.929500000000000000
+          Top = 128.944960000000000000
+          Width = 37.795300000000000000
+          Height = 11.338590000000000000
           DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftBottom]
+          HAlign = haRight
+          Memo.UTF8W = (
+            '% Desc')
+          ParentFont = False
+        end
+      end
+      object GroupFooter2: TfrxGroupFooter
+        FillType = ftBrush
+        Frame.Typ = []
+        Height = 102.047310000000000000
+        Top = 502.677490000000000000
+        Width = 718.110700000000000000
+        object Memo15: TfrxMemoView
+          AllowVectorExport = True
+          Left = 619.842920000000000000
+          Top = 3.779530000000020000
+          Width = 94.488250000000000000
+          Height = 15.118120000000000000
+          DisplayFormat.DecimalSeparator = '.'
           DisplayFormat.FormatStr = '%2.2m'
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 3.000000000000000000
-          Memo.UTF8W = (
-            '[Duplicatas."VDup"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-      end
-      object DuplicatasHeader: TfrxGroupHeader
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 17.007874020000000000
-        Top = 922.205320000000000000
-        Width = 744.567410000000000000
-        Condition = 'Duplicatas."ChaveNFe"'
-        ReprintOnNewPage = True
-        object Memo205: TfrxMemoView
-          AllowVectorExport = True
-          Top = 3.779530000000020000
-          Width = 430.866420000000000000
-          Height = 13.228344020000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
+          Font.Name = 'Arial'
           Font.Style = [fsBold]
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          Memo.UTF8W = (
-            'PARCELAS')
-          ParentFont = False
-          VAlign = vaBottom
-        end
-      end
-      object Volumes: TfrxMasterData
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 26.456692910000000000
-        Top = 1303.937850000000000000
-        Width = 744.567410000000000000
-        DataSetName = 'Volumes'
-        RowCount = 0
-        object Memo182: TfrxMemoView
-          AllowVectorExport = True
-          Top = 7.559023389999990000
-          Width = 59.212636670000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
+          Frame.Typ = [ftTop]
           HAlign = haRight
-          HideZeros = True
           Memo.UTF8W = (
-            '[Volumes."QVol"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo184: TfrxMemoView
-          AllowVectorExport = True
-          Left = 59.212636670000000000
-          Top = 7.559023389999990000
-          Width = 153.700886670000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          Memo.UTF8W = (
-            '[Volumes."Esp"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo187: TfrxMemoView
-          AllowVectorExport = True
-          Left = 212.913523330000000000
-          Top = 7.559023389999990000
-          Width = 142.362296670000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          Memo.UTF8W = (
-            '[Volumes."Marca"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo157: TfrxMemoView
-          AllowVectorExport = True
-          Left = 355.275820000000000000
-          Top = 7.559023389999990000
-          Width = 161.259946670000000000
-          Height = 17.007874020000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          Memo.UTF8W = (
-            '[Volumes."NVol"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo194: TfrxMemoView
-          AllowVectorExport = True
-          Left = 516.535766670000000000
-          Top = 7.559023389999990000
-          Width = 119.685116670000000000
-          Height = 17.007874020000000000
-          DisplayFormat.DecimalSeparator = ','
-          DisplayFormat.FormatStr = '%2.3n'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haRight
-          HideZeros = True
-          Memo.UTF8W = (
-            '[Volumes."PesoB"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo158: TfrxMemoView
-          AllowVectorExport = True
-          Left = 636.220883330000000000
-          Top = 7.559023389999990000
-          Width = 108.346526670000000000
-          Height = 17.007874020000000000
-          DisplayFormat.DecimalSeparator = ','
-          DisplayFormat.FormatStr = '%2.3n'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          HAlign = haRight
-          HideZeros = True
-          Memo.UTF8W = (
-            '[Volumes."PesoL"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object Memo159: TfrxMemoView
-          AllowVectorExport = True
-          Top = 0.110282600000005000
-          Width = 59.212636670000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HideZeros = True
-          Memo.UTF8W = (
-            'QUANTIDADE')
+            '[SUM(<dst_palm_pedidos."SUB_TOTAL">,DetailData1)]')
           ParentFont = False
         end
-        object Memo160: TfrxMemoView
-          AllowVectorExport = True
-          Left = 59.212636670000000000
-          Top = 0.110282600000005000
-          Width = 153.700886670000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'ESP'#201'CIE')
-          ParentFont = False
-        end
-        object Memo176: TfrxMemoView
-          AllowVectorExport = True
-          Left = 212.913523330000000000
-          Top = 0.110282600000005000
-          Width = 142.362296670000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'MARCA')
-          ParentFont = False
-        end
-        object Memo177: TfrxMemoView
-          AllowVectorExport = True
-          Left = 355.275820000000000000
-          Top = 0.110282600000005000
-          Width = 161.259946670000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'NUMERA'#199#195'O')
-          ParentFont = False
-        end
-        object Memo178: TfrxMemoView
-          AllowVectorExport = True
-          Left = 516.535766670000000000
-          Top = 0.110282600000000000
-          Width = 119.685116670000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'PESO BRUTO (KG)')
-          ParentFont = False
-        end
-        object Memo179: TfrxMemoView
-          AllowVectorExport = True
-          Left = 636.094488190000000000
-          Top = 0.110282600000000000
-          Width = 108.472433620000000000
-          Height = 26.456692910000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'PESO L'#205'QUIDO (KG)')
-          ParentFont = False
-        end
-      end
-      object ContDadosAdicionais: TfrxMasterData
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 30.207317350000000000
-        Top = 2139.213980000000000000
-        Visible = False
-        Width = 744.567410000000000000
-        RowCount = 1
-        Stretched = True
-        object memoContDadosAdicionais: TfrxMemoView
-          AllowVectorExport = True
-          Width = 744.567410000000000000
-          Height = 30.207317350000000000
-          StretchMode = smMaxHeight
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'CONTINUACAO DAS INFORMA'#199#213'ES COMPLEMENTARES')
-          ParentFont = False
-        end
-        object memContInfAdicionais: TfrxMemoView
-          AllowVectorExport = True
-          Top = 3.779527560000000000
-          Width = 744.567410000000000000
-          Height = 30.207317350000000000
-          StretchMode = smMaxHeight
-          AllowHTMLTags = True
-          ExpressionDelimiters = '[%,%]'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 3.000000000000000000
-          GapY = 10.000000000000000000
-          ParentFont = False
-        end
-      end
-      object LocalRetirada: TfrxMasterData
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 96.377952760000000000
-        Top = 623.622450000000000000
-        Width = 744.567410000000000000
-        DataSetName = 'LocalRetirada'
-        RowCount = 0
-        object quadroRetiradaNomeRazao: TfrxMemoView
-          AllowVectorExport = True
-          Top = 16.251968500000000000
-          Width = 468.661720000000000000
-          Height = 24.566929130000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'NOME / RAZ'#195'O SOCIAL')
-          ParentFont = False
-        end
-        object quadroRetiradaDocumento: TfrxMemoView
-          AllowVectorExport = True
-          Left = 549.921259842520000000
-          Top = 16.251968500000000000
-          Width = 98.267780000000000000
-          Height = 24.566929130000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'CNPJ / CPF')
-          ParentFont = False
-        end
-        object nemLocalRetirada: TfrxMemoView
-          AllowVectorExport = True
-          Top = 3.779530000000000000
-          Width = 430.866420000000000000
-          Height = 13.228344020000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = [fsBold]
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          Memo.UTF8W = (
-            'INFORMA'#199#213'ES DO LOCAL DE RETIRADA')
-          ParentFont = False
-          VAlign = vaBottom
-        end
-        object quadroRetiradaMemo01: TfrxMemoView
-          AllowVectorExport = True
-          ShiftMode = smWhenOverlapped
-          Top = 17.007874020000000000
-          Width = 548.031496060000000000
-          Height = 26.456692913385800000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          GapY = 3.000000000000000000
-          Memo.UTF8W = (
-            '[LocalRetirada."XNome"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object quadroRetiradainscricao: TfrxMemoView
-          AllowVectorExport = True
-          Left = 663.307086614173100000
-          Top = 16.251968500000000000
-          Width = 98.267780000000000000
-          Height = 24.566929130000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'INSCRI'#199#195'O ESTADUAL')
-          ParentFont = False
-        end
-        object quadroRetiradaMemo02: TfrxMemoView
-          AllowVectorExport = True
-          ShiftMode = smWhenOverlapped
-          Left = 548.031496060000000000
-          Top = 17.007874020000000000
-          Width = 113.385826770000000000
-          Height = 26.456692913385800000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          GapY = 3.000000000000000000
-          Memo.UTF8W = (
-            '[LocalRetirada."CNPJ"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object quadroRetiradaMemo03: TfrxMemoView
-          AllowVectorExport = True
-          ShiftMode = smWhenOverlapped
-          Left = 661.417322830000000000
-          Top = 17.007874020000000000
-          Width = 83.149606300000000000
-          Height = 26.456692913385800000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          GapY = 3.000000000000000000
-          Memo.UTF8W = (
-            '[LocalRetirada."IE"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object quadroRetiradaMemo04: TfrxMemoView
-          AllowVectorExport = True
-          ShiftMode = smWhenOverlapped
-          Top = 43.464566929133900000
-          Width = 453.543307086614000000
-          Height = 26.456692913385800000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          GapY = 3.000000000000000000
-          Memo.UTF8W = (
-            
-              '[LocalRetirada."XLgr"] [LocalRetirada."Nro"] [LocalRetirada."XCp' +
-              'l"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-          Formats = <
-            item
-            end
-            item
-            end
-            item
-            end
-            item
-            end
-            item
-            end
-            item
-            end
-            item
-            end
-            item
-            end
-            item
-            end>
-        end
-        object quadroRetiradaMemo07: TfrxMemoView
-          AllowVectorExport = True
-          ShiftMode = smWhenOverlapped
-          Top = 69.921259842519710000
-          Width = 744.566929130000000000
-          Height = 26.456692913385800000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          GapY = 3.000000000000000000
-          Memo.UTF8W = (
-            '[LocalRetirada."XMun"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object quadroRetiradaEndereco: TfrxMemoView
-          AllowVectorExport = True
-          Top = 42.708661420000000000
-          Width = 377.952755910000000000
-          Height = 24.566929130000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'ENDERE'#199'O')
-          ParentFont = False
-        end
-        object quadroRetiradaMunicipio: TfrxMemoView
-          AllowVectorExport = True
-          Top = 69.165354330708700000
-          Width = 543.496062990000000000
-          Height = 24.566929130000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'MUNIC'#205'PIO')
-          ParentFont = False
-        end
-        object quadroRetiradaBairro: TfrxMemoView
-          AllowVectorExport = True
-          Left = 455.433070866142000000
-          Top = 42.708661417322800000
-          Width = 294.803340000000000000
-          Height = 24.566929130000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'BAIRRO / DISTRITO')
-          ParentFont = False
-        end
-        object quadroRetiradaCep: TfrxMemoView
-          AllowVectorExport = True
-          Left = 663.307086614173100000
-          Top = 42.708661417322800000
-          Width = 79.370027480000000000
-          Height = 24.566929130000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'CEP')
-          ParentFont = False
-        end
-        object quadroRetiradaMemo05: TfrxMemoView
-          AllowVectorExport = True
-          ShiftMode = smWhenOverlapped
-          Left = 453.543307090000000000
-          Top = 43.464566929133900000
-          Width = 200.314980160000000000
-          Height = 26.456692913385800000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft]
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          GapY = 3.000000000000000000
-          Memo.UTF8W = (
-            '[LocalRetirada."XBairro"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-          Formats = <
-            item
-            end
-            item
-            end
-            item
-            end>
-        end
-        object quadroRetiradaMemo09: TfrxMemoView
-          AllowVectorExport = True
-          ShiftMode = smWhenOverlapped
-          Left = 661.417322834646000000
-          Top = 69.921259842519710000
-          Width = 83.149606299212600000
-          Height = 26.456692913385800000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          GapY = 3.000000000000000000
-          Memo.UTF8W = (
-            '[LocalRetirada."Fone"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object quadroRetiradaMemo08: TfrxMemoView
-          AllowVectorExport = True
-          ShiftMode = smWhenOverlapped
-          Left = 631.181102360000000000
-          Top = 69.921259842519710000
-          Width = 24.566929133858300000
-          Height = 26.456692913385800000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          GapY = 3.000000000000000000
-          Memo.UTF8W = (
-            '[LocalRetirada."UF"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object quadroRetiradaUf: TfrxMemoView
-          AllowVectorExport = True
-          Left = 633.070866140000000000
-          Top = 69.165354330000000000
-          Width = 22.677165350000000000
-          Height = 24.188976380000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'UF')
-          ParentFont = False
-        end
-        object quadroRetiradaMemo06: TfrxMemoView
-          AllowVectorExport = True
-          ShiftMode = smWhenOverlapped
-          Left = 661.417322834646000000
-          Top = 43.464566929133900000
-          Width = 83.149606300000000000
-          Height = 26.456692913385800000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight]
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          GapY = 3.000000000000000000
-          Memo.UTF8W = (
-            '[LocalRetirada."CEP"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-          Formats = <
-            item
-            end
-            item
-            end
-            item
-            end>
-        end
-        object quadroRetiradaTelefone: TfrxMemoView
-          AllowVectorExport = True
-          Left = 663.307086610000000000
-          Top = 69.165354330000000000
-          Width = 79.370027480000000000
-          Height = 24.566929130000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'TELEFONE / FAX')
-          ParentFont = False
-        end
-      end
-      object LocalEntrega: TfrxMasterData
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 94.488188970000000000
-        Top = 744.567410000000000000
-        Width = 744.567410000000000000
-        DataSetName = 'LocalEntrega'
-        RowCount = 0
-        object quadroEntregaMemo06: TfrxMemoView
-          AllowVectorExport = True
-          Left = 661.417322830000000000
-          Top = 43.464566930000000000
-          Width = 83.149606300000000000
-          Height = 26.456692910000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          GapY = 3.000000000000000000
-          Memo.UTF8W = (
-            '[LocalEntrega."CEP"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object MenlocalDeEnrega: TfrxMemoView
-          AllowVectorExport = True
-          Top = 3.779530000000000000
-          Width = 430.866420000000000000
-          Height = 13.228344020000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = [fsBold]
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          Memo.UTF8W = (
-            'INFORMA'#199#213'ES DO LOCAL DE ENTREGA')
-          ParentFont = False
-          VAlign = vaBottom
-        end
-        object quadroEntregaNomeRazao: TfrxMemoView
-          AllowVectorExport = True
-          Top = 16.251968500000000000
-          Width = 468.661720000000000000
-          Height = 24.566929130000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'NOME / RAZ'#195'O SOCIAL')
-          ParentFont = False
-        end
-        object quadroEntregaMemo01: TfrxMemoView
-          AllowVectorExport = True
-          ShiftMode = smWhenOverlapped
-          Top = 17.007874020000000000
-          Width = 548.031496060000000000
-          Height = 26.456692910000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          GapY = 3.000000000000000000
-          Memo.UTF8W = (
-            '[LocalEntrega."XNome"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object quadroEntregaMemo02: TfrxMemoView
-          AllowVectorExport = True
-          ShiftMode = smWhenOverlapped
-          Left = 548.031496062992000000
-          Top = 17.007874020000000000
-          Width = 113.385826771654000000
-          Height = 26.456692913385800000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          GapY = 3.000000000000000000
-          Memo.UTF8W = (
-            '[LocalEntrega."CNPJ"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object quadroEntregaDocumento: TfrxMemoView
-          AllowVectorExport = True
-          Left = 549.921259842520000000
-          Top = 16.251968500000000000
-          Width = 94.488188976378000000
-          Height = 24.566929130000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'CNPJ / CPF')
-          ParentFont = False
-        end
-        object quadroEntregaMemo09: TfrxMemoView
-          AllowVectorExport = True
-          ShiftMode = smWhenOverlapped
-          Left = 661.417322834646000000
-          Top = 69.921259842519710000
-          Width = 83.149606299212600000
-          Height = 24.566929130000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          GapY = 3.000000000000000000
-          Memo.UTF8W = (
-            '[LocalEntrega."Fone"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object quadroEntregaMemo05: TfrxMemoView
-          AllowVectorExport = True
-          ShiftMode = smWhenOverlapped
-          Left = 453.543307090000000000
-          Top = 43.464566930000000000
-          Width = 207.874040160000000000
-          Height = 26.456692910000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          GapY = 3.000000000000000000
-          Memo.UTF8W = (
-            '[LocalEntrega."XBairro"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object quadroEntregaUf: TfrxMemoView
-          AllowVectorExport = True
-          Left = 633.070866141732000000
-          Top = 69.165354330708700000
-          Width = 22.677165354330700000
-          Height = 24.566929130000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'UF')
-          ParentFont = False
-        end
-        object quadroEntregaTelefone: TfrxMemoView
-          AllowVectorExport = True
-          Left = 663.307086610000000000
-          Top = 69.165354330708700000
-          Width = 75.590551180000000000
-          Height = 24.566929130000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'TELEFONE / FAX')
-          ParentFont = False
-        end
-        object quadroEntregaInscricao: TfrxMemoView
-          AllowVectorExport = True
-          Left = 663.307086614173100000
-          Top = 16.251968500000000000
-          Width = 98.267780000000000000
-          Height = 24.566929130000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'INSCRI'#199#195'O ESTADUAL')
-          ParentFont = False
-        end
-        object quadroEntregaEndereco: TfrxMemoView
-          AllowVectorExport = True
-          Top = 42.708661417322800000
-          Width = 468.661720000000000000
-          Height = 24.566929130000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'ENDERE'#199'O')
-          ParentFont = False
-        end
-        object quadroEntregaBairro: TfrxMemoView
-          AllowVectorExport = True
-          Left = 455.433070870000000000
-          Top = 42.708661420000000000
-          Width = 188.976377950000000000
-          Height = 24.566929130000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'BAIRRO / DISTRITO')
-          ParentFont = False
-        end
-        object quadroEntregaCep: TfrxMemoView
-          AllowVectorExport = True
-          Left = 663.307086610000000000
-          Top = 42.708661420000000000
-          Width = 75.590551180000000000
-          Height = 24.566929130000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'CEP')
-          ParentFont = False
-        end
-        object quadroEntregaMunicipio: TfrxMemoView
-          AllowVectorExport = True
-          Top = 69.165354330708700000
-          Width = 468.661720000000000000
-          Height = 24.566929130000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'MUNIC'#205'PIO')
-          ParentFont = False
-        end
-        object quadroEntregaMemo03: TfrxMemoView
-          AllowVectorExport = True
-          ShiftMode = smWhenOverlapped
-          Left = 661.417322834646000000
-          Top = 17.007874020000000000
-          Width = 83.149606300000000000
-          Height = 26.456692913385800000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          GapY = 3.000000000000000000
-          Memo.UTF8W = (
-            '[LocalEntrega."IE"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object quadroEntregaMemo04: TfrxMemoView
-          AllowVectorExport = True
-          ShiftMode = smWhenOverlapped
-          Top = 43.464566930000000000
-          Width = 453.543307090000000000
-          Height = 26.456692910000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          GapY = 3.000000000000000000
-          Memo.UTF8W = (
-            '[LocalEntrega."XLgr"] [LocalEntrega."Nro"] [LocalEntrega."XCpl"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-          Formats = <
-            item
-            end
-            item
-            end
-            item
-            end>
-        end
-        object quadroEntregaMemo07: TfrxMemoView
-          AllowVectorExport = True
-          ShiftMode = smWhenOverlapped
-          Top = 69.921259840000000000
-          Width = 631.181029130000000000
-          Height = 24.566929130000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          GapY = 3.000000000000000000
-          Memo.UTF8W = (
-            '[LocalEntrega."XMun"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-        object quadroEntregaMemo08: TfrxMemoView
-          AllowVectorExport = True
-          ShiftMode = smWhenOverlapped
-          Left = 631.181102360000000000
-          Top = 69.921259840000000000
-          Width = 28.346459130000000000
-          Height = 24.566929130000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapX = 5.000000000000000000
-          GapY = 3.000000000000000000
-          Memo.UTF8W = (
-            '[LocalEntrega."UF"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaBottom
-        end
-      end
-      object CanhtoCabecalhoBarra: TfrxChild
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 98.267716540000000000
-        Top = 147.401670000000000000
-        Width = 744.567410000000000000
-        ToNRows = 0
-        ToNRowsMode = rmCount
         object Memo5: TfrxMemoView
           AllowVectorExport = True
-          Left = 147.401670000000000000
-          Top = 37.795275590000000000
-          Width = 307.937230000000000000
-          Height = 49.133890000000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'IDENTIFICA'#199#195'O E ASSINATURA DO RECEBEDOR')
-          ParentFont = False
-        end
-        object Memo54: TfrxMemoView
-          AllowVectorExport = True
-          Left = 453.543307090000000000
-          Width = 291.023810000000000000
-          Height = 37.795256060000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -13
-          Font.Name = 'Times New Roman'
-          Font.Style = [fsBold]
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            
-              'NF-e N'#186' [Identificacao."NNF"]  S'#233'rie [Identificacao."Serie" #n#0' +
-              '00]')
-          ParentFont = False
-          VAlign = vaCenter
-          Formats = <
-            item
-            end
-            item
-            end>
-        end
-        object Memo57: TfrxMemoView
-          AllowVectorExport = True
-          Top = 37.795275590000000000
-          Width = 145.511811020000000000
-          Height = 49.133890000000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'DATA DO RECEBIMENTO')
-          ParentFont = False
-        end
-        object Line5: TfrxLineView
-          AllowVectorExport = True
-          Left = 3.779527560000000000
-          Top = 92.708720000000000000
-          Width = 744.567410000000000000
-          Color = clBlack
-          Frame.Style = fsDot
-          Frame.Typ = [ftTop]
-          Frame.Width = 0.500000000000000000
-        end
-        object Memo104: TfrxMemoView
-          AllowVectorExport = True
-          Left = 453.543307090000000000
-          Top = 37.795275590000000000
-          Width = 291.023622050000000000
-          Height = 49.133890000000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Arial'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          ParentFont = False
-        end
-        object BarCode1: TfrxBarCodeView
-          AllowVectorExport = True
-          Left = 459.212598430000000000
-          Top = 43.574830000000000000
-          Width = 278.000000000000000000
-          Height = 37.795275590000000000
-          BarType = bcCode128C
-          DataField = 'Id'
-          DataSetName = 'Identificacao'
-          Frame.Typ = []
-          Rotation = 0
-          ShowText = False
-          TestLine = False
-          Text = '12345678901234567890123456789012345678901234'
-          WideBarRatio = 2.000000000000000000
-          Zoom = 1.000000000000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -12
-          Font.Name = 'Arial'
-          Font.Style = []
-          ColorBar = clBlack
-        end
-        object Memo105: TfrxMemoView
-          Align = baWidth
-          AllowVectorExport = True
-          Width = 453.543307090000000000
-          Height = 37.795275590000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            
-              'Recebemos de [Emitente."XNome"] os produtos e/ou servi'#231'os consta' +
-              'ntes da Nota '
-            'Fiscal Eletr'#244'nica indicada ao lado. '
-            '[Parametros."ResumoCanhoto"]')
-          ParentFont = False
-          WordWrap = False
-          Formats = <
-            item
-            end
-            item
-            end>
-        end
-      end
-      object CanhotoCabecalhoPadrao: TfrxChild
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 79.370078740000000000
-        Top = 45.354360000000000000
-        Width = 744.567410000000000000
-        Child = fR_RELATORIO.CanhtoCabecalhoBarra
-        ToNRows = 0
-        ToNRowsMode = rmCount
-        object Memo2: TfrxMemoView
-          AllowVectorExport = True
-          Width = 641.299630000000000000
-          Height = 37.795275590000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            
-              'Recebemos de [Emitente."XNome"] os produtos e/ou servi'#231'os consta' +
-              'ntes da Nota Fiscal Eletr'#244'nica indicada ao lado. '
-            '[Parametros."ResumoCanhoto"]')
-          ParentFont = False
-          WordWrap = False
-        end
-        object Memo3: TfrxMemoView
-          AllowVectorExport = True
-          Left = 145.511811020000000000
-          Top = 37.795275590000000000
-          Width = 495.118110240000000000
-          Height = 30.236240000000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'IDENTIFICA'#199#195'O E ASSINATURA DO RECEBEDOR')
-          ParentFont = False
-        end
-        object Memo4: TfrxMemoView
-          Align = baWidth
-          AllowVectorExport = True
-          Top = 37.795275590000000000
-          Width = 145.511811020000000000
-          Height = 30.236240000000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'DATA DO RECEBIMENTO')
-          ParentFont = False
-        end
-        object Line1: TfrxLineView
-          Align = baWidth
-          AllowVectorExport = True
-          Top = 73.811070000000000000
-          Width = 744.567410000000000000
-          Color = clBlack
-          Frame.Style = fsDot
-          Frame.Typ = [ftTop]
-          Frame.Width = 0.500000000000000000
-        end
-        object Memo17: TfrxMemoView
-          AllowVectorExport = True
-          Left = 640.629921260000000000
-          Width = 102.047212360000000000
-          Height = 68.031496060000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -13
-          Font.Name = 'Times New Roman'
-          Font.Style = [fsBold]
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            'NF-e'
-            'N'#186' [Identificacao."NNF"]'
-            'S'#233'rie [Identificacao."Serie" #n#000]')
-          ParentFont = False
-          VAlign = vaCenter
-        end
-      end
-      object CanhotoRodapeBarra: TfrxChild
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 105.826771650000000000
-        Top = 2010.709960000000000000
-        Visible = False
-        Width = 744.567410000000000000
-        ToNRows = 0
-        ToNRowsMode = rmCount
-        object Line4: TfrxLineView
-          Align = baWidth
-          AllowVectorExport = True
-          Top = 4.929190000000060000
-          Width = 744.567410000000000000
-          Color = clBlack
-          Frame.Style = fsDot
-          Frame.Typ = [ftTop]
-          Frame.Width = 0.500000000000000000
-        end
-        object Memo55: TfrxMemoView
-          AllowVectorExport = True
-          Top = 13.629870000000000000
-          Width = 453.543600000000000000
-          Height = 37.795275590000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            
-              'Recebemos de [Emitente."XNome"] os produtos e/ou servi'#231'os consta' +
-              'ntes da Nota '
-            'Fiscal Eletr'#244'nica indicada ao lado. '
-            '[Parametros."ResumoCanhoto"]')
-          ParentFont = False
-          WordWrap = False
-          Formats = <
-            item
-            end
-            item
-            end>
-        end
-        object Memo56: TfrxMemoView
-          AllowVectorExport = True
-          Left = 143.622047244094000000
-          Top = 51.425145590000000000
-          Width = 309.921460000000000000
-          Height = 49.133890000000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'IDENTIFICA'#199#195'O E ASSINATURA DO RECEBEDOR')
-          ParentFont = False
-        end
-        object Memo81: TfrxMemoView
-          AllowVectorExport = True
-          Top = 51.425145590000000000
-          Width = 143.622140000000000000
-          Height = 49.133890000000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          Memo.UTF8W = (
-            'DATA DO RECEBIMENTO')
-          ParentFont = False
-        end
-        object Memo106: TfrxMemoView
-          AllowVectorExport = True
-          Left = 453.543307086614000000
-          Top = 13.968460000000000000
-          Width = 291.023810000000000000
-          Height = 37.795256060000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
-          Font.Height = -13
-          Font.Name = 'Times New Roman'
-          Font.Style = [fsBold]
-          Frame.Typ = [ftLeft, ftRight, ftTop]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          HAlign = haCenter
-          Memo.UTF8W = (
-            
-              'NF-e N'#186' [Identificacao."NNF"]  S'#233'rie [Identificacao."Serie" #n#0' +
-              '00]')
-          ParentFont = False
-          VAlign = vaCenter
-          Formats = <
-            item
-            end
-            item
-            end>
-        end
-        object Memo107: TfrxMemoView
-          AllowVectorExport = True
-          Left = 453.543307086614000000
-          Top = 51.322820000000000000
-          Width = 291.023602520000000000
-          Height = 49.133890000000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -7
-          Font.Name = 'Arial'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapY = 2.000000000000000000
-          ParentFont = False
-        end
-        object BarCode2: TfrxBarCodeView
-          AllowVectorExport = True
-          Left = 461.102362204724000000
-          Top = 55.543290000000000000
-          Width = 278.000000000000000000
-          Height = 37.795275590000000000
-          BarType = bcCode128C
-          DataField = 'Id'
-          DataSetName = 'Identificacao'
-          Frame.Typ = []
-          Rotation = 0
-          ShowText = False
-          TestLine = False
-          Text = '12345678901234567890123456789012345678901234'
-          WideBarRatio = 2.000000000000000000
-          Zoom = 1.000000000000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -12
-          Font.Name = 'Arial'
-          Font.Style = []
-          ColorBar = clBlack
-        end
-      end
-      object Pagamentos: TfrxMasterData
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 26.456692910000000000
-        Top = 1065.827460000000000000
-        Width = 744.567410000000000000
-        Columns = 5
-        ColumnWidth = 148.913385826772000000
-        DataSetName = 'Pagamento'
-        RowCount = 0
-        object Shape2: TfrxShapeView
-          Align = baClient
-          AllowVectorExport = True
-          Width = 744.567410000000000000
-          Height = 26.456692910000000000
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-        end
-        object Memo181: TfrxMemoView
-          AllowVectorExport = True
-          Width = 148.913385830000000000
-          Height = 26.456685590000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          GapX = 3.000000000000000000
-          Memo.UTF8W = (
-            'Descri'#231#227'o'
-            'Valor')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-        object Memo183: TfrxMemoView
-          AllowVectorExport = True
-          Left = 49.133890000000000000
-          Width = 3.779530000000000000
-          Height = 26.456692910000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -8
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = [ftTop, ftBottom]
-          Frame.Width = 0.500000000000000000
-          LineSpacing = 3.000000000000000000
-          Memo.UTF8W = (
-            ':'
-            ':')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-        object Memo185: TfrxMemoView
-          AllowVectorExport = True
-          Left = 52.913420000000000000
-          Width = 94.488250000000000000
-          Height = 12.472440940000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 3.000000000000000000
-          Memo.UTF8W = (
-            '[Pagamento."tPag"]')
-          ParentFont = False
-          WordWrap = False
-        end
-        object Memo188: TfrxMemoView
-          AllowVectorExport = True
-          Left = 52.913420000000000000
-          Top = 13.606291890000000000
-          Width = 94.488250000000000000
-          Height = 12.472440940000000000
+          Left = 7.559060000000000000
+          Top = 22.677180000000100000
+          Width = 702.992580000000000000
+          Height = 71.811070000000000000
+          DataSet = Dm.dst_palm_pedidos
+          DataSetName = 'dst_palm_pedidos'
           DisplayFormat.DecimalSeparator = ','
-          DisplayFormat.FormatStr = '%2.2m'
+          DisplayFormat.FormatStr = '%2.2n'
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Frame.Typ = []
-          Frame.Width = 0.500000000000000000
-          GapX = 3.000000000000000000
-          Memo.UTF8W = (
-            '[Pagamento."vPag"]')
-          ParentFont = False
-          WordWrap = False
-          VAlign = vaCenter
-        end
-      end
-      object PagamentosHeader: TfrxGroupHeader
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 17.007874020000000000
-        Top = 1024.252630000000000000
-        Width = 744.567410000000000000
-        Condition = 'Length(<Pagamento."tPag">) > 0'
-        ReprintOnNewPage = True
-        object Memo191: TfrxMemoView
-          AllowVectorExport = True
-          Top = 3.779530000000020000
-          Width = 430.866420000000000000
-          Height = 13.228344020000000000
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clBlack
           Font.Height = -9
-          Font.Name = 'Times New Roman'
+          Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = []
-          Frame.Width = 0.500000000000000000
+          HAlign = haBlock
           Memo.UTF8W = (
-            'PAGAMENTOS')
+            '[dst_palm_pedidos."OBSERVACOES_PEDIDO"]')
           ParentFont = False
-          VAlign = vaBottom
+        end
+        object Memo7: TfrxMemoView
+          AllowVectorExport = True
+          Left = 3.779530000000000000
+          Top = 3.779530000000020000
+          Width = 37.795300000000000000
+          Height = 15.118120000000000000
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = []
+          Memo.UTF8W = (
+            'OBS.:')
+          ParentFont = False
+        end
+        object Memo23: TfrxMemoView
+          AllowVectorExport = True
+          Left = 517.795610000000000000
+          Top = 3.779530000000020000
+          Width = 94.488250000000000000
+          Height = 15.118120000000000000
+          DisplayFormat.DecimalSeparator = ','
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold, fsItalic]
+          Frame.Typ = []
+          HAlign = haRight
+          Memo.UTF8W = (
+            'Total Liquido:')
+          ParentFont = False
         end
       end
     end
@@ -15990,6 +11307,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
     Top = 200
   end
   object q_NFe_Ref: TFDQuery
+    AfterOpen = q_NFe_RefAfterOpen
     Connection = dao.CN
     SQL.Strings = (
       'SELECT a.ID, a.CHAVE_NFE'

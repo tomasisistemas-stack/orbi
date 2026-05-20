@@ -9774,6 +9774,7 @@ object Dm: TDm
     Top = 248
   end
   object q_configuracao: TFDQuery
+    Active = True
     Connection = dao.CN
     SQL.Strings = (
       
@@ -11171,6 +11172,7 @@ object Dm: TDm
     Top = 608
   end
   object q_ranking_vendas: TFDQuery
+    Active = True
     Connection = dao.CN
     SQL.Strings = (
       'SELECT TIPO,'
@@ -12214,5 +12216,130 @@ object Dm: TDm
     BCDToCurrency = False
     Left = 1232
     Top = 440
+  end
+  object q_ranking_vendas_completo: TFDQuery
+    MasterSource = DS_NF
+    Connection = dao.CN
+    SQL.Strings = (
+      'select '
+      '  r.id,'
+      '  r.nom_representante,'
+      '  mr.mes,'
+      '  mr.vl_meta,'
+      '  coalesce(mr.vl_realizado, 0) as vl_realizado,'
+      '  coalesce(mr.perc_realizado, 0) as perc_realizado,'
+      
+        '  coalesce(mr.qtd_clientes_atendidos, 0) as qtd_clientes_atendid' +
+        'os,'
+      '  coalesce(mr.qtd_clientes_base) as qtd_clientes_base,'
+      '  coalesce(mr.perc_positivacao, 0) as perc_positivacao,'
+      '  coalesce(mr.ticket_medio,0) as ticket_medio,'
+      '  coalesce(mr.perc_desconto,0) as perc_desconto'
+      ' '
+      'from metas_representante mr '
+      'inner join representante r on r.id = mr.id_representante'
+      'where mes = '#39'05/2026'#39
+      'order by 5 desc')
+    Left = 301
+    Top = 689
+    object q_ranking_vendas_completoid: TIntegerField
+      FieldName = 'id'
+      Origin = 'id'
+      ProviderFlags = [pfInUpdate, pfInWhere, pfInKey]
+    end
+    object q_ranking_vendas_completonom_representante: TStringField
+      FieldName = 'nom_representante'
+      Origin = 'nom_representante'
+      Size = 50
+    end
+    object q_ranking_vendas_completomes: TStringField
+      AutoGenerateValue = arDefault
+      FieldName = 'mes'
+      Origin = 'mes'
+      Size = 11
+    end
+    object q_ranking_vendas_completovl_meta: TBCDField
+      AutoGenerateValue = arDefault
+      FieldName = 'vl_meta'
+      Origin = 'vl_meta'
+      Precision = 15
+      Size = 2
+    end
+    object q_ranking_vendas_completovl_realizado: TFMTBCDField
+      AutoGenerateValue = arDefault
+      FieldName = 'vl_realizado'
+      Origin = 'vl_realizado'
+      ReadOnly = True
+      Precision = 64
+      Size = 0
+    end
+    object q_ranking_vendas_completoperc_realizado: TFMTBCDField
+      AutoGenerateValue = arDefault
+      FieldName = 'perc_realizado'
+      Origin = 'perc_realizado'
+      ReadOnly = True
+      Precision = 64
+      Size = 0
+    end
+    object q_ranking_vendas_completoqtd_clientes_atendidos: TLargeintField
+      AutoGenerateValue = arDefault
+      FieldName = 'qtd_clientes_atendidos'
+      Origin = 'qtd_clientes_atendidos'
+      ReadOnly = True
+    end
+    object q_ranking_vendas_completoqtd_clientes_base: TLargeintField
+      AutoGenerateValue = arDefault
+      FieldName = 'qtd_clientes_base'
+      Origin = 'qtd_clientes_base'
+    end
+    object q_ranking_vendas_completoperc_positivacao: TFMTBCDField
+      AutoGenerateValue = arDefault
+      FieldName = 'perc_positivacao'
+      Origin = 'perc_positivacao'
+      ReadOnly = True
+      Precision = 64
+      Size = 0
+    end
+    object q_ranking_vendas_completoticket_medio: TFMTBCDField
+      AutoGenerateValue = arDefault
+      FieldName = 'ticket_medio'
+      Origin = 'ticket_medio'
+      ReadOnly = True
+      Precision = 64
+      Size = 0
+    end
+    object q_ranking_vendas_completoperc_desconto: TFMTBCDField
+      AutoGenerateValue = arDefault
+      FieldName = 'perc_desconto'
+      Origin = 'perc_desconto'
+      ReadOnly = True
+      Precision = 64
+      Size = 0
+    end
+  end
+  object ds_ranking_vendas_completo: TDataSource
+    DataSet = q_ranking_vendas_completo
+    Left = 301
+    Top = 745
+  end
+  object dst_ranking_vendas_completo: TfrxDBDataset
+    UserName = 'dst_ranking_vendas_completo'
+    CloseDataSource = False
+    FieldAliases.Strings = (
+      'id=id'
+      'nom_representante=nom_representante'
+      'mes=mes'
+      'vl_meta=vl_meta'
+      'vl_realizado=vl_realizado'
+      'perc_realizado=perc_realizado'
+      'qtd_clientes_atendidos=qtd_clientes_atendidos'
+      'qtd_clientes_base=qtd_clientes_base'
+      'perc_positivacao=perc_positivacao'
+      'ticket_medio=ticket_medio'
+      'perc_desconto=perc_desconto')
+    DataSet = q_ranking_vendas_completo
+    BCDToCurrency = False
+    Left = 301
+    Top = 801
   end
 end

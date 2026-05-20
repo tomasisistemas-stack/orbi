@@ -244,6 +244,9 @@ type
     rbNaoConsumidorFinal: TsRadioButton;
     rbApenasConsumidorFinal: TsRadioButton;
     CodigoProduto: TsRadioButton;
+    gbMesAno: TsGroupBox;
+    cbMes: TComboBox;
+    sLabel15: TsLabel;
     procedure bt_imprimirClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -366,6 +369,7 @@ type
     procedure monta_rel_produtos_capa;
     procedure relatorio_comissao_desconto(c_fornecedor, c_loja, c_grupo, c_vendedor, c_marca: string);
     procedure relatorio_ranking_produtos;
+    procedure ranking_vendas_completo;
     { Private declarations }
   public
     { Public declarations }
@@ -698,6 +702,8 @@ begin
     relatorio_pedidos_geral
   else if tipo_relatorio = 'ranking_vendas' then
     ranking_vendas
+  else if tipo_relatorio = 'ranking_vendas_completo' then
+    ranking_vendas_completo
   else if tipo_relatorio = 'teto_faturamento' then
     relatorio_teto_fixo
   else if tipo_relatorio = 'comissoes' then
@@ -1305,6 +1311,9 @@ begin
 end;
 
 procedure TFr_opc_relatorios.FormShow(Sender: TObject);
+var
+  mes, ano, x : Integer;
+
 begin
   // dao.Geral1('select ema_login, ema_senha, ema_email, ema_nom_apresentacao, ema_smtp, ema_autenticacao from empresa where cod_empresa='+QuotedStr(cod_empresa));
   // fr_relatorio.FromName:= dao.Q1.fieldbyname('ema_nom_apresentacao').AsString;
@@ -2271,6 +2280,57 @@ begin
   else if tipo_relatorio = 'ranking_vendas' then
   begin
     Gbdata.Visible := true;
+    // loja.visible:=true;
+    vendedor.Visible := true;
+    edCodRepresentante.Visible := false;
+    sbLimpaRep.Visible := false;
+
+    supervisor.Visible := true;
+    if Tipo_usuario = '0' then
+    begin
+      Prcod_representante.Text := Representante_usuario;
+      edCodRepresentante.Text := Representante_usuario;
+      Prcod_representanteExit(Self);
+      vendedor.Enabled := false;
+    end;
+    if telemarketing then
+    begin
+      prcod_supervisor.Text := Representante_usuario;
+      edcodsupervisor.Text := Representante_usuario;
+      prcod_supervisorExit(Self);
+      supervisor.Enabled := false;
+    end;
+
+    if Tipo_usuario = '9' then
+    begin
+      gbConsumidorFinal.Visible:= True;
+    end
+    else
+    begin
+      gbConsumidorFinal.Visible:= False;
+      rbNaoConsumidorFinal.Checked := True;
+    end;
+
+
+    Self.Height := 350;
+  end
+  else if tipo_relatorio = 'ranking_vendas_completo' then
+  begin
+    gbMesAno.Visible := True;
+    cbMes.Items.Clear;
+    mes := strtoint(FormatDateTime('m', now));
+    ano := strtoint(FormatDateTime('yyyy', now));
+
+    for x := 0 to 2 do
+    begin
+      if (mes - x) <= 0 then
+        cbMes.Items.Add(FMFUN.enchezero(inttostr(12 + (mes - x)), 2) + '/' + inttostr(ano - 1))
+      else
+        cbMes.Items.Add(FMFUN.enchezero(inttostr(mes - x), 2) + '/' + inttostr(ano));
+    end;
+
+
+    Gbdata.Visible := false;
     // loja.visible:=true;
     vendedor.Visible := true;
     edCodRepresentante.Visible := false;
@@ -5731,6 +5791,14 @@ begin
     else if VarName = 'dtafin' then
       Value := formatdatetime('dd/mm/yyyy', Prdta_final.date);
 
+  end
+  else if tipo_relatorio = 'ranking_vendas_completo' then
+  begin
+    if VarName = 'empresa' then
+      Value := nom_empresa;
+
+    if VarName = 'MesAno' then
+      Value := cbMes.Text;
   end
   else if tipo_relatorio = 'televendas_cidade' then
   begin
@@ -9951,6 +10019,63 @@ begin
   end;
 
   if not (fR_RELATORIO.LoadFromFile(path + 'Relatorios\ranking_vendas.fr3')) then
+  begin
+    dao.msg('Relatório não encontrado nas configurações do Sistema' + #13 + 'Avise o Suporte');
+    exit;
+  end;
+  fR_RELATORIO.ShowReport;
+
+end;
+
+procedure TFr_opc_relatorios.ranking_vendas_completo;
+var
+  cmd, cmd_rep: string;
+begin
+  cmd_rep := '';
+
+  if Prcod_representante.Text <> '' then
+    cmd_rep := ' and r.id = ' + Prcod_representante.Text;
+
+  if prcod_supervisor.Text <> '' then
+    cmd_rep := ' and r.id = ' + prcod_supervisor.Text;
+
+  if (Prcod_representante.Text <> '') and (prcod_supervisor.Text <> '') then
+    cmd_rep := ' and r.id in (' + Prcod_representante.Text + ',' + prcod_supervisor.Text + ')';
+
+  cmd := 'select '+
+         '  r.id, '+
+         '  r.nom_representante, '+
+         '  mr.mes, '+
+         '  mr.vl_meta, '+
+         '  coalesce(mr.vl_realizado, 0) as vl_realizado, '+
+         '  coalesce(mr.perc_realizado, 0) as perc_realizado, '+
+         '  coalesce(mr.qtd_clientes_atendidos, 0) as qtd_clientes_atendidos, '+
+         '  mr.qtd_clientes_base, '+
+         '  coalesce(mr.perc_positivacao, 0) as perc_positivacao, '+
+         '  coalesce(mr.ticket_medio,0) as ticket_medio, '+
+         '  coalesce(mr.perc_desconto,0) as perc_desconto '+
+         'from metas_representante mr '+
+         'inner join representante r on r.id = mr.id_representante '+
+         'where mes = '''+cbMes.Text+'''' +
+         ifthen(rbApenasConsumidorFinal.Checked, '  and coalesce(r.consumidor_final, ''N'') = ''S'' ',
+         ifthen(rbNaoConsumidorFinal.Checked, ' and coalesce(r.consumidor_final, ''N'') = ''N'' ', ''))+
+         ' order by 5 desc ';
+
+  with dm.q_ranking_vendas_completo do
+  begin
+    close;
+    sql.clear;
+    sql.add(cmd);
+    open;
+  end;
+
+  if dm.q_ranking_vendas_completo.RecordCount = 0 then
+  begin
+    dao.msg('Não foi encontrado registro neste periodo!');
+    exit;
+  end;
+
+  if not (fR_RELATORIO.LoadFromFile(path + 'Relatorios\ranking_vendas_completo.fr3')) then
   begin
     dao.msg('Relatório não encontrado nas configurações do Sistema' + #13 + 'Avise o Suporte');
     exit;

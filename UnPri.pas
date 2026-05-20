@@ -337,6 +337,8 @@ type
     shpCertAviso: TShape;
     lblCertAvisoTitulo: TsLabel;
     lblCertAvisoMsg: TsLabel;
+    S6: TMenuItem;
+    C9: TMenuItem;
     procedure JvXPBar1Items0Click(Sender: TObject);
     procedure JvXPBar1Items1Click(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -529,7 +531,6 @@ type
     procedure T3Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure T4Click(Sender: TObject);
-    procedure r2Click(Sender: TObject);
     procedure IdHTTPDownloadWork(ASender: TObject; AWorkMode: TWorkMode;
       AWorkCount: Int64);
     procedure IdHTTPDownloadWorkBegin(ASender: TObject; AWorkMode: TWorkMode;
@@ -553,6 +554,8 @@ type
     procedure N22Click(Sender: TObject);
     procedure RankingProdutosClick(Sender: TObject);
     procedure Button3Click(Sender: TObject);
+    procedure S6Click(Sender: TObject);
+    procedure C9Click(Sender: TObject);
   private
     procedure CarregarListaMenu;
     procedure AvisoAniversariantes;
@@ -694,7 +697,7 @@ type
 
 const
   ////////////////////////////////////////////////////////////
-  versao: ShortString = '2.00.64';
+  versao: ShortString = '2.00.69';
   ////////////////////////////////////////////////////////////
 
 var
@@ -1976,10 +1979,25 @@ end;
 function TFRPRI.EnvioEmailNFE(pedido, tipo: string): string;
 var
   pathSaida, arquivoPDF, arquivoNFe, nome_logo, anexosPDF, boletoPDF, formaPagto: string;
+  nomEmpresa, emailCliente, emailAdicional1, emailAdicional2, emailAdicional3, numeroNFe: string;
   final, count: Integer;
   F: TSearchRec;
   Ret: Integer;
   RecNFe: Tnferecxml;
+
+  procedure ExecSqlEmailNFe(const ACmd: string);
+  begin
+    if Trim(ACmd) = '' then
+      Exit;
+    with dao.Exec_sql do
+    begin
+      Prepared := False;
+      Close;
+      SQL.Clear;
+      SQL.Add(ACmd);
+      ExecSQL;
+    end;
+  end;
 begin
 
   pathSaida := ExtractFilePath(Application.ExeName) + 'nf\';
@@ -1996,12 +2014,17 @@ begin
     DeleteFile(pathSaida + F.name);
     Ret := FindNext(F);
   end;
-  qr_nfe_email.close;
-  qr_nfe_email.ParamByName('numdoc').value := pedido;
-  qr_nfe_email.open;
+  if dao.cn.InTransaction then
+    dao.cn.Rollback;
 
-  count := 1;
-  final := qr_nfe_email.RecordCount;
+  try
+    dao.cn.StartTransaction;
+    qr_nfe_email.Close;
+    qr_nfe_email.ParamByName('numdoc').Value := pedido;
+    qr_nfe_email.Open;
+
+    count := 1;
+    final := qr_nfe_email.RecordCount;
   {
   try
     DM.FTPNFe.Connect;
@@ -2025,15 +2048,37 @@ begin
     Exit;
   end;
   }
+  if qr_nfe_email.IsEmpty then
+  begin
+    qr_nfe_email.Close;
+    dao.cn.Commit;
+    Result := '2';
+    Exit;
+  end;
+
   cod_empresa := qr_nfe_email.fieldbyname('COD_EMPRESA').AsString;
-  nome_logo := qr_nfe_email.fieldbyname('nom_empresa').AsString + '.bmp';
+  nomEmpresa := qr_nfe_email.fieldbyname('nom_empresa').AsString;
+  emailCliente := qr_nfe_email.fieldbyname('EMAIL').AsString;
+  emailAdicional1 := qr_nfe_email.fieldbyname('EMAIL_ADICIONAL1').AsString;
+  emailAdicional2 := qr_nfe_email.fieldbyname('EMAIL_ADICIONAL2').AsString;
+  emailAdicional3 := qr_nfe_email.fieldbyname('EMAIL_ADICIONAL3').AsString;
+  numeroNFe := qr_nfe_email.fieldbyname('NFE').AsString;
+  nome_logo := nomEmpresa + '.bmp';
   arquivoNFe := qr_nfe_email.fieldbyname('CHAVE_NFE').AsString + '-procNFe.xml';
   arquivoPDF := qr_nfe_email.fieldbyname('CHAVE_NFE').AsString + '-nfe.pdf';
 
-  if tipo = 'Saída' then
+  if tipo <> 'Entrada' then
     TBlobField(qr_nfe_email.fieldbyname('XML')).SAVETOFILE(pathSaida + arquivoNFe)
   else
     TBlobField(qr_nfe_email.fieldbyname('XML_DEV')).SAVETOFILE(pathSaida + arquivoNFe);
+
+  qr_nfe_email.Close;
+  dao.cn.Commit;
+  except
+    if dao.cn.InTransaction then
+      dao.cn.Rollback;
+    raise;
+  end;
 
   ACBrNFe1.NotasFiscais.Clear;
   // ACBrNFe1.DANFE.Impressora := fmfun.BuscaImpressoraPadrao;
@@ -2054,10 +2099,17 @@ begin
   anexosPDF := pathSaida + arquivoPDF;
   formaPagto := '';
   try
+    if dao.cn.InTransaction then
+      dao.cn.Rollback;
+    dao.cn.StartTransaction;
     dao.Geral2('select coalesce(f.NOM_FOP, '''') as NOM_FOP from VENDAS1 v left join FOP f on f.COD_FOP = v.COD_FOP where v.NUMDOC = ' + pedido);
     if (not dao.Q2.IsEmpty) and (not dao.Q2.FieldByName('NOM_FOP').IsNull) then
       formaPagto := UpperCase(Trim(dao.Q2.FieldByName('NOM_FOP').AsString));
+    dao.Q2.Close;
+    dao.cn.Commit;
   except
+    if dao.cn.InTransaction then
+      dao.cn.Rollback;
     formaPagto := '';
   end;
 
@@ -2093,26 +2145,21 @@ begin
   try
    if FMFUN.BuscaAmbienteNFE = taHomologacao then
     begin
-      if not qr_nfe_email.Active then
-        qr_nfe_email.open;
-      EnviaArquivoNFe(qr_nfe_email.fieldbyname('nom_empresa').AsString,
+      EnviaArquivoNFe(nomEmpresa,
         '',
         '', 'cltomasi@gmail.com',
-        qr_nfe_email.fieldbyname('NFE').AsString, pathSaida + arquivoNFe,
+        numeroNFe, pathSaida + arquivoNFe,
         anexosPDF, '', '', '', count, final);
     end
     else
     begin
-      if not qr_nfe_email.Active then
-        qr_nfe_email.open;
-      EnviaArquivoNFe(qr_nfe_email.fieldbyname('nom_empresa').AsString,
+      EnviaArquivoNFe(nomEmpresa,
         '',
         '',
-        qr_nfe_email.fieldbyname('EMAIL').AsString,
-        qr_nfe_email.fieldbyname('NFE').AsString, pathSaida + arquivoNFe,
-        anexosPDF, qr_nfe_email.fieldbyname('EMAIL_ADICIONAL1')
-        .AsString, qr_nfe_email.fieldbyname('EMAIL_ADICIONAL2').AsString,
-        qr_nfe_email.fieldbyname('EMAIL_ADICIONAL3').AsString, count, final);
+        emailCliente,
+        numeroNFe, pathSaida + arquivoNFe,
+        anexosPDF, emailAdicional1, emailAdicional2,
+        emailAdicional3, count, final);
     end;
   except
     DM.FTPNFe.Quit;
@@ -2122,11 +2169,21 @@ begin
   DeleteFile(pathSaida + arquivoPDF);
   DeleteFile(pathSaida + arquivoNFe);
 
-  dao.execsql('UPDATE vendas1 SET EMAIL_NFE = 1 WHERE NUMDOC = ' + pedido);
+  try
+    if dao.cn.InTransaction then
+      dao.cn.Rollback;
+    dao.cn.StartTransaction;
+    ExecSqlEmailNFe('UPDATE vendas1 SET EMAIL_NFE = 1 WHERE NUMDOC = ' + pedido);
+    dao.cn.Commit;
+  except
+    if dao.cn.InTransaction then
+      dao.cn.Rollback;
+    raise;
+  end;
   count := count + 1;
   Result := '1';
 
-  qr_nfe_email.close;
+  qr_nfe_email.Close;
 
 end;
 
@@ -5474,6 +5531,18 @@ begin
   end;
 end;
 
+procedure TFRPRI.C9Click(Sender: TObject);
+begin
+  try
+    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+    tipo_relatorio := 'ranking_vendas_completo';
+  	SetaAcesso(tipo_relatorio);
+    Fr_opc_relatorios.ShowModal;
+  finally
+    Fr_opc_relatorios.Free;
+  end;
+end;
+
 procedure TFRPRI.CAClculoPLR1Click(Sender: TObject);
 begin
   try
@@ -5755,7 +5824,7 @@ procedure TFRPRI.IdHTTPDownloadWork(ASender: TObject; AWorkMode: TWorkMode;
   AWorkCount: Int64);
 begin
   fm_splash.ggProgress.Progress := AWorkCount;
-  fm_splash.Refresh;
+  fm_splash.Update;
 
 end;
 
@@ -5772,7 +5841,8 @@ procedure TFRPRI.IdHTTPDownloadWorkEnd(Sender: TObject; AWorkMode: TWorkMode);
 begin
   fm_splash.ggProgress.Progress := fm_splash.ggProgress.MaxValue;
   fm_splash.lbStatus.Caption := 'Download Finalizado...';
-  fm_splash.Refresh;
+  Sleep(2000);
+  fm_splash.Update;
   fm_splash.hide;
 end;
 
@@ -6369,6 +6439,18 @@ begin
   end;
 end;
 
+procedure TFRPRI.S6Click(Sender: TObject);
+begin
+  try
+    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+    tipo_relatorio := 'ranking_vendas';
+  	SetaAcesso(tipo_relatorio);
+    Fr_opc_relatorios.ShowModal;
+  finally
+    Fr_opc_relatorios.Free;
+  end;
+end;
+
 procedure TFRPRI.AvisoContasPagarDiario;
 begin
 
@@ -6915,6 +6997,8 @@ begin
       '  (SELECT COUNT(*) FROM VENDAS1 V ' +
       '    WHERE V.FATURADO = ''0'' ' +
       '      AND V.PEDIDO_VENDEDOR = ''1'' ' +
+      '      AND V.ORCAMENTO = 0 ' +
+      '      AND COALESCE((SELECT PP.STATUS FROM PROCESSO_PEDIDO pp WHERE pp.ID = V.PROCESSO_ID), ''À Conferir'') <> ''À Digitar'' ' +
       '      AND CAST(V.DTADOC AS DATE) >= (CURRENT_DATE - 30)) AS QTD_WORBYREPRE';
     QPed.Open;
 
@@ -7184,18 +7268,6 @@ begin
     Fr_telas.ShowModal;
   finally
     Fr_telas.Free;
-  end;
-end;
-
-procedure TFRPRI.r2Click(Sender: TObject);
-begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
-    tipo_relatorio := 'ranking_vendas';
-	SetaAcesso(tipo_relatorio);
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
   end;
 end;
 
