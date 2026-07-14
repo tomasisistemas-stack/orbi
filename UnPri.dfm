@@ -10519,6 +10519,7 @@ object FRPRI: TFRPRI
     Top = 232
   end
   object TmPedidoPalm: TTimer
+    Enabled = False
     Interval = 2000
     OnTimer = TmPedidoPalmTimer
     Left = 480
@@ -10553,29 +10554,34 @@ object FRPRI: TFRPRI
     Top = 222
   end
   object TmContaVencida: TTimer
+    Enabled = False
     Interval = 7200000
     OnTimer = TmContaVencidaTimer
     Left = 568
     Top = 288
   end
   object TmPedidoVendedor: TTimer
+    Enabled = False
     Interval = 3000
     OnTimer = TmPedidoVendedorTimer
     Left = 528
     Top = 240
   end
   object TmReiniciaTimers: TTimer
+    Enabled = False
     Interval = 1
     OnTimer = TmReiniciaTimersTimer
     Left = 584
     Top = 240
   end
   object tmChamaGravador: TTimer
+    Enabled = False
     OnTimer = tmChamaGravadorTimer
     Left = 352
     Top = 448
   end
   object TmAlertas: TTimer
+    Enabled = False
     OnTimer = TmAlertasTimer
     Left = 760
     Top = 328

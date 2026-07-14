@@ -4,16 +4,18 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  ActiveX,
   Dialogs, ComCtrls, StdCtrls, Mask, ExtCtrls, Buttons, Grids,
   BaseGrid, AdvGrid, DateUtils, ACBrBoletoConversao,
-  DBGrids, DB, RxMemDS, DBCtrls,
+  DBGrids, DB, RxMemDS, DBCtrls, ImgList, StrUtils,
   sPageControl, sSpeedButton, sLabel, sPanel, sBitBtn, sGroupBox, sCheckBox,
   ACBrBoleto, ACBrBase, sRadioButton, acDBGrid,
   sCurrEdit, sCurrencyEdit, sEdit, sMaskEdit, sCustomComboEdit, sTooledit,
   sComboEdit, sDBCheckBox, sMemo, frxClass,  AdvObj,
   ACBrBoletoFCFR, FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Param,
   FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf, FireDAC.DApt.Intf,
-  FireDAC.Stan.Async, FireDAC.DApt, FireDAC.Comp.DataSet, FireDAC.Comp.Client;
+  FireDAC.Stan.Async, FireDAC.DApt, FireDAC.Comp.DataSet, FireDAC.Comp.Client,
+  RxCtrls;
 
 type
   TFr_contas_receber = class(TForm)
@@ -36,7 +38,7 @@ type
     Prconferido: tscheckbox;
     Prid: TsEdit;
     Prcod_empresa: TsComboEdit;
-    GroupBox2: TsGroupBox;
+    gbBoleto: TsGroupBox;
     Label11: tsLabel;
     Label12: tsLabel;
     Label13: tsLabel;
@@ -221,6 +223,7 @@ type
     PrProtesto: tscheckbox;
     rbProtestados: TsRadioButton;
     mmContasPagarCONTA: TStringField;
+    mmContasPagarBOLETO_REGISTRADO: TBooleanField;
     q_pedidos_agruparNUMDOC: TIntegerField;
     q_pedidos_agruparDTADOC: TDateField;
     q_pedidos_agruparCOD_CLIENTE: TIntegerField;
@@ -230,6 +233,9 @@ type
     q_pedidos_agruparREPRESENTANTE: TStringField;
     q_pedidos_agruparOBSERVACOES_PEDIDO: TMemoField;
     q_pedidos_agruparAGRUPADO: TStringField;
+    ImageList1: TImageList;
+    RxLabel1: TRxLabel;
+    lbBoletoRegistrado: TRxLabel;
     procedure Ed_titulo1Exit(Sender: TObject);
     procedure ed_titulo2Exit(Sender: TObject);
     procedure EDdtainiKeyPress(Sender: TObject; var Key: Char);
@@ -347,10 +353,295 @@ implementation
 
 uses Un_localizar, UnPri, UnFun, Un_dao, Un_dados_cliente,
   Un_opc_relatorios, un_conta_atrasada, un_conta_descontada,
-  un_email_envio, Un_dm, un_splash;
+  un_email_envio, Un_dm, un_splash, Un_BB_Cobrancas_Api, Un_CEF_Cobrancas_Api, System.JSON;
 
 {$R *.dfm}
 
+const
+  BB_CONTAS_RECEBER_SCOPE = 'cobrancas.boletos-info cobrancas.boletos-requisicao';
+
+function CRBBOnlyNumbers(const Value: string): string;
+var
+  I: Integer;
+begin
+  Result := '';
+  for I := 1 to Length(Value) do
+    if CharInSet(Value[I], ['0'..'9']) then
+      Result := Result + Value[I];
+end;
+
+function CRBBFieldStr(ADataSet: TDataSet; const AFieldName, ADefault: string): string;
+var
+  Field: TField;
+begin
+  Field := ADataSet.FindField(AFieldName);
+  if (Field = nil) or Field.IsNull then
+    Result := ADefault
+  else
+    Result := Field.AsString;
+end;
+
+function CRBBLeftPadDigits(const Value: string; Len: Integer): string;
+var
+  Digits, Padded: string;
+begin
+  Digits := CRBBOnlyNumbers(Value);
+  if Digits = '' then
+  begin
+    Result := '';
+    Exit;
+  end;
+
+  Padded := StringOfChar('0', Len) + Digits;
+  Result := Copy(Padded, Length(Padded) - Len + 1, Len);
+end;
+
+function CRBBNumeroTituloCliente(ADataSet: TDataSet): string;
+var
+  Convenio, Controle, Titulo, Sequencia: string;
+begin
+  Convenio := CRBBLeftPadDigits(CRBBFieldStr(ADataSet, 'convenio', ''), 7);
+  Titulo := CRBBOnlyNumbers(CRBBFieldStr(ADataSet, 'titulo', ''));
+  Sequencia := CRBBOnlyNumbers(CRBBFieldStr(ADataSet, 'sequencia', ''));
+  Controle := CRBBLeftPadDigits(Titulo, 8) + CRBBLeftPadDigits(Sequencia, 2);
+
+  if (Convenio = '') or (Controle = '') then
+    Result := ''
+  else
+    Result := '000' + Convenio + Controle;
+end;
+
+function CRBBRightStr(const Value: string; Len: Integer): string;
+begin
+  if Length(Value) <= Len then
+    Result := Value
+  else
+    Result := Copy(Value, Length(Value) - Len + 1, Len);
+end;
+
+function CRBBTituloNossoNumero(ADataSet: TDataSet): string;
+var
+  Titulo, Sequencia: string;
+begin
+  Titulo := CRBBFieldStr(ADataSet, 'titulo', '');
+  Sequencia := CRBBFieldStr(ADataSet, 'sequencia', '');
+  //ANossoNumero := PadLeft(AConvenio, 7, '0') + RightStr(ANossoNumero, 10);
+  Result := RightStr(Titulo, 10) + CRBBLeftPadDigits(Sequencia, 1);
+  Result := fmfun.MontaNossoNumero(Result);
+end;
+
+function CRBBFormataNossoNumero(ADataSet: TDataSet): string;
+var
+  Convenio, NossoNumero: string;
+begin
+  Convenio := CRBBOnlyNumbers(CRBBFieldStr(ADataSet, 'convenio', ''));
+  NossoNumero := CRBBTituloNossoNumero(ADataSet);
+
+  if Length(Convenio) = 7 then
+    Result := CRBBLeftPadDigits(Convenio, 7) + NossoNumero.padleft(10, '0')
+  else
+    Result := NossoNumero;
+end;
+
+function CRBBCalcularDigitoVerificador(const Documento: string): string;
+var
+  I, Peso, Soma, ModuloFinal: Integer;
+begin
+  Result := '0';
+  Soma := 0;
+  Peso := 9;
+
+  for I := Length(Documento) downto 1 do
+  begin
+    if CharInSet(Documento[I], ['0'..'9']) then
+      Soma := Soma + StrToInt(Documento[I]) * Peso;
+    Dec(Peso);
+    if Peso < 2 then
+      Peso := 9;
+  end;
+
+  ModuloFinal := Soma mod 11;
+  if ModuloFinal >= 10 then
+    Result := 'X'
+  else
+    Result := IntToStr(ModuloFinal);
+end;
+function CRBBMontarCampoNossoNumero(ADataSet: TDataSet): string;
+begin
+  Result := '000' + CRBBFormataNossoNumero(ADataSet);
+end;
+
+function CRBBJsonString(AObj: TJSONObject; const ANames: array of string): string;
+var
+  I: Integer;
+  V: TJSONValue;
+  Pair: TJSONPair;
+begin
+  Result := '';
+  if AObj = nil then
+    Exit;
+
+  for I := Low(ANames) to High(ANames) do
+  begin
+    V := AObj.GetValue(ANames[I]);
+    if V <> nil then
+    begin
+      Result := Trim(V.Value);
+      if Result <> '' then
+        Exit;
+    end;
+  end;
+
+  for I := 0 to AObj.Count - 1 do
+  begin
+    Pair := AObj.Pairs[I];
+    if Pair.JsonValue is TJSONObject then
+    begin
+      Result := CRBBJsonString(TJSONObject(Pair.JsonValue), ANames);
+      if Result <> '' then
+        Exit;
+    end
+    else if Pair.JsonValue is TJSONArray then
+    begin
+      if (TJSONArray(Pair.JsonValue).Count > 0) and
+         (TJSONArray(Pair.JsonValue).Items[0] is TJSONObject) then
+      begin
+        Result := CRBBJsonString(TJSONObject(TJSONArray(Pair.JsonValue).Items[0]), ANames);
+        if Result <> '' then
+          Exit;
+      end;
+    end;
+  end;
+end;
+
+function CRBBTryDate(const Value: string; out ADate: TDateTime): Boolean;
+var
+  S: string;
+  FS: TFormatSettings;
+begin
+  S := Trim(Value);
+  Result := False;
+  ADate := 0;
+  if S = '' then
+    Exit;
+
+  if Length(S) >= 10 then
+    S := Copy(S, 1, 10);
+
+  GetLocaleFormatSettings(LOCALE_SYSTEM_DEFAULT, FS);
+  FS.DateSeparator := '/';
+  FS.ShortDateFormat := 'dd/mm/yyyy';
+
+  Result := TryStrToDate(StringReplace(S, '.', '/', [rfReplaceAll]), ADate, FS);
+  if Result then
+    Exit;
+
+  FS.DateSeparator := '-';
+  FS.ShortDateFormat := 'yyyy-mm-dd';
+  Result := TryStrToDate(S, ADate, FS);
+end;
+
+function CRBBTryFloat(const Value: string; out AValue: Double): Boolean;
+var
+  S: string;
+  FS: TFormatSettings;
+begin
+  S := Trim(Value);
+  GetLocaleFormatSettings(LOCALE_SYSTEM_DEFAULT, FS);
+  FS.DecimalSeparator := '.';
+  FS.ThousandSeparator := ',';
+  Result := TryStrToFloat(S, AValue, FS);
+  if Result then
+    Exit;
+
+  FS.DecimalSeparator := ',';
+  FS.ThousandSeparator := '.';
+  Result := TryStrToFloat(S, AValue, FS);
+end;
+
+function CRBBAmbienteApi: TBBApiAmbiente;
+begin
+  Result := bbProducao;
+  dao.Geral5('select NFE_HOMOLOGACAO from configuracao');
+  if (not dao.Q5.IsEmpty) and (UpperCase(Trim(dao.Q5.fieldbyname('NFE_HOMOLOGACAO').AsString)) = 'S') then
+    Result := bbHomologacao;
+end;
+
+function CRBBAmbienteNome(AAmbiente: TBBApiAmbiente): string;
+begin
+  case AAmbiente of
+    bbSandbox: Result := 'Sandbox';
+    bbHomologacao: Result := 'Homologacao';
+    bbProducao: Result := 'Producao';
+  else
+    Result := 'Desconhecido';
+  end;
+end;
+
+procedure CRBBLogApi(const AMensagem: string);
+begin
+  try
+    dao.grava_log('API BB COBRANCAS - ' + AMensagem, '');
+  except
+  end;
+end;
+
+function CRCEFAmbienteApi: TCEFApiAmbiente;
+begin
+  Result := cefProducao;
+  dao.Geral5('select NFE_HOMOLOGACAO from configuracao');
+  if (not dao.Q5.IsEmpty) and (UpperCase(Trim(dao.Q5.fieldbyname('NFE_HOMOLOGACAO').AsString)) = 'S') then
+    Result := cefHomologacao;
+end;
+
+procedure CRCEFLogApi(const AMensagem: string);
+begin
+  try
+    dao.grava_log('API CEF COBRANCAS - ' + AMensagem, '');
+  except
+  end;
+end;
+
+function CRBBBoletoRegistradoNaApi(ADataSet: TDataSet; out ADataPagamento: TDateTime; out AValorPago: Double): Boolean;
+begin
+  Result := Un_BB_Cobrancas_Api.BBBoletoRegistradoNaApi(ADataSet, CRBBAmbienteApi,
+    BB_CONTAS_RECEBER_SCOPE, CRBBLogApi, ADataPagamento, AValorPago);
+end;
+
+function CRBoletoRegistradoNaApi(ADataSet: TDataSet; out ADataPagamento: TDateTime; out AValorPago: Double): Boolean;
+var
+  Banco: string;
+begin
+  Banco := CRBBOnlyNumbers(CRBBFieldStr(ADataSet, 'nr_banco', ''));
+  if (Banco = '1') or (Banco = '001') then
+    Result := CRBBBoletoRegistradoNaApi(ADataSet, ADataPagamento, AValorPago)
+  else if Banco = '104' then
+    Result := Un_CEF_Cobrancas_Api.CEFBoletoRegistradoNaApi(ADataSet, CRCEFAmbienteApi,
+      CRCEFLogApi, ADataPagamento, AValorPago)
+  else
+  begin
+    ADataPagamento := 0;
+    AValorPago := 0;
+    Result := False;
+  end;
+end;
+procedure CRBBMarcarBoletoRegistrado(AIdCR1: Integer; ADataPagamento: TDateTime; AValorPago: Double);
+var
+  SQL: string;
+begin
+  SQL := 'update cr1 set boleto_registrado = true';
+  if (ADataPagamento > 0) and (AValorPago > 0) then
+    SQL := SQL + ', dtarec = ' + QuotedStr(FormatDateTime('yyyy-mm-dd', ADataPagamento)) +
+      ', valor_recebido = ' + StringReplace(FormatFloat('0.00', AValorPago), ',', '.', [rfReplaceAll]) +
+      ', vlr_corrigido = ' + StringReplace(FormatFloat('0.00', AValorPago), ',', '.', [rfReplaceAll]);
+  SQL := SQL + ' where id = ' + IntToStr(AIdCR1);
+
+  dao.Exec_sql.SQL.Clear;
+  dao.Exec_sql.SQL.Add(SQL);
+  dao.Exec_sql.ExecSQL;
+  CRBBLogApi('Update CR1 boleto registrado - id=' + IntToStr(AIdCR1) +
+    ', pagamento=' + BoolToStr((ADataPagamento > 0) and (AValorPago > 0), True));
+end;
 procedure TFr_contas_receber.Ed_titulo1Exit(Sender: TObject);
 begin
   FMFUN.enchezero(Ed_titulo1.Text, 6);
@@ -739,7 +1030,7 @@ begin
   if expandir then
   begin
 
-    Fr_contas_receber.Width := 1222;
+    Fr_contas_receber.Width := 1250;
 
     Fr_contas_receber.Left :=
       (Screen.DesktopWidth - Fr_contas_receber.Width) DIV 2;
@@ -1438,7 +1729,7 @@ begin
       + 'a.COD_EMPRESA, a.DTAVEN, a.VALOR, a.COD_FOP, a.HISTORICO1, a.DTAREC, a.VALOR_RECEBIDO, '
       + 'a.SALDO, a.DIAS_ATRASO, a.VLR_CORRIGIDO, a.DESCONTO, a.NR_CUPOM, a.CONFERIDO, '
       + 'a.ID_REPRESENTANTE, a.VLR_COMISSAO, a.ID_PLANO_CONTAS, a.SINCRONIZAR_PALM, a.EXTRATO, '
-      + 'a.VALOR_CORRIGIDO, a.BOLETO_REMESSA_ORDEM, a.BOLETO_RETORNO_CODIGO, a.CONTA_BOLETO, '
+      + 'a.VALOR_CORRIGIDO, a.BOLETO_REMESSA_ORDEM, a.BOLETO_RETORNO_CODIGO, a.CONTA_BOLETO, a.BOLETO_REGISTRADO, '
       + 'a.INSTRUCAO_BOLETO, a.BOLETO_RETORNO_DESCRICAO, c.nom_cliente, fp.nom_fop, ep.nom_empresa '
       + 'from cr1 a ' + 'left join cliente c on c.cod_cliente=a.cod_cliente ' +
       'left join fop fp on fp.cod_fop=a.cod_fop ' +
@@ -1589,22 +1880,27 @@ begin
     Screen.Cursor := crSQLWait;
     cmd := '';
     cmd := 'select distinct a.ID, a.COD_CLIENTE, a.NR_DOCUMENTO, a.TITULO, ' +
-      '  a.SEQUENCIA, a.COD_EMPRESA, a.DTAVEN, a.VALOR, a.COD_FOP, ' +
+      '  a.SEQUENCIA, a.COD_EMPRESA, a.DTAVEN, a.VALOR, a.COD_FOP, a.boleto_registrado, ' +
       '  a.HISTORICO1, a.DTAREC, a.VALOR_RECEBIDO, a.SALDO, a.DIAS_ATRASO, ' +
       '  a.VLR_CORRIGIDO, a.DESCONTO, a.NR_CUPOM, a.CONFERIDO, a.ID_REPRESENTANTE, cc.mensagem_padrao, '
       + '  a.VLR_COMISSAO, a.ID_PLANO_CONTAS, a.SINCRONIZAR_PALM, a.EXTRATO, a.DESCONTADA, '
-      + '  a.VALOR_CORRIGIDO, a.BOLETO_REMESSA_ORDEM, a.BOLETO_RETORNO_CODIGO, a.CONTA_BOLETO, '
+      + '  a.VALOR_CORRIGIDO, a.BOLETO_REMESSA_ORDEM, a.BOLETO_RETORNO_CODIGO, coalesce(a.CONTA_BOLETO, v1.conta_boleto) as CONTA_BOLETO, a.BOLETO_REGISTRADO, '
       + '  a.BOLETO_RETORNO_DESCRICAO, c.nom_cliente, e.nom_empresa, fp.nom_fop, v1.tot_liquido, '
+      + '  cc.api_key_cobranca, cc.client_id_cobranca, cc.client_secret_cobranca, cc.convenio, cc.codigo_cedente, cc.nr_agencia, ec.cnpj as cnpj_beneficiario, b.nr_banco, '
       + '  TRIM(PC1.NR_CONTA)||''-''||PC1.DESCRICAO DESCRICAO1, ' +
       '  TRIM(PC2.NR_CONTA)||''-''||PC2.DESCRICAO DESCRICAO2, ' +
       '  TRIM(PC3.NR_CONTA)||''-''||PC3.DESCRICAO DESCRICAO3, ' +
       '  TRIM(PC4.NR_CONTA)||''-''||PC4.DESCRICAO DESCRICAO4, ' +
       '  cc.id||''-''||cc.NOM_CONTA||''-''||cc.NR_AGENCIA||''-''||cc.NR_CONTA as conta '
-      + 'from cr1 a ' + 'left join CONTA_CORRENTE cc on cc.id = a.CONTA_BOLETO '
+      + 'from cr1 a '
+      + 'left join vendas1 v1 on v1.numdoc=a.nr_documento '
+      + 'left join CONTA_CORRENTE cc on cc.id = coalesce(a.CONTA_BOLETO, v1.conta_boleto) '
+      + 'left join banco b on b.id = cc.id_banco '
+      + 'left join empresa ec on ec.cod_empresa = cc.id_empresa '
       + 'left join cliente c on c.cod_cliente = a.cod_cliente ' +
       'left join fop fp on fp.cod_fop = a.cod_fop ' +
       'left join empresa e on e.cod_empresa = a.cod_empresa ' +
-      'left join vendas1 v1 on v1.numdoc=a.nr_documento ' +
+
       'left join plano_contas pc4 on pc4.id = a.id_plano_contas ' +
       'left JOIN PLANO_CONTAS PC3 ON (PC3.ID = PC4.ID_PAI) ' +
       'left JOIN PLANO_CONTAS PC2 ON (PC2.ID = PC3.ID_PAI) ' +
@@ -1706,10 +2002,10 @@ begin
 
     fm_splash.lbStatus.Caption := 'Listando...';
     fm_splash.ggProgress.Visible := true;
-    fm_splash.ggProgress.MaxValue := Q_resultado.RecordCount;
+  {  fm_splash.ggProgress.MaxValue := Q_resultado.RecordCount;
     fm_splash.ggProgress.Progress := 0;
     fm_splash.Update;
-
+    }
     preenche_grid;
     Screen.Cursor := crDefault;
     Pccor.ActivePage := tab_resultado;
@@ -1728,66 +2024,170 @@ end;
 
 procedure TFr_contas_receber.preenche_grid;
 var
-  i: Integer;
+  SQLConsulta, ConnDriverName: string;
+  ConnParams: TStringList;
 begin
+  SQLConsulta := Q_resultado.SQL.Text;
+  ConnDriverName := dao.cn.DriverName;
+  ConnParams := TStringList.Create;
+  ConnParams.Assign(dao.cn.Params);
+
   mmContasPagar.DisableControls;
-
-  mmContasPagar.close;
+  mmContasPagar.Close;
   mmContasPagar.EmptyTable;
-  mmContasPagar.open;
+  mmContasPagar.Open;
   VlrTotal := 0;
-  while not(Q_resultado.Eof) do
-  begin
-    mmContasPagar.Append;
-    mmContasPagarID.AsString := Q_resultado.fieldbyname('id').AsString;
-    mmContasPagarNR_DOCUMENTO.AsString :=
-      Q_resultado.fieldbyname('NR_DOCUMENTO').AsString;
-    mmContasPagarTITULO.AsString := Q_resultado.fieldbyname('titulo').AsString;
-    mmContasPagarSEQUENCIA.AsString := Q_resultado.fieldbyname
-      ('sequencia').AsString;
-    mmContasPagarRAZAO_SOCIAL.AsString :=
-      Q_resultado.fieldbyname('nom_cliente').AsString;
-    mmContasPagarHISTORICO.AsString := Q_resultado.fieldbyname
-      ('historico1').AsString;
-    mmContasPagarDTAVEN.AsString := Q_resultado.fieldbyname('dtaven').AsString;
-    mmContasPagarTOTAL_PEDIDO.AsString :=
-      Q_resultado.fieldbyname('tot_liquido').AsString;
-    mmContasPagarVALOR.AsString := Q_resultado.fieldbyname('valor').AsString;
-    mmContasPagarDTAPAG.AsString := Q_resultado.fieldbyname('dtarec').AsString;
-    mmContasPagarVALOR_PAGO.AsString := Q_resultado.fieldbyname
-      ('valor_recebido').AsString;
-    mmContasPagarVALOR_CORRIGIDO.AsString :=
-      Q_resultado.fieldbyname('vlr_corrigido').AsString;
+  btok.Enabled := False;
 
-    mmContasPagarNOM_FOP.AsString := Q_resultado.fieldbyname('nom_fop')
-      .AsString;
-    mmContasPagarEXTRATO.AsString := Q_resultado.fieldbyname('EXTRATO')
-      .AsString;
-    VlrTotal := VlrTotal + mmContasPagarVALOR.Value;
-    mmContasPagarDESCONTADA.AsString := Q_resultado.fieldbyname
-      ('DESCONTADA').AsString;
-    mmContasPagarCONTA.AsString := Q_resultado.fieldbyname('conta').AsString;
-    mmContasPagar.Post;
+  TThread.CreateAnonymousThread(
+    procedure
+    var
+      ConnThread: TFDConnection;
+      QThread: TFDQuery;
+      LDataPagamento: TDateTime;
+      LValorPago: Double;
+      LID, LSequencia: Integer;
+      LNrDocumento, LTitulo, LRazaoSocial, LHistorico, LTotalPedido: string;
+      LNomFop, LExtrato, LDescontada, LConta: string;
+      LDtaVen, LDtaPag: string;
+      LValor, LValorPagoOriginal, LValorCorrigido: Double;
+      LBoletoRegistrado: Boolean;
+      LErro: string;
+    begin
+      CoInitialize(nil);
+      ConnThread := nil;
+      QThread := nil;
+      try
+        ConnThread := TFDConnection.Create(nil);
+        ConnThread.Params.Assign(ConnParams);
+        ConnThread.DriverName := ConnDriverName;
+        ConnThread.LoginPrompt := False;
+        ConnThread.Connected := True;
 
-    fm_splash.ggProgress.AddProgress(1);
-    fm_splash.Update;
+        QThread := TFDQuery.Create(nil);
+        QThread.Connection := ConnThread;
+        QThread.SQL.Text := SQLConsulta;
+        QThread.Open;
+        QThread.FetchAll;
+        QThread.First;
+        fm_splash.ggProgress.Progress := 0;
+        fm_splash.ggProgress.MaxValue := QThread.RecordCount;
+        while not QThread.Eof do
+        begin
+          LID := QThread.FieldByName('id').AsInteger;
+          LNrDocumento := QThread.FieldByName('NR_DOCUMENTO').AsString;
+          LTitulo := QThread.FieldByName('titulo').AsString;
+          LSequencia := QThread.FieldByName('sequencia').AsInteger;
+          LRazaoSocial := QThread.FieldByName('nom_cliente').AsString;
+          LHistorico := QThread.FieldByName('historico1').AsString;
+          LDtaVen := QThread.FieldByName('dtaven').AsString;
+          LTotalPedido := QThread.FieldByName('tot_liquido').AsString;
+          LValor := QThread.FieldByName('valor').AsFloat;
+          LDtaPag := QThread.FieldByName('dtarec').AsString;
+          LValorPagoOriginal := QThread.FieldByName('valor_recebido').AsFloat;
+          LValorCorrigido := QThread.FieldByName('vlr_corrigido').AsFloat;
+          LNomFop := QThread.FieldByName('nom_fop').AsString;
+          LExtrato := QThread.FieldByName('EXTRATO').AsString;
+          LDescontada := QThread.FieldByName('DESCONTADA').AsString;
+          LConta := QThread.FieldByName('conta').AsString;
+          LBoletoRegistrado := QThread.FieldByName('BOLETO_REGISTRADO').AsBoolean;
+          LDataPagamento := 0;
+          LValorPago := 0;
 
-    Q_resultado.Next;
-  end;
-  mmContasPagar.First;
-  mmContasPagar.EnableControls;
+          if (not LBoletoRegistrado) or QThread.FieldByName('dtarec').IsNull or
+             (QThread.FieldByName('valor_recebido').AsFloat <= 0) then
+          begin
+            try
+              if CRBoletoRegistradoNaApi(QThread, LDataPagamento, LValorPago) then
+              begin
+                TThread.Synchronize(nil,
+                  procedure
+                  begin
+                    CRBBMarcarBoletoRegistrado(LID, LDataPagamento, LValorPago);
+                  end);
+                LBoletoRegistrado := True;
+                if (LDataPagamento > 0) and (LValorPago > 0) then
+                begin
+                  LDtaPag := DateToStr(LDataPagamento);
+                  LValorPagoOriginal := LValorPago;
+                end;
+              end;
+            except
+              on E: Exception do
+                CRBBLogApi('preenche_grid verificar boleto registrado ERRO - cr1_id=' + IntToStr(LID) + ', erro=' + E.Message);
+            end;
+          end;
 
-  stTotal.Caption := formatfloat('R$ #,###,##0.00', VlrTotal);
-  stTotalSel.Caption := formatfloat('R$ #,###,##0.00', 0);
-  totalselecionados := 0;
-  total_confimar_pagto := 0;
-  total_cancelar_pgto := 0;
-  total_parcial_pgto := 0;
-  VlrTotalSel := 0;
+          TThread.Synchronize(nil,
+            procedure
+            begin
+              mmContasPagar.Append;
+              mmContasPagarID.AsInteger := LID;
+              mmContasPagarNR_DOCUMENTO.AsString := LNrDocumento;
+              mmContasPagarTITULO.AsString := LTitulo;
+              mmContasPagarSEQUENCIA.AsInteger := LSequencia;
+              mmContasPagarRAZAO_SOCIAL.AsString := LRazaoSocial;
+              mmContasPagarHISTORICO.AsString := LHistorico;
+              mmContasPagarDTAVEN.AsString := LDtaVen;
+              mmContasPagarTOTAL_PEDIDO.AsString := LTotalPedido;
+              mmContasPagarVALOR.AsFloat := LValor;
+              mmContasPagarDTAPAG.AsString := LDtaPag;
+              mmContasPagarVALOR_PAGO.AsFloat := LValorPagoOriginal;
+              mmContasPagarVALOR_CORRIGIDO.AsFloat := LValorCorrigido;
+              mmContasPagarNOM_FOP.AsString := LNomFop;
+              mmContasPagarEXTRATO.AsString := LExtrato;
+              VlrTotal := VlrTotal + mmContasPagarVALOR.Value;
+              mmContasPagarDESCONTADA.AsString := LDescontada;
+              mmContasPagarCONTA.AsString := LConta;
+              mmContasPagarBOLETO_REGISTRADO.AsBoolean := LBoletoRegistrado;
+              mmContasPagar.Post;
+            end);
 
-  fm_splash.hide;
+          fm_splash.ggProgress.Progress := fm_splash.ggProgress.Progress + 1;
+          fm_splash.Update;
+
+          QThread.Next;
+        end;
+
+        TThread.Synchronize(nil,
+          procedure
+          begin
+            mmContasPagar.First;
+            mmContasPagar.EnableControls;
+            stTotal.Caption := FormatFloat('R$ #,###,##0.00', VlrTotal);
+            stTotalSel.Caption := FormatFloat('R$ #,###,##0.00', 0);
+            totalselecionados := 0;
+            total_confimar_pagto := 0;
+            total_cancelar_pgto := 0;
+            total_parcial_pgto := 0;
+            VlrTotalSel := 0;
+            btok.Enabled := True;
+            Screen.Cursor := crDefault;
+            fm_splash.Hide;
+          end);
+      except
+        on E: Exception do
+        begin
+          LErro := E.Message;
+          TThread.Synchronize(nil,
+            procedure
+            begin
+              mmContasPagar.EnableControls;
+              fm_splash.Hide;
+              Screen.Cursor := crDefault;
+              btok.Enabled := True;
+              dao.msg('Houve um Erro ao preencher a grade!' + #13 +
+                'Abaixo segue o Erro Detalhado:' + #13 + LErro);
+            end);
+        end;
+      end;
+
+      QThread.Free;
+      ConnThread.Free;
+      ConnParams.Free;
+      CoUninitialize;
+    end).Start;
 end;
-
 procedure TFr_contas_receber.FormShow(Sender: TObject);
 begin
   { Sg_cor.ColWidths[0] := 0;
@@ -1914,6 +2314,10 @@ begin
   Lbnom_empresa.Caption := Q_cr1.fieldbyname('nom_empresa').AsString;
   Prid_plano_contas.Text := Q_cr1.fieldbyname('id_plano_contas').AsString;
   PrCONTA_BOLETO.Text := Q_cr1.fieldbyname('CONTA_BOLETO').AsString;
+  if Q_cr1.fieldbyname('BOLETO_REGISTRADO').IsNull then
+    lbBoletoRegistrado.Visible := false
+  else
+    lbBoletoRegistrado.Visible := Q_cr1.fieldbyname('BOLETO_REGISTRADO').AsBoolean;
   Prid_plano_contasExit(Self);
 
   if Q_cr1.fieldbyname('conferido').AsString = 'S' then
@@ -2665,6 +3069,21 @@ begin
   end;
 
   dgContasPagar.DefaultDrawDataCell(Rect, Column.Field, State);
+
+  if (Column.Field <> nil) and SameText(Column.Field.FieldName, 'BOLETO_REGISTRADO') then
+  begin
+    dgContasPagar.Canvas.FillRect(Rect);
+    if Column.Field.AsBoolean then
+    begin
+      DrawRect := Rect;
+      DrawRect.Left := Rect.Left + ((Rect.Right - Rect.Left - 16) div 2);
+      DrawRect.Top := Rect.Top + ((Rect.Bottom - Rect.Top - 16) div 2);
+      DrawRect.Right := DrawRect.Left + 16;
+      DrawRect.Bottom := DrawRect.Top + 16;
+      DrawFrameControl(dgContasPagar.Canvas.Handle, DrawRect, DFC_MENU, DFCS_MENUCHECK);
+    end;
+    Exit;
+  end;
 
   if (gdFocused in State) then
   begin
@@ -3546,6 +3965,8 @@ begin
 end;
 
 end.
+
+
 
 
 

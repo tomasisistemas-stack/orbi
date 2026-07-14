@@ -59,6 +59,12 @@ type
     PrModalidade: TsEdit;
     sGroupBox2: TsGroupBox;
     PrMensagem_Padrao: TMemo;
+    gbApiCobranca: TsGroupBox;
+    Prapi_key_cobranca: TsEdit;
+    gbClientIdCobranca: TsGroupBox;
+    Prclient_id_cobranca: TsEdit;
+    gbClientSecretCobranca: TsGroupBox;
+    Prclient_secret_cobranca: TsEdit;
     q_conta_corrente: TFDQuery;
     procedure btnovClick(Sender: TObject);
     procedure btaltClick(Sender: TObject);
@@ -827,3 +833,4 @@ begin
 end;
 
 end.
+

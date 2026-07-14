@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, DBGrids, DB,
+  Dialogs, StdCtrls, ExtCtrls, DBGrids, DB, Math,
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Param,
   FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf, FireDAC.DApt.Intf,
   FireDAC.Stan.Async, FireDAC.DApt, FireDAC.Comp.DataSet, FireDAC.Comp.Client, sComboEdit,
@@ -196,9 +196,9 @@ begin
   Result := StrToFloatDef(V, 0, F);
   if Result = 0 then
   begin
-    F.DecimalSeparator := '.';
-    F.ThousandSeparator := ',';
-    Result := StrToFloatDef(StringReplace(V, ',', '', [rfReplaceAll]), 0, F);
+    F.DecimalSeparator := ',';
+    F.ThousandSeparator := '.';
+    Result := StrToFloatDef(StringReplace(V, '.', '', [rfReplaceAll]), 0, F);
   end;
 end;
 
@@ -331,6 +331,7 @@ procedure TFr_pedido_simplificado.LimparDigitacaoItem;
 begin
   MeCodProduto.Clear;
   LbNomProduto.Caption := '';
+  FPrecoVendaProduto := 0;
   MeQtd.Text := '1';
   MePreco.Clear;
   MeDesconto.Text := '0';
@@ -347,6 +348,7 @@ begin
   end;
   MeCodProduto.Text := mmItens.FieldByName('cod_produto').AsString;
   LbNomProduto.Caption := mmItens.FieldByName('nom_produto').AsString;
+  FPrecoVendaProduto := mmItens.FieldByName('preco_base').AsFloat;
   MeQtd.Text := mmItens.FieldByName('qtd').DisplayText;
   MePreco.Text := mmItens.FieldByName('preco').DisplayText;
   if mmItens.FindField('desconto') <> nil then
@@ -423,7 +425,12 @@ end;
 
 procedure TFr_pedido_simplificado.MePrecoExit(Sender: TObject);
 begin
-  if FPrecoVendaProduto > 0 then if ParseFloatFlex(MePreco.Text) <= FPrecoVendaProduto then MeDesconto.Text := FmtQtd(100 - ((ParseFloatFlex(MePreco.Text) / FPrecoVendaProduto) * 100)) else MeDesconto.Text := '0';
+  if FPrecoVendaProduto > 0 then
+    if ParseFloatFlex(MePreco.Text) <= FPrecoVendaProduto then
+      MeDesconto.Text := FmtQtd(100 - ((ParseFloatFlex(MePreco.Text) / FPrecoVendaProduto) * 100))
+    else
+      MeDesconto.Text := '0';
+
   if not ValidarDescontoItem(ParseFloatFlex(MeDesconto.Text)) then
   begin
     if FPrecoVendaProduto > 0 then
@@ -1156,15 +1163,18 @@ begin
       if Assigned(mmItens) and mmItens.Active then begin
         mmItens.First;
         while not mmItens.Eof do begin
-          Q.SQL.Text := 'insert into vendas2 (numdoc, cod_produto, qtd, preco_base, preco, desconto, sub_total, sub_total_bruto) values (' +
+          Q.SQL.Text := 'insert into vendas2 (numdoc, cod_produto, qtd, preco_bruto, preco_base, preco, desconto, sub_total, sub_total_bruto) values (' +
             QuotedStr(NumDoc) + ',' + QuotedStr(mmItens.FieldByName('cod_produto').AsString) + ',' +
             StringReplace(FloatToStr(mmItens.FieldByName('qtd').AsFloat), ',', '.', [rfReplaceAll]) + ',' +
+            StringReplace(FloatToStr(mmItens.FieldByName('preco_base').AsFloat), ',', '.', [rfReplaceAll]) + ',' +
             StringReplace(FloatToStr(mmItens.FieldByName('preco_base').AsFloat), ',', '.', [rfReplaceAll]) + ',' +
             StringReplace(FloatToStr(mmItens.FieldByName('preco').AsFloat), ',', '.', [rfReplaceAll]) + ',' +
             StringReplace(FloatToStr(mmItens.FieldByName('desconto').AsFloat), ',', '.', [rfReplaceAll]) + ',' +
             StringReplace(FloatToStr(mmItens.FieldByName('sub_total').AsFloat), ',', '.', [rfReplaceAll]) + ',' +
             StringReplace(FloatToStr(mmItens.FieldByName('sub_total_bruto').AsFloat), ',', '.', [rfReplaceAll]) + ')';
-          Q.ExecSQL; mmItens.Next; end;
+          Q.ExecSQL;
+          mmItens.Next;
+        end;
       end;
 
       dao.CN.Commit;
@@ -1247,6 +1257,9 @@ end;
 procedure TFr_pedido_simplificado.CarregarProdutoItem;
 var
   Q: TFDQuery;
+  LPrecoProduto: Double;
+  LPrecoPromocao: Double;
+  LPromocao: Boolean;
 begin
   LbNomProduto.Caption := '';
   FPrecoVendaProduto := 0;
@@ -1257,16 +1270,43 @@ begin
   try
     Q.Connection := dao.CN;
     Q.SQL.Text :=
-      'select nom_produto, coalesce(preco_venda, 0) as preco_venda ' +
-      'from produto where cod_produto = :cod';
-    Q.ParamByName('cod').AsInteger := StrToIntDef(Trim(MeCodProduto.Text),0);
+      'select p.nom_produto, coalesce(p.preco_venda, 0) as preco_venda, ' +
+      '       coalesce(p.preco_promocao, 0) as preco_promocao, coalesce(p.promocao, ''N'') as promocao, ' +
+      '       coalesce( ' +
+      '         (select pr.desconto_maximo from produto_representante pr ' +
+      '          where pr.cod_produto = p.cod_produto and pr.id_representante = :cod_rep limit 1), ' +
+      '         coalesce( ' +
+      '           (select gr.desconto_maximo from grupo_representante gr ' +
+      '            where gr.cod_grupo = p.cod_grupo and gr.id_representante = :cod_rep limit 1), ' +
+      '           coalesce(p.desconto_maximo, 0) ' +
+      '         ) ' +
+      '       ) as desconto_maximo ' +
+      'from produto p ' +
+      'where p.status = ''N'' and p.cod_produto = :cod';
+    Q.ParamByName('cod').AsInteger := StrToIntDef(Trim(MeCodProduto.Text), 0);
+    Q.ParamByName('cod_rep').AsInteger := StrToIntDef(Trim(Prcod_representante.Text), 0);
     Q.Open;
     if not Q.IsEmpty then
     begin
-      LbNomProduto.Caption := Q.FieldByName('nom_produto').AsString;
-      FPrecoVendaProduto := Q.FieldByName('preco_venda').AsFloat;
+      LPromocao := Q.FieldByName('promocao').AsString = 'S';
+      LPrecoProduto := Q.FieldByName('preco_venda').AsFloat;
+      LPrecoPromocao := Q.FieldByName('preco_promocao').AsFloat;
+{      if LPromocao and (LPrecoPromocao > 0) then
+        LPrecoProduto := LPrecoPromocao / 0.65;}
+
+      if LPromocao then
+        LbNomProduto.Caption := Q.FieldByName('nom_produto').AsString + ' (PROMOÇÃO)'
+      else
+        LbNomProduto.Caption := Q.FieldByName('nom_produto').AsString;
+
+      FPrecoVendaProduto := LPrecoProduto;
       if (Trim(MePreco.Text) = '0,00') or (Trim(MePreco.Text) = '') then
-        MePreco.Text := FormatFloat('0.00', Q.FieldByName('preco_venda').AsFloat);
+        MePreco.Text := FmtMoney(LPrecoProduto);
+    end
+    else begin
+      MessageDlg('Produto Inexistente ou Inativo!', mtWarning, [mbOK], 0);
+      MeCodProduto.Clear;
+      Mecodproduto.SetFocus;
     end;
   finally
     Q.Free;
@@ -1332,14 +1372,14 @@ end;
 procedure TFr_pedido_simplificado.GravarItem(AAlterar: Boolean);
 var
   Qtd, Preco, Desc, SubTotal, SubTotalBruto: Double;
-  CodProdutoGravado: string;
+  CodProdutoGravado, CodProdutoAtual: string;
 begin
   if FFaturado then
   begin
     ShowMessage('Pedido ja faturado.');
     Exit;
   end;
-  CarregarProdutoItem;
+  //CarregarProdutoItem;
   if Trim(MeCodProduto.Text) = '' then
   begin
     ShowMessage('Informe o produto.');
@@ -1377,6 +1417,27 @@ begin
     Exit;
   if not mmItens.Active then
     mmItens.Open;
+
+  CodProdutoAtual := '';
+  if AAlterar then
+    CodProdutoAtual := ItemAtualCodProduto;
+
+  if (not AAlterar) and mmItens.Locate('cod_produto', CodProdutoGravado, []) then
+  begin
+    ShowMessage('Produto ja incluido no pedido.');
+    MeCodProduto.SetFocus;
+    Exit;
+  end;
+
+  if AAlterar and (CodProdutoAtual <> CodProdutoGravado) and
+    mmItens.Locate('cod_produto', CodProdutoGravado, []) then
+  begin
+    if CodProdutoAtual <> '' then
+      mmItens.Locate('cod_produto', CodProdutoAtual, []);
+    ShowMessage('Produto ja incluido no pedido.');
+    MeCodProduto.SetFocus;
+    Exit;
+  end;
 
   if AAlterar then
     mmItens.Edit
@@ -1849,17 +1910,31 @@ begin
   try
     Q.Connection := dao.CN;
     Q.SQL.Text :=
-      'select coalesce(p.desconto_maximo, 0) as desconto_produto, ' +
-      '       coalesce(c.desconto_maximo, 100) as desconto_cliente ' +
+      'select coalesce(c.desconto_maximo, 100) as desconto_cliente, ' +
+      '       coalesce(p.promocao, ''N'') as promocao, ' +
+      '       coalesce( ' +
+      '         (select pr.desconto_maximo from produto_representante pr ' +
+      '          where pr.cod_produto = p.cod_produto and pr.id_representante = :cod_rep limit 1), ' +
+      '         coalesce( ' +
+      '           (select gr.desconto_maximo from grupo_representante gr ' +
+      '            where gr.cod_grupo = p.cod_grupo and gr.id_representante = :cod_rep limit 1), ' +
+      '           coalesce(p.desconto_maximo, 0) ' +
+      '         ) ' +
+      '       ) as desconto_produto, ' +
+      '       p.preco_venda, p.preco_promocao ' +
       'from produto p ' +
       'left join cliente c on c.cod_cliente = :cod_cliente ' +
       'where p.cod_produto = :cod_produto';
     Q.ParamByName('cod_cliente').AsInteger := StrToIntDef(Trim(Prcod_cliente.Text), 0);
     Q.ParamByName('cod_produto').AsInteger := StrToIntDef(Trim(MeCodProduto.Text), 0);
+    Q.ParamByName('cod_rep').AsInteger := StrToIntDef(Trim(Prcod_representante.Text), 0);
     Q.Open;
     if not Q.IsEmpty then
     begin
-      LDescontoProduto := Q.FieldByName('desconto_produto').AsFloat;
+      if Q.FieldByName('promocao').AsString = 'S' then
+        LDescontoProduto := ((Q.FieldByName('preco_venda').AsFloat -  Q.FieldByName('preco_promocao').AsFloat) / Q.FieldByName('preco_venda').AsFloat) * 100
+      else
+        LDescontoProduto := Q.FieldByName('desconto_produto').AsFloat;
       LDescontoCliente := Q.FieldByName('desconto_cliente').AsFloat;
     end;
   finally
@@ -1876,7 +1951,9 @@ var
 begin
   Result := True;
   LDescontoMaximo := ObterDescontoMaximoItem;
-  if ADesconto > LDescontoMaximo then
+
+
+  if roundto(ADesconto, -2) > roundto(LDescontoMaximo, -2) then
   begin
     ShowMessage('Desconto Superior ao Permitido para este Produto! Maximo: ' + FmtQtd(LDescontoMaximo) + '%');
     MeDesconto.Text := FmtQtd(LDescontoMaximo);
@@ -1927,9 +2004,14 @@ procedure TFr_pedido_simplificado.CarregarNomeCliente;
 begin
   LbNomCliente.Caption := '';
   if Trim(Prcod_cliente.Text) = '' then Exit;
-  dao.Geral1('select nom_cliente from cliente where cod_cliente = ' + QuotedStr(Trim(Prcod_cliente.Text)));
+  dao.Geral1('select nom_cliente from cliente where id_representante = '+QuotedStr(Trim(Prcod_representante.Text))+' and cod_cliente = ' + QuotedStr(Trim(Prcod_cliente.Text)));
   if not dao.q1.IsEmpty then
-    LbNomCliente.Caption := dao.q1.FieldByName('nom_cliente').AsString;
+    LbNomCliente.Caption := dao.q1.FieldByName('nom_cliente').AsString
+  else begin
+    dao.msg('Registro nao Encontrado!');
+    Prcod_cliente.Clear;
+    Prcod_cliente.SetFocus;
+  end;
 end;
 
 procedure TFr_pedido_simplificado.CarregarNomeRepresentante;
@@ -1938,7 +2020,12 @@ begin
   if Trim(Prcod_representante.Text) = '' then Exit;
   dao.Geral1('select nom_representante from representante where ativo = ''S'' and funcionario in (''0'', ''1'') and  id = ' + QuotedStr(Trim(Prcod_representante.Text)));
   if not dao.q1.IsEmpty then
-    LbNomRepresentante.Caption := dao.q1.FieldByName('nom_representante').AsString;
+    LbNomRepresentante.Caption := dao.q1.FieldByName('nom_representante').AsString
+  else begin
+    dao.msg('Registro nao Encontrado!');
+    Prcod_representante.Clear;
+    Prcod_representante.SetFocus;
+  end;
 end;
 
 procedure TFr_pedido_simplificado.CarregarNomeSupervisor;

@@ -4,7 +4,7 @@ object frm_remessa_boleto: Tfrm_remessa_boleto
   BorderIcons = [biSystemMenu]
   Caption = 'Gerar Remessa de Boletos'
   ClientHeight = 514
-  ClientWidth = 871
+  ClientWidth = 911
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -21,7 +21,7 @@ object frm_remessa_boleto: Tfrm_remessa_boleto
   object sPanel1: TsPanel
     Left = 0
     Top = 473
-    Width = 871
+    Width = 911
     Height = 41
     Align = alBottom
     TabOrder = 0
@@ -513,7 +513,7 @@ object frm_remessa_boleto: Tfrm_remessa_boleto
   object sPanel2: TsPanel
     Left = 0
     Top = 35
-    Width = 871
+    Width = 911
     Height = 438
     Align = alClient
     BevelInner = bvLowered
@@ -529,7 +529,7 @@ object frm_remessa_boleto: Tfrm_remessa_boleto
     object dgItens: TDBGrid
       Left = 2
       Top = 2
-      Width = 867
+      Width = 907
       Height = 393
       Align = alClient
       DataSource = dsItens
@@ -615,6 +615,12 @@ object frm_remessa_boleto: Tfrm_remessa_boleto
         end
         item
           Expanded = False
+          FieldName = 'BOLETO_REGISTRADO'
+          Title.Caption = 'B.Reg.'
+          Visible = True
+        end
+        item
+          Expanded = False
           FieldName = 'DESCONTADA'
           Title.Alignment = taCenter
           Title.Caption = 'De'
@@ -657,7 +663,7 @@ object frm_remessa_boleto: Tfrm_remessa_boleto
     object Panel1: TPanel
       Left = 2
       Top = 395
-      Width = 867
+      Width = 907
       Height = 41
       Align = alBottom
       BevelInner = bvLowered
@@ -708,7 +714,7 @@ object frm_remessa_boleto: Tfrm_remessa_boleto
   object sPanel3: TsPanel
     Left = 0
     Top = 0
-    Width = 871
+    Width = 911
     Height = 35
     Align = alTop
     TabOrder = 2
@@ -928,6 +934,9 @@ object frm_remessa_boleto: Tfrm_remessa_boleto
     end
     object mmItensDESCONTADA: TBooleanField
       FieldName = 'DESCONTADA'
+    end
+    object mmItensBOLETO_REGISTRADO: TBooleanField
+      FieldName = 'BOLETO_REGISTRADO'
     end
   end
   object dsItens: TDataSource

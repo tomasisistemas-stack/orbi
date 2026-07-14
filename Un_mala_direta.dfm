@@ -28,8 +28,8 @@ object FmMalaDireta: TFmMalaDireta
     TabOrder = 0
     SkinData.SkinSection = 'PANEL'
     object BtPublicar: TsSpeedButton
-      Left = 322
-      Top = 5
+      Left = 471
+      Top = 6
       Width = 97
       Height = 30
       Caption = 'Publicar'
@@ -58,8 +58,8 @@ object FmMalaDireta: TFmMalaDireta
       SkinData.SkinSection = 'SPEEDBUTTON'
     end
     object btImprimir: TsSpeedButton
-      Left = 427
-      Top = 5
+      Left = 61
+      Top = 2
       Width = 89
       Height = 30
       Caption = 'Mala D.'
@@ -84,12 +84,13 @@ object FmMalaDireta: TFmMalaDireta
         33333337FFFF7733333333300000033333333337777773333333}
       NumGlyphs = 2
       ParentFont = False
+      Visible = False
       OnClick = btImprimirClick
       SkinData.SkinSection = 'SPEEDBUTTON'
     end
     object btnSalvar: TsSpeedButton
-      Left = 216
-      Top = 5
+      Left = 365
+      Top = 6
       Width = 97
       Height = 30
       Caption = 'Salvar'
@@ -118,8 +119,8 @@ object FmMalaDireta: TFmMalaDireta
       SkinData.SkinSection = 'SPEEDBUTTON'
     end
     object sbEmail: TsSpeedButton
-      Left = 618
-      Top = 5
+      Left = 91
+      Top = 6
       Width = 86
       Height = 30
       Caption = 'Email'
@@ -187,12 +188,13 @@ object FmMalaDireta: TFmMalaDireta
         FFFFFFFFFFFFFFFFFFFFFAFAFAD0D0D0FFFFFFF9F9F9D0D0D0FFFFFFFFFFFFFF
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
       ParentFont = False
+      Visible = False
       OnClick = sbEmailClick
       SkinData.SkinSection = 'SPEEDBUTTON'
     end
     object btImpPromo: TsSpeedButton
-      Left = 523
-      Top = 6
+      Left = 578
+      Top = 7
       Width = 86
       Height = 30
       Caption = 'Promo'#231#227'o'

@@ -2776,7 +2776,7 @@ var
   totais, Total, saldo, valor_parc: double;
   dtvcto: TDate;
   X, Y, dia, mes, ano: Integer;
-  data_str: string;
+  data_str, historico: string;
 begin
   if PrId_master.Text = '' then
     PrId_master.Text := Prid.Text;
@@ -2786,6 +2786,7 @@ begin
   mmParcelas.open;
   Total := VlrTotalParc;
   totais := 0;
+  historico := TrimRight(Prhistorico1.Lines.Text);
 
   if edEntrada.Value > 0 then
   begin
@@ -2794,7 +2795,7 @@ begin
     mmParcelasID_MASTER.AsString := PrId_master.Text;
     mmParcelasTITULO.Value := copy(Prtitulo.Text, 1, 6) + '-0';
     mmParcelasRAZAO_SOCIAL.Value := Lbnom_fornecedor.Caption;
-    mmParcelasHISTORICO.Value := Prhistorico1.Text;
+    mmParcelasHISTORICO.AsString := historico;
     mmParcelasDTAVEN.Value := Prdtaven.date;
     mmParcelasVALOR.Value := edEntrada.Value;
     mmParcelasNOM_FOP.Value := Lbnom_fop.Caption;
@@ -2818,7 +2819,7 @@ begin
     mmParcelasID_MASTER.AsString := PrId_master.Text;
     mmParcelasTITULO.Value := copy(Prtitulo.Text, 1, 6) + '-' + inttostr(X);
     mmParcelasRAZAO_SOCIAL.Value := Lbnom_fornecedor.Caption;
-    mmParcelasHISTORICO.Value := Prhistorico1.Text;
+    mmParcelasHISTORICO.AsString := historico;
     dia := strtoint(edDiaVcto.Text);
     mes := mes + 1;
 
@@ -2946,91 +2947,108 @@ end;
 
 procedure TFr_contas_pagar.BtSalvarClick(Sender: TObject);
 var
-  sql_insert, id_plano_contas, cod_empresa, representante: string;
+  sql_insert, id_plano_contas, cod_empresa, representante, historico_salvar, historico_hex: string;
+
+  function TextoParaHexBytea(const valor: string): string;
+  var
+    bytes: AnsiString;
+    i: Integer;
+  begin
+    bytes := AnsiString(valor);
+    Result := '';
+    for i := 1 to Length(bytes) do
+      Result := Result + IntToHex(Ord(bytes[i]), 2);
+  end;
 begin
   if PrId_master.Text <> '' then
   begin
+    historico_salvar := TrimRight(Prhistorico1.Lines.Text);
+    historico_hex := TextoParaHexBytea(historico_salvar);
     try
       if not dao.cn.InTransaction then
         dao.cn.StartTransaction;
+
       dao.Exec_sql.sql.clear;
-      dao.Exec_sql.sql.Add('DELETE FROM CP1 WHERE ID_MASTER = ' +
-        PrId_master.Text);
+      dao.Exec_sql.Params.Clear;
+      dao.Exec_sql.sql.Add('DELETE FROM CP1 WHERE ID_MASTER = ' + PrId_master.Text);
       dao.Exec_sql.Execsql;
-      dao.cn.Commit;
-    except
-      dao.cn.rollback;
-    end;
-    try
-      if not dao.cn.InTransaction then
-        dao.cn.StartTransaction;
+
       dao.Exec_sql.sql.clear;
+      dao.Exec_sql.Params.Clear;
       dao.Exec_sql.sql.Add('DELETE FROM CP1 WHERE ID = ' + Prid.Text);
       dao.Exec_sql.Execsql;
-      dao.cn.Commit;
-    except
-      dao.cn.rollback;
-    end;
-    mmParcelas.First;
-    while not mmParcelas.Eof do
-    begin
-      if mmParcelasID_PLANO_CONTAS.AsString = '' then
-        id_plano_contas := 'null'
-      else
-        id_plano_contas := mmParcelasID_PLANO_CONTAS.AsString;
 
-      if mmParcelasCOD_EMPRESA.AsString = '' then
-        cod_empresa := 'null'
-      else
-        cod_empresa := mmParcelasCOD_EMPRESA.AsString;
-
-      if not mmParcelasID_REPRESENTANTE.IsNull then
-        representante := mmParcelasID_REPRESENTANTE.AsString
-      else
-        representante := 'null';
-
-      if not mmParcelasID.IsNull then
+      mmParcelas.First;
+      while not mmParcelas.Eof do
       begin
-        sql_insert :=
-          'INSERT INTO CP1 (ID, ID_MASTER, SEQUENCIA, TITULO, HISTORICO1, DTAVEN, VALOR, COD_FOP, COD_FORNECEDOR, ID_PLANO_CONTAS, COD_EMPRESA, COD_REPRESENTANTE)'
-          + ' VALUES ( ' + mmParcelasID.AsString + ',' +
-          mmParcelasID_MASTER.AsString + ', 1,' +
-          QuotedStr(mmParcelasTITULO.AsString) + ',' +
-          QuotedStr(mmParcelasHISTORICO.AsString) + ',' +
-          QuotedStr(formatdatetime('dd/mm/yyyy', mmParcelasDTAVEN.AsDateTime)) +
-          ',' + StringReplace(mmParcelasVALOR.AsString, ',', '.', [rfReplaceAll]
-          ) + ',' + mmParcelasCOD_FOP.AsString + ',' +
-          mmParcelasCOD_FORNECEDOR.AsString + ',' + id_plano_contas + ',' +
-          cod_empresa + ',' + representante + ')';
-      end
-      else
-      begin
-        sql_insert :=
-          'INSERT INTO CP1 (ID_MASTER, SEQUENCIA, TITULO, HISTORICO1, DTAVEN, VALOR, COD_FOP, COD_FORNECEDOR, ID_PLANO_CONTAS, COD_EMPRESA, COD_REPRESENTANTE )'
-          + ' VALUES ( ' + mmParcelasID_MASTER.AsString + ', 1,' +
-          QuotedStr(mmParcelasTITULO.AsString) + ',' +
-          QuotedStr(mmParcelasHISTORICO.AsString) + ',' +
-          QuotedStr(formatdatetime('dd/mm/yyyy', mmParcelasDTAVEN.AsDateTime)) +
-          ',' + StringReplace(mmParcelasVALOR.AsString, ',', '.', [rfReplaceAll]
-          ) + ',' + mmParcelasCOD_FOP.AsString + ',' +
-          mmParcelasCOD_FORNECEDOR.AsString + ',' + id_plano_contas + ',' +
-          cod_empresa + ',' + representante + ')';
-      end;
-      try
-        if not dao.cn.InTransaction then
-          dao.cn.StartTransaction;
+        if mmParcelasID_PLANO_CONTAS.AsString = '' then
+          id_plano_contas := 'null'
+        else
+          id_plano_contas := mmParcelasID_PLANO_CONTAS.AsString;
+
+        if mmParcelasCOD_EMPRESA.AsString = '' then
+          cod_empresa := 'null'
+        else
+          cod_empresa := mmParcelasCOD_EMPRESA.AsString;
+
+        if not mmParcelasID_REPRESENTANTE.IsNull then
+          representante := mmParcelasID_REPRESENTANTE.AsString
+        else
+          representante := 'null';
+
+        if not mmParcelasID.IsNull then
+        begin
+          sql_insert :=
+            'INSERT INTO CP1 (ID, ID_MASTER, SEQUENCIA, TITULO, HISTORICO1, DTAVEN, VALOR, COD_FOP, COD_FORNECEDOR, ID_PLANO_CONTAS, COD_EMPRESA, COD_REPRESENTANTE)'
+            + ' VALUES ( ' + mmParcelasID.AsString + ',' +
+            mmParcelasID_MASTER.AsString + ', 1,' +
+            QuotedStr(mmParcelasTITULO.AsString) + ', decode(' + QuotedStr(historico_hex) + ', ''hex''),' +
+            QuotedStr(formatdatetime('dd/mm/yyyy', mmParcelasDTAVEN.AsDateTime)) +
+            ',' + StringReplace(mmParcelasVALOR.AsString, ',', '.', [rfReplaceAll]
+            ) + ',' + mmParcelasCOD_FOP.AsString + ',' +
+            mmParcelasCOD_FORNECEDOR.AsString + ',' + id_plano_contas + ',' +
+            cod_empresa + ',' + representante + ')';
+        end
+        else
+        begin
+          sql_insert :=
+            'INSERT INTO CP1 (ID_MASTER, SEQUENCIA, TITULO, HISTORICO1, DTAVEN, VALOR, COD_FOP, COD_FORNECEDOR, ID_PLANO_CONTAS, COD_EMPRESA, COD_REPRESENTANTE )'
+            + ' VALUES ( ' + mmParcelasID_MASTER.AsString + ', 1,' +
+            QuotedStr(mmParcelasTITULO.AsString) + ', decode(' + QuotedStr(historico_hex) + ', ''hex''),' +
+            QuotedStr(formatdatetime('dd/mm/yyyy', mmParcelasDTAVEN.AsDateTime)) +
+            ',' + StringReplace(mmParcelasVALOR.AsString, ',', '.', [rfReplaceAll]
+            ) + ',' + mmParcelasCOD_FOP.AsString + ',' +
+            mmParcelasCOD_FORNECEDOR.AsString + ',' + id_plano_contas + ',' +
+            cod_empresa + ',' + representante + ')';
+        end;
+
         dao.Exec_sql.sql.clear;
+        dao.Exec_sql.Params.Clear;
         dao.Exec_sql.sql.Add(sql_insert);
         dao.Exec_sql.Execsql;
-        dao.cn.Commit;
-      except
-        dao.cn.rollback;
+
+        mmParcelas.Next;
       end;
-      mmParcelas.Next;
+
+      dao.cn.Commit;
+    except
+      on E: Exception do
+      begin
+        if dao.cn.InTransaction then
+          dao.cn.rollback;
+        dao.msg('Erro ao gravar parcela: ' + E.Message + #13 + dao.Exec_sql.SQL.Text);
+        Exit;
+      end;
     end;
 
     dao.Geral1('select min(ID) AS ID FROM CP1 WHERE ID_MASTER = ' +
-      mmParcelasID_MASTER.AsString);
+      PrId_master.Text);
+
+    if dao.Q1.fieldbyname('id').IsNull then
+    begin
+      dao.msg('Parcelas não gravadas. Verifique a mensagem de erro anterior.');
+      Exit;
+    end;
 
     ativa_cp1(dao.Q1.fieldbyname('id').AsString);
     mostra_campos('Pr');

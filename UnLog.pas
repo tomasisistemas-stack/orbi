@@ -216,41 +216,54 @@ end;
 procedure TFRLOG.ListaServidores;
 var
   Ini: TIniFile;
-  Path, Usuario, Senha, ServidorPadrao : string;
-  x, total_servidores: integer;
+  Path, Usuario, Senha, ServidorPadrao, NomeServidorPadrao: string;
+  x, total_servidores, indice_servidor: integer;
 begin
   Path := extractFilePath(application.ExeName);
   Ini := TIniFile.Create(Path + 'servidor.ini');
+  try
+    dao.skin := Ini.ReadString('config', 'skin', '');
+    dao.skinPath := Ini.ReadString('config', 'skinPath', '');
 
-  dao.skin := Ini.ReadString('config', 'skin', '');
-  dao.skinPath := Ini.ReadString('config', 'skinPath', '');
+    dao.skinData1.Active := false;
+    if dao.skinPath <> '' then
+    begin
+      dao.skinData1.SkinDirectory := dao.skinPath;
+      dao.skinData1.SkinName := dao.skin;
+      dao.skinData1.Active := true;
+    end;
 
-  dao.skinData1.Active := false;
-  if dao.skinPath <> '' then
-  begin
-    dao.skinData1.SkinDirectory := dao.skinPath;
-    dao.skinData1.SkinName := dao.skin;
-    dao.skinData1.Active := true;
+    ServidorPadrao := Trim(Ini.ReadString('config', 'servidor_padrao', ''));
+    NomeServidorPadrao := Trim(Ini.ReadString('config', 'Nome', ''));
+    Usuario := Ini.ReadString('config', 'usuario', '');
+    Senha := Ini.ReadString('config', 'senha', '');
+    total_servidores := StrToIntDef(Ini.ReadString('config', 'quantidade', '0'), 0);
+
+    cbServidor.Clear;
+    for x := 0 to total_servidores - 1 do
+      cbServidor.Items.Add(Ini.ReadString(IntToStr(x), 'Nome', ''));
+
+    indice_servidor := 0;
+    if ServidorPadrao <> '' then
+      indice_servidor := StrToIntDef(ServidorPadrao, 0)
+    else if NomeServidorPadrao <> '' then
+      indice_servidor := cbServidor.Items.IndexOf(NomeServidorPadrao);
+
+    if (indice_servidor < 0) or (indice_servidor >= cbServidor.Items.Count) then
+      indice_servidor := 0;
+
+    cbServidor.ItemIndex := indice_servidor;
+    dao.servidor_selecionado := indice_servidor;
+
+    if (Usuario <> '') and (Senha <> '') then
+    begin
+      dao.conf_CN;
+      dao.CN.Connected := True;
+      Logon(Usuario, Senha);
+    end;
+  finally
+    Ini.Free;
   end;
-
-  ServidorPadrao := Ini.ReadString('config', 'Nome', '');
-  ServidorPadrao := Ini.ReadString('config', 'servidor_padrao', '');
-  Usuario := Ini.ReadString('config', 'usuario', '');
-  Senha := Ini.ReadString('config', 'senha', '');
-
-  if not ((ServidorPadrao = '') or (Usuario = '') or (Senha = '')) then
-  begin
-    dao.servidor_selecionado := StrToInt(ServidorPadrao);
-    dao.conf_CN;
-    Logon(Usuario, Senha);
-  end;
-
-  total_servidores := strtoint(Ini.ReadString('config', 'quantidade', ''));
-
-  cbServidor.Clear;
-  for x := 0 to total_servidores - 1 do
-    cbServidor.Items.Add(Ini.ReadString(inttostr(x), 'Nome', ''));
-  cbServidor.ItemIndex := 0;
 end;
 (*
 procedure TFRLOG.teste;

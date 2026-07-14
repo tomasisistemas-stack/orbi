@@ -276,5 +276,7 @@
     <File Path="un_pedido_simplificado.pas"/>
     <File Path="un_pedido_simplificado.dfm"/>
     <File Path="Un_speedio_api.pas"/>
+    <File Path="Un_BB_Cobrancas.pas"/>
+    <File Path="Un_BB_Cobrancas_Api.pas"/>
   </ProjectSortOrder>
 </BorlandProject>

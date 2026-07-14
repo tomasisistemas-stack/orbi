@@ -5,11 +5,7 @@
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppName=ORBI
-<<<<<<< HEAD
-AppVersion=2.00.69
-=======
-AppVersion=2.00.68
->>>>>>> ea249b0eb181edecb8a4b97e553e293fa1d1b47d
+AppVersion=2.00.82
 AppPublisher=TOMASI SISTEMAS DE INFORMAÇÃO
 DefaultDirName=C:\ORBI
 DefaultGroupName=ORBI
@@ -45,6 +41,19 @@ Source: "C:\Tomasi Sistemas\orbi\libxml2.dll"; DestDir: "{app}"; Flags: ignoreve
 Source: "C:\Tomasi Sistemas\orbi\libxmlsec.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Tomasi Sistemas\orbi\libxmlsec-openssl.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Tomasi Sistemas\orbi\libxslt.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Tomasi Sistemas\orbi\libcef.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Tomasi Sistemas\orbi\chrome_elf.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Tomasi Sistemas\orbi\d3dcompiler_47.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Tomasi Sistemas\orbi\vk_swiftshader.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Tomasi Sistemas\orbi\vk_swiftshader_icd.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Tomasi Sistemas\orbi\vulkan-1.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Tomasi Sistemas\orbi\libEGL.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Tomasi Sistemas\orbi\libGLESv2.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Tomasi Sistemas\orbi\icudtl.dat"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Tomasi Sistemas\orbi\v8_context_snapshot.bin"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Tomasi Sistemas\orbi\resources.pak"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Tomasi Sistemas\orbi\chrome_100_percent.pak"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Tomasi Sistemas\orbi\chrome_200_percent.pak"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Tomasi Sistemas\orbi\midas.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Tomasi Sistemas\orbi\msvbvm50.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Tomasi Sistemas\orbi\msvcr120.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -55,6 +64,7 @@ Source: "C:\Tomasi Sistemas\orbi\Zip1Dll.dll"; DestDir: "{app}"; Flags: ignoreve
 Source: "C:\Tomasi Sistemas\orbi\Relatorios\*"; DestDir: "{app}\Relatorios\"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "C:\Tomasi Sistemas\orbi\Logos\*"; DestDir: "{app}\Logos\"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "C:\Tomasi Sistemas\orbi\Schemas\*"; DestDir: "{app}\Schemas\"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\Tomasi Sistemas\orbi\locales\*"; DestDir: "{app}\locales\"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

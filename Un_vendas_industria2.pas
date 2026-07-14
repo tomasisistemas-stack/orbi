@@ -225,6 +225,7 @@ type
     DBGrid1: Tdbgrid;
     Panel3: tpanel;
     Label9: tsLabel;
+    lbItemOC: TsLabel;
     Lbnom_produto_db: TsDBText;
     Label18: tsLabel;
     Label19: tsLabel;
@@ -377,7 +378,7 @@ type
     edDecTransp: TsCurrencyEdit;
     Prdtadoc: TsDateEdit;
     DS_CR2: TDataSource;
-    sDBGrid1: Tdbgrid;
+    grCR: TDBGrid;
     Q2S: TFDQuery;
     q_cr1: TFDQuery;
     gbTotalFaturado: TsGroupBox;
@@ -490,6 +491,8 @@ type
     PrDESCONTO_GERAL: TsCurrencyEdit;
     PrVLR_DESCONTO_GERAL: TsCurrencyEdit;
     mmVendas2DESCONTO_VALOR_GERAL: TFloatField;
+    mmVendas2ITEM_OC: TStringField;
+    MeITEM_OC: TsDBEdit;
     BtStatus: TSpeedButton;
     sGroupBox10: TsGroupBox;
     PrProcesso_id: TsEdit;
@@ -545,6 +548,7 @@ type
     q_cr1dtarec: TDateField;
     q_cr1valor_recebido: TBCDField;
     q_cr1boleto_remessa_ordem: TIntegerField;
+    q_cr1boleto_registrado: TBooleanField;
     q_cr1conta_padrao: TIntegerField;
     Lbforma_pgto: TsLabel;
     Crdtaven: TsDateEdit;
@@ -598,6 +602,9 @@ type
     zzreal: TsCurrencyEdit;
     zzreservado: TsCurrencyEdit;
     zztotal: TsCurrencyEdit;
+    gbPedidoRef: TsGroupBox;
+    PrNumdoc_ref_ent: TsComboBox;
+    btnImpXMLDev: TSpeedButton;
     procedure ChecarBoletoEmpresa(cc, empresa: string);
     procedure Prcod_clienteButtonClick(Sender: TObject);
     procedure Prcod_clienteKeyPress(Sender: TObject; var Key: Char);
@@ -640,6 +647,7 @@ type
     procedure Prcod_fornecedorButtonClick(Sender: TObject);
     procedure FaturamentoAvulso1Click(Sender: TObject);
     procedure DBGrid1DrawColumnCell(Sender: TObject; const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
+    procedure grCRDrawColumnCell(Sender: TObject; const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
     procedure Mecod_produtoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure MeTrib_ICMSExit(Sender: TObject);
     procedure Meipi_itemExit(Sender: TObject);
@@ -771,6 +779,8 @@ type
     procedure MeqtdExit(Sender: TObject);
     procedure PrNfeEntradaSaidaChange(Sender: TObject);
     procedure BtnAltObsClick(Sender: TObject);
+    procedure SpeedButton1Click(Sender: TObject);
+    procedure btnImpXMLDevClick(Sender: TObject);
 
   private
     procedure AtualizarCamposDevolucao;
@@ -856,7 +866,9 @@ type
     procedure SgProClickCell(Sender: TObject; ARow, ACol: integer);
     procedure SgProSelectCell(Sender: TObject; ACol, ARow: integer;
       var CanSelect: boolean);
-    procedure SpeedButton1Click(Sender: TObject);
+    procedure RegistrarBoletoApi;
+    procedure BaixarBoletoApi;
+    procedure CarregarPedidosRefEntrada;
   public
     agrupar_pedidos, empresa_simples, cliente_aceita_simples, obrigatoriedade_peso, representacao, industria: boolean;
     nfe_duplicada: boolean;
@@ -951,11 +963,520 @@ uses
   Un_imp_pedidos_lote, Un_cheque_terceiros, un_frente_caixa, UnSenha_especial,
   frmMontaXML, Math, nfe_v200, un_dm, un_nfe_transmissao, Un_nfe_envio_lote,
   un_motivo, un_mais_precos, Un_splash, Un_Cliente, Un_Transportadora,
-  un_definir_saldo_inicial, ACBrNFeWebServices, pcnProcNFe, un_email_envio,
-  un_historico_processo_pedido, un_escolhe_impressora_termica, un_nfe, Un_status_emissor;
+  Un_Fornecedor, Un_produto_fornecedor, Un_produto_fornecedor_unidade,
+  un_definir_saldo_inicial, ACBrNFeWebServices, pcnProcNFe, un_email_envio, Un_BB_Cobrancas, Un_BB_Cobrancas_Api, Un_CEF_Cobrancas, Un_CEF_Cobrancas_Api,
+  un_historico_processo_pedido, un_escolhe_impressora_termica, un_nfe, Un_status_emissor, System.JSON;
 
 {$R *.dfm}
 
+const
+  BB_COBRANCA_SCOPE = 'cobrancas.boletos-info cobrancas.boletos-requisicao';
+
+function BBFieldStr(Q: TFDQuery; const Name, Default: string): string;
+begin
+  if (Q.FindField(Name) <> nil) and (not Q.FieldByName(Name).IsNull) then
+    Result := Q.FieldByName(Name).AsString
+  else
+    Result := Default;
+end;
+
+function BBFieldInt(Q: TFDQuery; const Name: string; Default: Integer = 0): Integer;
+begin
+  if (Q.FindField(Name) <> nil) and (not Q.FieldByName(Name).IsNull) then
+    Result := Q.FieldByName(Name).AsInteger
+  else
+    Result := Default;
+end;
+
+function BBFieldFloat(Q: TFDQuery; const Name: string; Default: Double = 0): Double;
+begin
+  if (Q.FindField(Name) <> nil) and (not Q.FieldByName(Name).IsNull) then
+    Result := Q.FieldByName(Name).AsFloat
+  else
+    Result := Default;
+end;
+
+function BBFieldDate(Q: TFDQuery; const Name: string): TDateTime;
+begin
+  if (Q.FindField(Name) <> nil) and (not Q.FieldByName(Name).IsNull) then
+    Result := Q.FieldByName(Name).AsDateTime
+  else
+    Result := 0;
+end;
+
+function BBOnlyNumbers(const Value: string): string;
+var
+  I: Integer;
+begin
+  Result := '';
+  for I := 1 to Length(Value) do
+    if CharInSet(Value[I], ['0'..'9']) then
+      Result := Result + Value[I];
+end;
+
+function BBSameDigits(const Value: string): Boolean;
+var
+  I: Integer;
+begin
+  Result := Value <> '';
+  for I := 2 to Length(Value) do
+    if Value[I] <> Value[1] then
+    begin
+      Result := False;
+      Exit;
+    end;
+end;
+
+function BBIsValidCPF(const Value: string): Boolean;
+var
+  I, Sum, Remainder, Digit: Integer;
+  CPF: string;
+begin
+  CPF := BBOnlyNumbers(Value);
+  Result := False;
+  if (Length(CPF) <> 11) or BBSameDigits(CPF) then
+    Exit;
+
+  Sum := 0;
+  for I := 1 to 9 do
+    Sum := Sum + StrToInt(CPF[I]) * (11 - I);
+  Remainder := (Sum * 10) mod 11;
+  if Remainder = 10 then
+    Remainder := 0;
+  Digit := StrToInt(CPF[10]);
+  if Remainder <> Digit then
+    Exit;
+
+  Sum := 0;
+  for I := 1 to 10 do
+    Sum := Sum + StrToInt(CPF[I]) * (12 - I);
+  Remainder := (Sum * 10) mod 11;
+  if Remainder = 10 then
+    Remainder := 0;
+  Result := Remainder = StrToInt(CPF[11]);
+end;
+
+function BBIsValidCNPJ(const Value: string): Boolean;
+const
+  Weight1: array[1..12] of Integer = (5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2);
+  Weight2: array[1..13] of Integer = (6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2);
+var
+  I, Sum, Remainder, Digit: Integer;
+  CNPJ: string;
+begin
+  CNPJ := BBOnlyNumbers(Value);
+  Result := False;
+  if (Length(CNPJ) <> 14) or BBSameDigits(CNPJ) then
+    Exit;
+
+  Sum := 0;
+  for I := 1 to 12 do
+    Sum := Sum + StrToInt(CNPJ[I]) * Weight1[I];
+  Remainder := Sum mod 11;
+  if Remainder < 2 then
+    Digit := 0
+  else
+    Digit := 11 - Remainder;
+  if Digit <> StrToInt(CNPJ[13]) then
+    Exit;
+
+  Sum := 0;
+  for I := 1 to 13 do
+    Sum := Sum + StrToInt(CNPJ[I]) * Weight2[I];
+  Remainder := Sum mod 11;
+  if Remainder < 2 then
+    Digit := 0
+  else
+    Digit := 11 - Remainder;
+  Result := Digit = StrToInt(CNPJ[14]);
+end;
+
+function BBDate(const Value: TDateTime): string;
+begin
+  if Value = 0 then
+    Result := ''
+  else
+    Result := FormatDateTime('dd.mm.yyyy', Value);
+end;
+
+function BBLeftPadDigits(const Value: string; Len: Integer): string;
+var
+  Digits, Padded: string;
+begin
+  Digits := BBOnlyNumbers(Value);
+  if Digits = '' then
+  begin
+    Result := '';
+    Exit;
+  end;
+
+  Padded := StringOfChar('0', Len) + Digits;
+  Result := Copy(Padded, Length(Padded) - Len + 1, Len);
+end;
+
+function BBNumeroTituloCliente(Q: TFDQuery): string;
+var
+  Convenio, Controle, Titulo, Sequencia: string;
+begin
+  Convenio := BBLeftPadDigits(BBFieldStr(Q, 'convenio', ''), 7);
+  Titulo := BBOnlyNumbers(BBFieldStr(Q, 'titulo', ''));
+  Sequencia := BBOnlyNumbers(BBFieldStr(Q, 'sequencia', ''));
+  Controle := BBLeftPadDigits(Titulo, 8) + BBLeftPadDigits(Sequencia, 2);
+
+  if (Convenio = '') or (Controle = '') then
+    Result := ''
+  else
+    Result := '000' + Convenio + Controle;
+end;
+function BBRightStr(const Value: string; Len: Integer): string;
+begin
+  if Length(Value) <= Len then
+    Result := Value
+  else
+    Result := Copy(Value, Length(Value) - Len + 1, Len);
+end;
+
+function BBTituloNossoNumero(Q: TFDQuery): string;
+var
+  Titulo, Sequencia: string;
+begin
+  Titulo := BBFieldStr(Q, 'titulo', '');
+  Sequencia := BBFieldStr(Q, 'sequencia', '');
+  Result := BBRightStr(Titulo, 10) + BBLeftPadDigits(Sequencia, 1);
+  Result := FMFUN.MontaNossoNumero(Result);
+end;
+
+function BBFormataNossoNumero(Q: TFDQuery): string;
+var
+  Convenio, NossoNumero: string;
+begin
+  Convenio := BBOnlyNumbers(BBFieldStr(Q, 'convenio', ''));
+  NossoNumero := BBTituloNossoNumero(Q);
+
+  if Length(Convenio) = 7 then
+    Result := BBLeftPadDigits(Convenio, 7) + NossoNumero.padleft(10, '0')
+  else
+    Result := NossoNumero;
+end;
+
+function BBCalcularDigitoVerificador(const Documento: string): string;
+var
+  I, Peso, Soma, ModuloFinal: Integer;
+begin
+  Result := '0';
+  Soma := 0;
+  Peso := 9;
+
+  for I := Length(Documento) downto 1 do
+  begin
+    if CharInSet(Documento[I], ['0'..'9']) then
+      Soma := Soma + StrToInt(Documento[I]) * Peso;
+    Dec(Peso);
+    if Peso < 2 then
+      Peso := 9;
+  end;
+
+  ModuloFinal := Soma mod 11;
+  if ModuloFinal >= 10 then
+    Result := 'X'
+  else
+    Result := IntToStr(ModuloFinal);
+end;
+
+function BBMontarCampoNossoNumero(Q: TFDQuery; DV: Boolean = False): string;
+begin
+  Result := '000' + BBFormataNossoNumero(Q);
+  if DV then
+    Result := Result + BBCalcularDigitoVerificador(Result);
+end;
+
+function BBNumeroTituloBeneficiario(Q: TFDQuery): string;
+var
+  I: Integer;
+  Value: string;
+begin
+  Result := '';
+  Value := UpperCase(Trim(BBFieldStr(Q, 'titulo', '') + '-' + BBFieldStr(Q, 'sequencia', '')));
+
+  for I := 1 to Length(Value) do
+  begin
+    if CharInSet(Value[I], ['A'..'Z', '0'..'9']) then
+      Result := Result + Value[I]
+    else if (Value[I] = '-') and (Result <> '') and (Result[Length(Result)] <> '-') then
+      Result := Result + Value[I];
+  end;
+
+  while (Result <> '') and (Result[Length(Result)] = '-') do
+    Delete(Result, Length(Result), 1);
+
+  Result := Copy(Result, 1, 15);
+end;
+
+function BBErroBaixaIgnoravel(E: Exception): Boolean;
+var
+  ApiError: TBBApiException;
+begin
+  Result := False;
+  if not (E is TBBApiException) then
+    Exit;
+
+  ApiError := TBBApiException(E);
+  Result := (ApiError.StatusCode = 404) and
+            ((Pos('4923892', ApiError.ResponseText) > 0) or
+             (Pos('Boleto ja baixado', ApiError.ResponseText) > 0) or
+             (Pos('Boleto já baixado', ApiError.ResponseText) > 0));
+end;
+
+function BBAmbienteApi: TBBApiAmbiente;
+begin
+  Result := bbProducao;
+  dao.Geral5('select NFE_HOMOLOGACAO from configuracao');
+  if (not dao.Q5.IsEmpty) and (UpperCase(Trim(dao.Q5.fieldbyname('NFE_HOMOLOGACAO').AsString)) = 'S') then
+    Result := bbHomologacao;
+end;
+
+function BBAmbienteNome(AAmbiente: TBBApiAmbiente): string;
+begin
+  case AAmbiente of
+    bbSandbox: Result := 'Sandbox';
+    bbHomologacao: Result := 'Homologacao';
+    bbProducao: Result := 'Producao';
+  else
+    Result := 'Desconhecido';
+  end;
+end;
+
+procedure BBLogApi(const AMensagem: string);
+begin
+  try
+    dao.grava_log('API BB COBRANCAS - ' + AMensagem, '');
+  except
+  end;
+end;
+
+function BBJsonString(AObj: TJSONObject; const AName: string): string;
+var
+  V: TJSONValue;
+begin
+  Result := '';
+  if not Assigned(AObj) then
+    Exit;
+
+  V := AObj.GetValue(AName);
+  if Assigned(V) then
+    Result := V.Value;
+end;
+
+function BBJsonStringAny(AObj: TJSONObject; const ANames: array of string): string;
+var
+  I: Integer;
+  V: TJSONValue;
+  Pair: TJSONPair;
+begin
+  Result := '';
+  if AObj = nil then
+    Exit;
+
+  for I := Low(ANames) to High(ANames) do
+  begin
+    V := AObj.GetValue(ANames[I]);
+    if V <> nil then
+    begin
+      Result := Trim(V.Value);
+      if Result <> '' then
+        Exit;
+    end;
+  end;
+
+  for I := 0 to AObj.Count - 1 do
+  begin
+    Pair := AObj.Pairs[I];
+    if Pair.JsonValue is TJSONObject then
+    begin
+      Result := BBJsonStringAny(TJSONObject(Pair.JsonValue), ANames);
+      if Result <> '' then
+        Exit;
+    end
+    else if Pair.JsonValue is TJSONArray then
+    begin
+      if (TJSONArray(Pair.JsonValue).Count > 0) and
+         (TJSONArray(Pair.JsonValue).Items[0] is TJSONObject) then
+      begin
+        Result := BBJsonStringAny(TJSONObject(TJSONArray(Pair.JsonValue).Items[0]), ANames);
+        if Result <> '' then
+          Exit;
+      end;
+    end;
+  end;
+end;
+
+function BBTryDate(const Value: string; out ADate: TDateTime): Boolean;
+var
+  S: string;
+  FS: TFormatSettings;
+begin
+  S := Trim(Value);
+  Result := False;
+  ADate := 0;
+  if S = '' then
+    Exit;
+
+  if Length(S) >= 10 then
+    S := Copy(S, 1, 10);
+
+  GetLocaleFormatSettings(LOCALE_SYSTEM_DEFAULT, FS);
+  FS.DateSeparator := '/';
+  FS.ShortDateFormat := 'dd/mm/yyyy';
+
+  Result := TryStrToDate(StringReplace(S, '.', '/', [rfReplaceAll]), ADate, FS);
+  if Result then
+    Exit;
+
+  FS.DateSeparator := '-';
+  FS.ShortDateFormat := 'yyyy-mm-dd';
+  Result := TryStrToDate(S, ADate, FS);
+end;
+
+function BBTryFloat(const Value: string; out AValue: Double): Boolean;
+var
+  S: string;
+  FS: TFormatSettings;
+begin
+  S := Trim(Value);
+  GetLocaleFormatSettings(LOCALE_SYSTEM_DEFAULT, FS);
+  FS.DecimalSeparator := '.';
+  FS.ThousandSeparator := ',';
+  Result := TryStrToFloat(S, AValue, FS);
+  if Result then
+    Exit;
+
+  FS.DecimalSeparator := ',';
+  FS.ThousandSeparator := '.';
+  Result := TryStrToFloat(S, AValue, FS);
+end;
+function BBJsonArrayMessage(AObj: TJSONObject; const AArrayName, AMessageName: string): string;
+var
+  V: TJSONValue;
+  Arr: TJSONArray;
+  Item: TJSONObject;
+begin
+  Result := '';
+  if not Assigned(AObj) then
+    Exit;
+
+  V := AObj.GetValue(AArrayName);
+  if not (V is TJSONArray) then
+    Exit;
+
+  Arr := TJSONArray(V);
+  if Arr.Count = 0 then
+    Exit;
+  if not (Arr.Items[0] is TJSONObject) then
+    Exit;
+
+  Item := TJSONObject(Arr.Items[0]);
+  Result := BBJsonString(Item, AMessageName);
+end;
+
+function BBMensagemErroApi(E: Exception): string;
+var
+  ApiError: TBBApiException;
+  V: TJSONValue;
+  Obj: TJSONObject;
+begin
+  Result := E.Message;
+  if not (E is TBBApiException) then
+    Exit;
+
+  ApiError := TBBApiException(E);
+  V := TJSONObject.ParseJSONValue(ApiError.ResponseText);
+  try
+    if not (V is TJSONObject) then
+      Exit;
+
+    Obj := TJSONObject(V);
+    Result := BBJsonArrayMessage(Obj, 'errors', 'message');
+    if Result = '' then
+      Result := BBJsonArrayMessage(Obj, 'erros', 'message');
+    if Result = '' then
+      Result := BBJsonArrayMessage(Obj, 'erros', 'mensagem');
+    if Result = '' then
+      Result := BBJsonString(Obj, 'message');
+    if Result = '' then
+      Result := BBJsonString(Obj, 'mensagem');
+    if Result = '' then
+      Result := BBJsonString(Obj, 'detail');
+    if Result = '' then
+      Result := E.Message;
+  finally
+    V.Free;
+  end;
+end;
+
+
+function CEFAmbienteApi: TCEFApiAmbiente;
+begin
+  Result := cefProducao;
+  dao.Geral5('select NFE_HOMOLOGACAO from configuracao');
+  if (not dao.Q5.IsEmpty) and (UpperCase(Trim(dao.Q5.fieldbyname('NFE_HOMOLOGACAO').AsString)) = 'S') then
+    Result := cefHomologacao;
+end;
+
+procedure CEFLogApi(const AMensagem: string);
+begin
+  try
+    dao.grava_log('API CEF COBRANCAS - ' + AMensagem, '');
+  except
+  end;
+end;
+
+function BBBoletoRegistradoNaApi(Q: TFDQuery; out ADataPagamento: TDateTime; out AValorPago: Double): Boolean;
+begin
+  Result := Un_BB_Cobrancas_Api.BBBoletoRegistradoNaApi(Q, BBAmbienteApi,
+    BB_COBRANCA_SCOPE, BBLogApi, ADataPagamento, AValorPago);
+end;
+
+function BoletoRegistradoNaApi(Q: TFDQuery; out ADataPagamento: TDateTime; out AValorPago: Double): Boolean;
+var
+  Banco: string;
+begin
+  Banco := BBOnlyNumbers(BBFieldStr(Q, 'nr_banco', ''));
+  if (Banco = '1') or (Banco = '001') then
+    Result := BBBoletoRegistradoNaApi(Q, ADataPagamento, AValorPago)
+  else if Banco = '104' then
+    Result := Un_CEF_Cobrancas_Api.CEFBoletoRegistradoNaApi(Q, CEFAmbienteApi,
+      CEFLogApi, ADataPagamento, AValorPago)
+  else
+  begin
+    ADataPagamento := 0;
+    AValorPago := 0;
+    Result := False;
+  end;
+end;
+procedure BBMarcarBoletoRegistrado(AIdCR1: Integer; ADataPagamento: TDateTime; AValorPago: Double);
+var
+  SQL: string;
+begin
+  SQL := 'update cr1 set boleto_registrado = true';
+  if (ADataPagamento > 0) and (AValorPago > 0) then
+    SQL := SQL + ', dtarec = ' + QuotedStr(FormatDateTime('yyyy-mm-dd', ADataPagamento)) +
+      ', valor_recebido = ' + StringReplace(FormatFloat('0.00', AValorPago), ',', '.', [rfReplaceAll]) +
+      ', vlr_corrigido = ' + StringReplace(FormatFloat('0.00', AValorPago), ',', '.', [rfReplaceAll]);
+  SQL := SQL + ' where id = ' + IntToStr(AIdCR1);
+
+  dao.Execsql(SQL);
+  BBLogApi('Update CR1 boleto registrado - id=' + IntToStr(AIdCR1) +
+    ', pagamento=' + BoolToStr((ADataPagamento > 0) and (AValorPago > 0), True));
+end;
+procedure BBMessageDlgErroApi(const APrefixo: string; E: Exception);
+var
+  Msg: string;
+begin
+  Msg := BBMensagemErroApi(E);
+  if Trim(APrefixo) <> '' then
+    Msg := APrefixo + #13 + Msg;
+  MessageDlg(Msg, mtError, [mbOK], 0);
+end;
 procedure TFr_vendas_industria2.Prcod_cargaExit(Sender: TObject);
 begin
   if trim(Prcod_carga.Text) = '' then
@@ -1455,7 +1976,8 @@ begin
   begin
     Prcod_fornecedor.Enabled := true;
     Prcod_fornecedorExit(Self);
-    Prcod_fiscal.Text := '5202';
+    if not (ansiindexstr(Fr_vendas_industria2.Prcod_fiscal.Text, ['5412', '5553', '6412', '6553', '5202', '6202', '5411', '6411', '5918', '5919', '5921', '5209', '6209', '6918', '6919', '6921', '5210', '6210', '5413', '6413', '6556', '5556']) > -1) then
+      Prcod_fiscal.Text := '5202';
     Prcod_fiscalExit(Self);
     CarregaChaveNfeDev;
   end;
@@ -1699,7 +2221,7 @@ begin
     Mevolume.Enabled := false
   end;
 
-  if mform <> 'vendas_devolucoes' then
+  if Lbnom_fop.Caption <> 'DEVOLUÇÃO' then
   begin
     Mecod_fiscal_item.Enabled := false;
     MeTrib_ICMS.Enabled := false;
@@ -1928,6 +2450,8 @@ begin
       if (FRPRI.TipUsu > '1') and (dao.q3.fieldbyname('verifica_status_financeiro').AsString = 'S') then
         cliente_com_pendencia := VerificaFaturaVencida(Prcod_cliente.Text);
 
+
+      CarregarPedidosRefEntrada;
 
       { if (frpri.tipusu > '1') then
         ChecarDataUltConsultaSerasa; }
@@ -2249,10 +2773,7 @@ begin
          (dao.q5.fieldbyname('nom_fop').AsString = 'TRANSFERENCIA') or
          (dao.q5.fieldbyname('nom_fop').AsString = 'TROCA') or
          (dao.q5.fieldbyname('nom_fop').AsString = 'PERMUTA') or
-<<<<<<< HEAD
          (dao.q5.fieldbyname('nom_fop').AsString = 'CONSERTO') or
-=======
->>>>>>> ea249b0eb181edecb8a4b97e553e293fa1d1b47d
          (dao.q5.fieldbyname('nom_fop').AsString = 'DEVOLUÇÃO') or
          (dao.q5.fieldbyname('nom_fop').AsString = 'CONSIGNAÇÃO') or
          (dao.q5.fieldbyname('nom_fop').AsString = 'BONIFICAÇÃO') then
@@ -2328,7 +2849,7 @@ begin
       Prcod_prazo_pgto.SetFocus;
       Exit;
     end;
-    gbDesconto.Enabled := desconto_prazo > 0;
+    //gbDesconto.Enabled := desconto_prazo > 0;
   end;
   if (FRPRI.TipUsu = '0') or (FRPRI.TipUsu = '1') then
     Mecod_produto.SetFocus;
@@ -2571,7 +3092,10 @@ procedure TFr_vendas_industria2.CFOPTROCA(alterar_itens : boolean);
 
 
       if (Lbnom_fop.Caption = 'DEVOLUÇÃO') then
-        mmVendas2COD_FISCAL_ITEM.Text := '5202';
+      begin
+        if not (ansiindexstr(mmVendas2COD_FISCAL_ITEM.Text, ['5412', '5553', '6412', '6553', '5202', '6202', '5411', '6411', '5918', '5919', '5921', '5209', '6209', '6918', '6919', '6921', '5210', '6210', '5413', '6413', '6556', '5556']) > -1) then
+          mmVendas2COD_FISCAL_ITEM.Text := '5202';
+      end;
 
       if (Lbnom_fop.Caption = 'CONSIGNAÇÃO') then
       begin
@@ -2724,20 +3248,24 @@ begin
 
     if not cfop_st then
     begin
-      if industria then
+      if AnsiIndexStr(Lbnom_fop.Caption, ['TROCA', 'PERMUTA', 'CONSERTO', 'TRANSFERENCIA', 'CONSIGNAÇÃO', 'BONIFICAÇÃO', 'ATIVO IMOBILIZA', 'AMOSTRA', 'DEVOLUÇÃO']) = -1 then
       begin
-        if UF_Cliente = UF_Emissor then
-          Prcod_fiscal.Text := '5101'
+        if industria then
+        begin
+          if UF_Cliente = UF_Emissor then
+            Prcod_fiscal.Text := '5101'
+          else
+            Prcod_fiscal.Text := '6101';
+        end
         else
-          Prcod_fiscal.Text := '6101';
-      end
-      else
-      begin
-        if UF_Cliente = UF_Emissor then
-          Prcod_fiscal.Text := '5102'
-        else
-          Prcod_fiscal.Text := '6102';
+        begin
+          if UF_Cliente = UF_Emissor then
+            Prcod_fiscal.Text := '5102'
+          else
+            Prcod_fiscal.Text := '6102';
+        end;
       end;
+
       if (Lbnom_fop.Caption = 'TRANSFERENCIA') then
       begin
         transferencia := true;
@@ -2768,23 +3296,21 @@ begin
         else
           Prcod_fiscal.Text := '6949';
       end;
-<<<<<<< HEAD
       if (Lbnom_fop.Caption = 'CONSERTO') then
       begin
         cst := '00';
         Prcod_fiscal.Text := '5949';
       end;
       if (Lbnom_fop.Caption = 'DEVOLUÇÃO') then
-        Prcod_fiscal.Text := '5202';
-=======
-      if (Lbnom_fop.Caption = 'DEVOLUÇÃO') then
       begin
-        if UF_Cliente = UF_Emissor then
-          Prcod_fiscal.Text := '5202'
-        else
-          Prcod_fiscal.Text := '6202';
+        if not (ansiindexstr(Fr_vendas_industria2.Prcod_fiscal.Text, ['5412', '5553', '6412', '6553', '5202', '6202', '5411', '6411', '5918', '5919', '5921', '5209', '6209', '6918', '6919', '6921', '5210', '6210', '5413', '6413', '6556', '5556']) > -1) then
+        begin
+          if UF_Cliente = UF_Emissor then
+            Prcod_fiscal.Text := '5202'
+          else
+            Prcod_fiscal.Text := '6202';
+        end;
       end;
->>>>>>> ea249b0eb181edecb8a4b97e553e293fa1d1b47d
       if (Lbnom_fop.Caption = 'CONSIGNAÇÃO') then
       begin
         if UF_Cliente = UF_Emissor then
@@ -2836,6 +3362,7 @@ begin
       empresa_simples := dao.q5.fieldbyname('ENQUADRADA_SIMPLES').AsString = 'S';
       industria := dao.q5.fieldbyname('INDUSTRIA').AsString = 'S';
       bConsumidorFinal := dao.q5.fieldbyname('consumidorfinal').AsString = 'S';
+      Prconsumidor_final.Checked := bConsumidorFinal;
       // ChecarBoletoEmpresa(conta_boleto, empresa_faturar);
       nome_logo := dao.q5.fieldbyname('logo_desc').AsString + '.bmp';
       //TBlobField(dao.q5.fieldbyname('LOGO')).SaveToFile(nome_logo);
@@ -2848,7 +3375,7 @@ begin
       Exit;
     end;
 
-    if (Prcod_cliente.Text = '') and (mform = 'vendas_industria') then
+    if (Prcod_cliente.Text = '') and (Lbnom_fop.Caption <> 'DEVOLUÇÃO') then
     begin
       dao.msg('Favor Informar o Cliente!');
       Prcod_cliente.SetFocus;
@@ -2862,7 +3389,7 @@ begin
       Exit;
     end;
 
-    if venda then
+{    if venda then
     begin
       dao.Geral1('select cd.uf from cliente c ' +
                  'left join cidades cd on cd.cod_cidade=c.cod_cidade ' +
@@ -2874,7 +3401,8 @@ begin
         Prcod_fiscal.Text := '6102';
 
         ChecaCFOP;
-    end;
+    end;}
+    ChecaCFOP;
   end;
 
 end;
@@ -3144,6 +3672,8 @@ procedure TFr_vendas_industria2.dados_produto(cod_produto: string);
 var
   status, cod_fiscal: string;
 begin
+  if mmVendas2.state in [dsbrowse] then exit;
+
   formatsettings.DecimalSeparator := ',';
 
   if Prcod_representante.Text = '' then
@@ -3198,19 +3728,22 @@ begin
 			   '   COALESCE(M.MVA, 0) AS MVA, ' + #13 + 
 			   '   COALESCE(M.ALIQ_ICMS_INTERNA, 0) AS ALIQ_ICMS_INTERNA, ' + #13 +
 			   '   N.IPI_ALIQUOTA, ' + #13 + 
-			   '   case when COALESCE(NC.COD_FISCAL_PRODUTO, p.COD_FISCAL_PRODUTO) is not null then COALESCE(NC.TRIB_ICMS, COALESCE(P.TRIB_ICMS, N.TRIB_ICMS)) else N.TRIB_ICMS END AS TRIB_ICMS, ' + #13 + 
+         IfThen(Prcod_cliente.Text <> '',
+			   '   case when COALESCE(NC.COD_FISCAL_PRODUTO, p.COD_FISCAL_PRODUTO) is not null then COALESCE(NC.TRIB_ICMS, COALESCE(P.TRIB_ICMS, N.TRIB_ICMS)) else N.TRIB_ICMS END AS TRIB_ICMS, ',
+			   '   N.TRIB_ICMS, ') + #13 +
 			   '   P.PROMOCAO, ' + #13 +
-               '   N.CESTA_BASICA, ' + #13 + 
-			   '   N.CEST, ' + #13 + 
+         '   N.CESTA_BASICA, ' + #13 +
+			   '   N.CEST, ' + #13 +
 			   '   P.PESO, ' + #13 +
-			   '   P.CODIGO_BARRA, ' + #13 + 
-			   '   P.NAO_VALIDAR_MARGEM, ' + #13 + 
-			   '   P.BONIFICACAO_APENAS ' + #13 + 
+			   '   P.CODIGO_BARRA, ' + #13 +
+			   '   P.NAO_VALIDAR_MARGEM, ' + #13 +
+			   '   P.BONIFICACAO_APENAS ' + #13 +
 			   ' FROM ' + #13 +
-               '   PRODUTO P  ' + #13 + 
-			   ' LEFT OUTER JOIN GRUPO G ON (G.COD_GRUPO = P.COD_GRUPO) ' + #13 + 
-			   ' LEFT OUTER JOIN NCM N ON (N.CODIGO = coalesce(P.NCM, G.NCM) AND N.CEST = coalesce(p.cest, g.cest)) ' + #13 + 
-			   ' LEFT OUTER JOIN CLIENTE_NCM NC ON (N.CODIGO = NC.NCM AND N.CEST = NC.CEST AND NC.COD_CLIENTE = ' + Prcod_cliente.Text + ' ) ' + #13 + 
+               '   PRODUTO P  ' + #13 +
+			   ' LEFT OUTER JOIN GRUPO G ON (G.COD_GRUPO = P.COD_GRUPO) ' + #13 +
+			   ' LEFT OUTER JOIN NCM N ON (N.CODIGO = coalesce(P.NCM, G.NCM) AND N.CEST = coalesce(p.cest, g.cest)) ' + #13 +
+         IfThen(Prcod_cliente.Text <> '',
+			   ' LEFT OUTER JOIN CLIENTE_NCM NC ON (N.CODIGO = NC.NCM AND N.CEST = NC.CEST AND NC.COD_CLIENTE = ' + Prcod_cliente.Text + ' ) ', '') + #13 +
 			   ' LEFT OUTER JOIN MVA M ON  ( ' + #13 +
 			   '  ( M.NCM = N.CODIGO ' + #13 + 
 			   '    OR M.NCM = substring(n.CODIGO from 1 for 9) ' + #13 + 
@@ -3220,7 +3753,7 @@ begin
 			   '    OR M.NCM = substring(n.CODIGO from 1 for 5) ' + #13 + 
 			   '    OR M.NCM = substring(n.CODIGO from 1 for 4) ' + #13 + 
 			   '    OR M.NCM = substring(n.CODIGO from 1 for 3) ' + #13 + 
-			   '    OR M.NCM = substring(n.CODIGO from 1 for 2) ) ' + #13 + 
+			   '    OR M.NCM = substring(n.CODIGO from 1 for 2) ) ' + #13 +
 			   '  AND M.CEST = N.CEST ' + #13 + 
 			   '  AND M.UF_ORIGEM = ''' + UF_Emissor + '''' + #13 + 
 			   '  AND M.UF = ''' + UF_Cliente + ''') ' + #13 + 
@@ -3285,20 +3818,22 @@ begin
         mmVendas2DESCONTO_MAXIMO.Value := desconto_forma;
 
       if mmVendas2PROMOCAO.AsString = 'S' then
-        mmVendas2DESCONTO_MAXIMO.Value := 0;
+        mmVendas2DESCONTO_MAXIMO.Value := 35;
 
-      { if mmVendas2PROMOCAO.AsString = 'S' then
-        begin
-        mmVendas2PRECO_VENDA.Value :=
-        dao.q3.fieldbyname('PRECO_PROMOCAO').AsFloat;
-        mmVendas2PRECO_CUSTO.Value := mmVendas2PRECO_VENDA.Value /
-        (1 + (margem_lucro_minima / 100));
-        SetRoundMode(rmDown);
-        mmVendas2PRECO_CUSTO.Value := roundto(mmVendas2PRECO_CUSTO.Value,
-        (CasasDecimais * (-1)));
-        SetRoundMode(rmNearest);
-        end;
-      }
+      if mmVendas2PROMOCAO.AsString = 'S' then
+      begin
+//        mmVendas2PRECO_VENDA.Value := dao.q3.fieldbyname('PRECO_PROMOCAO').AsFloat / 0.65;
+{        mmVendas2PRECO_LIQUIDO.Value := dao.q3.fieldbyname('PRECO_PROMOCAO').AsFloat;
+        mmVendas2DESCONTO.Value := 35;
+        mmVendas2SUB_TOTAL.Value := mmVendas2PRECO_LIQUIDO.Value * mmVendas2QTD.Value;}
+       // mmVendas2PRECO_CUSTO.Value := mmVendas2PRECO_VENDA.Value / (1 + (margem_lucro_minima / 100));
+        //SetRoundMode(rmDown);
+      //  mmVendas2PRECO_CUSTO.Value := roundto(mmVendas2PRECO_CUSTO.Value, (CasasDecimais * (-1)));
+//        SetRoundMode(rmNearest);
+         mmVendas2DESCONTO_MAXIMO.Value := ((mmVendas2PRECO_VENDA.Value - dao.q3.fieldbyname('PRECO_PROMOCAO').AsFloat) / mmVendas2PRECO_VENDA.Value) * 100;
+
+      end;
+
       Zzcusto.Value := mmVendas2PRECO_CUSTO.Value;
     end;
 
@@ -3312,63 +3847,14 @@ begin
     // mmVendas2NOM_PRODUTO.AsString := dao.Q3.fieldbyname('nom_produto').AsString;
 
     cod_fiscal := '';
-    if mform = 'vendas_industria' then
-    begin
-      if dao.q3.fieldbyname('trib_icms').AsString = '0' then
+      if mform = 'vendas_industria' then
       begin
-        mmVendas2IPI_ITEM.Value := dao.q3.fieldbyname('IPI_ALIQUOTA').AsFloat;
-        mmVendas2VLR_IPI_ITEM.Value := mmVendas2SUB_TOTAL.Value * (mmVendas2IPI_ITEM.Value / 100);
-
-        cst := '00';
-        if industria then
+        if dao.q3.fieldbyname('trib_icms').AsString = '0' then
         begin
-          if UF_Cliente = UF_Emissor then
-            cod_fiscal := '5101'
-          else
-            cod_fiscal := '6101';
-        end
-        else
-        begin
-          if UF_Cliente = UF_Emissor then
-            cod_fiscal := '5102'
-          else
-            cod_fiscal := '6102';
-        end;
-      end;
+          mmVendas2IPI_ITEM.Value := dao.q3.fieldbyname('IPI_ALIQUOTA').AsFloat;
+          mmVendas2VLR_IPI_ITEM.Value := mmVendas2SUB_TOTAL.Value * (mmVendas2IPI_ITEM.Value / 100);
 
-      if dao.q3.fieldbyname('trib_icms').AsString = '1' then
-        cst := '10';
-      if dao.q3.fieldbyname('trib_icms').AsString = '2' then
-        cst := '20';
-      if dao.q3.fieldbyname('trib_icms').AsString = '3' then
-        cst := '30';
-      if dao.q3.fieldbyname('trib_icms').AsString = '4' then
-        cst := '40';
-      if dao.q3.fieldbyname('trib_icms').AsString = '5' then
-        cst := '41';
-      if dao.q3.fieldbyname('trib_icms').AsString = '6' then
-        cst := '50';
-      if dao.q3.fieldbyname('trib_icms').AsString = '7' then
-        cst := '51';
-      if dao.q3.fieldbyname('trib_icms').AsString = '8' then
-      begin
-        cst := '60';
-        if UF_Cliente = UF_Emissor then
-          cod_fiscal := '5405'
-        else
-          cod_fiscal := '6403';
-
-        mmVendas2IPI_ITEM.Value := 0;
-        mmVendas2VLR_IPI_ITEM.Value := 0;
-        if (MVA = 0) then
-        begin
-          { showmessage('Margem de Valor Agregado (MVA) não pode ser igual a zero.'
-            + #13 + 'Verifique no cadastro de ncm no código :' +
-            dao.Q3.fieldbyname('ncm').AsString + '.' + #13 +
-            'Ou se o código CST 60 do produto ' + mecod_produto.text + '-' +
-            Lbnom_produto_DB.Caption + ' está informado corretamente.'); }
           cst := '00';
-
           if industria then
           begin
             if UF_Cliente = UF_Emissor then
@@ -3384,60 +3870,121 @@ begin
               cod_fiscal := '6102';
           end;
         end;
-      end
-      else begin
-        if industria then
+
+        if dao.q3.fieldbyname('trib_icms').AsString = '1' then
+          cst := '10';
+        if dao.q3.fieldbyname('trib_icms').AsString = '2' then
+          cst := '20';
+        if dao.q3.fieldbyname('trib_icms').AsString = '3' then
+          cst := '30';
+        if dao.q3.fieldbyname('trib_icms').AsString = '4' then
+          cst := '40';
+        if dao.q3.fieldbyname('trib_icms').AsString = '5' then
+          cst := '41';
+        if dao.q3.fieldbyname('trib_icms').AsString = '6' then
+          cst := '50';
+        if dao.q3.fieldbyname('trib_icms').AsString = '7' then
+          cst := '51';
+        if dao.q3.fieldbyname('trib_icms').AsString = '8' then
         begin
+          cst := '60';
           if UF_Cliente = UF_Emissor then
-            cod_fiscal := '5101'
+            cod_fiscal := '5405'
           else
-            cod_fiscal := '6101';
+            cod_fiscal := '6403';
+
+          mmVendas2IPI_ITEM.Value := 0;
+          mmVendas2VLR_IPI_ITEM.Value := 0;
+          if (MVA = 0) then
+          begin
+            { showmessage('Margem de Valor Agregado (MVA) não pode ser igual a zero.'
+              + #13 + 'Verifique no cadastro de ncm no código :' +
+              dao.Q3.fieldbyname('ncm').AsString + '.' + #13 +
+              'Ou se o código CST 60 do produto ' + mecod_produto.text + '-' +
+              Lbnom_produto_DB.Caption + ' está informado corretamente.'); }
+            cst := '00';
+
+            if industria then
+            begin
+              if UF_Cliente = UF_Emissor then
+                cod_fiscal := '5101'
+              else
+                cod_fiscal := '6101';
+            end
+            else
+            begin
+              if UF_Cliente = UF_Emissor then
+                cod_fiscal := '5102'
+              else
+                cod_fiscal := '6102';
+            end;
+          end;
         end
-        else
+        else begin
+          if industria then
+          begin
+            if UF_Cliente = UF_Emissor then
+              cod_fiscal := '5101'
+            else
+              cod_fiscal := '6101';
+          end
+          else
+          begin
+            if UF_Cliente = UF_Emissor then
+              cod_fiscal := '5102'
+            else
+              cod_fiscal := '6102';
+          end;
+        end;
+        if dao.q3.fieldbyname('trib_icms').AsString = '9' then
+          cst := '70';
+        if dao.q3.fieldbyname('trib_icms').AsString = '10' then
+          cst := '90';
+        if mmVendas2CESTA_BASICA.Value then
+          cst := '90';
+
+        { if UF_Cliente = 'PR' then
+          begin
+          cst := '00';
+          cod_fiscal := '6102';
+          end; }
+
+        if ((UF_Cliente <> UF_Emissor) and (cst = '60')) then
         begin
+          cst := '10';
+          cod_fiscal := '6403';
+        end;
+
+        if (UF_Emissor = 'SC') and (UF_Cliente = 'SC') then
+        begin
+          cst := '00';
           if UF_Cliente = UF_Emissor then
             cod_fiscal := '5102'
           else
             cod_fiscal := '6102';
         end;
-      end;
-      if dao.q3.fieldbyname('trib_icms').AsString = '9' then
-        cst := '70';
-      if dao.q3.fieldbyname('trib_icms').AsString = '10' then
-        cst := '90';
-      if mmVendas2CESTA_BASICA.Value then
-        cst := '90';
 
-      { if UF_Cliente = 'PR' then
-        begin
-        cst := '00';
-        cod_fiscal := '6102';
-        end; }
+        mmVendas2TRIB_ICMS.Text := cst;
 
-      if ((UF_Cliente <> UF_Emissor) and (cst = '60')) then
+      end
+      else
       begin
-        cst := '10';
-        cod_fiscal := '6403';
+        { mmVendas2ipi_item.Value := 0;
+          mmVendas2vlr_ipi_item.Value := 0; }
+        cod_fiscal := Prcod_fiscal.Text;
       end;
 
-      if (UF_Emissor = 'SC') and (UF_Cliente = 'SC') then
-      begin
-        cst := '00';
-        if UF_Cliente = UF_Emissor then
-          cod_fiscal := '5102'
-        else
-          cod_fiscal := '6102';
-      end;
-
-      mmVendas2TRIB_ICMS.Text := cst;
-
-    end
-    else
-    begin
-      { mmVendas2ipi_item.Value := 0;
-        mmVendas2vlr_ipi_item.Value := 0; }
+    if AnsiIndexStr(Lbnom_fop.Caption,
+      ['TROCA',
+       'PERMUTA',
+       'CONSERTO',
+       'TRANSFERENCIA',
+       'CONSIGNAÇÃO',
+       'BONIFICAÇÃO',
+       'ATIVO IMOBILIZA',
+       'AMOSTRA',
+       'DEVOLUÇÃO']) <> -1 then
       cod_fiscal := Prcod_fiscal.Text;
-    end;
 
     if (Lbnom_fop.Caption = 'TROCA') or (Lbnom_fop.Caption = 'PERMUTA') then
     begin
@@ -3448,11 +3995,13 @@ begin
         cod_fiscal := '6949';
     end;
 
+
     if (Lbnom_fop.Caption = 'CONSERTO') then
     begin
       cst := '00';
       cod_fiscal := '5949';
     end;
+
 
     if (Lbnom_fop.Caption = 'TRANSFERENCIA') then
     begin
@@ -3462,6 +4011,7 @@ begin
         cod_fiscal := '6152';
     end;
 
+
     if (Lbnom_fop.Caption = 'CONSIGNAÇÃO') then
     begin
       if UF_Cliente = UF_Emissor then
@@ -3470,6 +4020,8 @@ begin
         cod_fiscal := '6917';
     end;
 
+
+
     if (Lbnom_fop.Caption = 'BONIFICAÇÃO') then
     begin
       if UF_Cliente = UF_Emissor then
@@ -3477,6 +4029,7 @@ begin
       else
         cod_fiscal := '6910';
     end;
+
 
     if (Lbnom_fop.Caption = 'ATIVO IMOBILIZA') then
     begin
@@ -3493,12 +4046,17 @@ begin
       else
         cod_fiscal := '6911';
     end;
-<<<<<<< HEAD
 
     if (Lbnom_fop.Caption = 'DEVOLUÇÃO') then
-      cod_fiscal := '5202';
-=======
->>>>>>> ea249b0eb181edecb8a4b97e553e293fa1d1b47d
+    begin
+      if not (ansiindexstr(cod_fiscal, ['5412', '5553', '6412', '6553', '5202', '6202', '5411', '6411', '5918', '5919', '5921', '5209', '6209', '6918', '6919', '6921', '5210', '6210', '5413', '6413', '6556', '5556']) > -1) then
+      begin
+        if UF_Cliente = UF_Emissor then
+          cod_fiscal := '5202'
+        else
+          cod_fiscal := '6202';
+      end;
+    end;
 
     mmVendas2TRIB_ICMS.Text := cst;
     mmVendas2COD_FISCAL_ITEM.Text := cod_fiscal;
@@ -3509,11 +4067,12 @@ begin
       Aliquota_ICMS_Interno := 17; }
 
     mmVendas2NAO_VALIDAR_MARGEM.AsString := dao.q3.fieldbyname('NAO_VALIDAR_MARGEM').AsString;
-
+    {
     mmVendas2DESCONTO_MAXIMO.Value := dao.q3.fieldbyname('DESCONTO_MAXIMO').AsFloat;
 
     if mmVendas2DESCONTO_MAXIMO.AsFloat > strtofloat(desconto_maximo) then
       mmVendas2DESCONTO_MAXIMO.AsFloat := strtofloat(desconto_maximo);
+    }
 
     CarregaFoto(Mecod_produto.Text);
 
@@ -3658,7 +4217,7 @@ end;
 
 procedure TFr_vendas_industria2.PromocaoPorQuantidade(quantidade: string);
 var
-  custo, preco: real;
+  custo, preco, precoBase: real;
 begin
   if (trim(Prcod_representante.Text) = '') then
     Exit;
@@ -3670,18 +4229,16 @@ begin
 			 ' and a.ID_REPRESENTANTE =' + Prcod_representante.Text + ' limit 1 ');
 
   preco := dao.q5.fieldbyname('preco_promocao').AsCurrency;
+  precoBase := preco / 0.65;
 
   if (preco > 0) then
   begin
     // custo := preco / (1 + (margem_lucro_ideal / 100));
     SetRoundMode(rmDown);
     // mmVendas2PRECO_CUSTO.Value := custo;
-    mmVendas2PRECO_VENDA.Value := preco;
-    if (mmVendas2PRECO_VENDA.Value <> preco) then
-    begin
-      mmVendas2PRECO_LIQUIDO.Value := preco;
-      mmVendas2DESCONTO.Value := 0;
-    end;
+    mmVendas2PRECO_VENDA.Value := precoBase;
+    mmVendas2PRECO_LIQUIDO.Value := preco;
+    mmVendas2DESCONTO.Value := 35;
     mmVendas2PROMOCAO.AsString := 'S';
   end
   else
@@ -3799,17 +4356,6 @@ begin
 
     liberado := true;
 
-    { if (mmVendas2desconto.Value > mmVendas2DESCONTO_MAXIMO.Value) and
-      (mmVendas2PROMOCAO.AsString = 'S')  then
-      begin
-      dao.msg('Não é possível dar desconto para produtos em promoção!');
-      mmVendas2desconto.Value := mmVendas2DESCONTO_MAXIMO.Value;
-      MedescontoExit(self);
-      Medesconto.SetFocus;
-      liberado := false;
-      end;
-    }
-
     if (roundto(mmVendas2DESCONTO.Value, -2) > roundto(mmVendas2DESCONTO_MAXIMO.AsFloat, -2)) and (Prcod_fop.Text <> '7') then
     begin
 
@@ -3879,7 +4425,7 @@ var
   total: currency;
 begin
   if ckSemDev.Checked then
-    sql_nfe_dev := ' A.NFEENTRADASAIDA = ''0'' AND A.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') AND A.NFE_DEV IS NULL AND '
+    sql_nfe_dev := ' A.NFEENTRADASAIDA = ''0'' AND A.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) AND A.NFE_DEV IS NULL AND '
   else
     sql_nfe_dev := '';
 
@@ -4032,7 +4578,7 @@ begin
   begin
     close;
     sql.Clear;
-    sql.Add('select a.NUMDOC, a.NUMDOC_GRUPO, a.HORA, a.DTADOC, a.MOTIVO_NFE_CANCEL_INTERNO, a.COD_CLIENTE, a.COD_USUARIO, a.COD_EMPRESA, ' +
+    sql.Add('select a.NUMDOC, a.NUMDOC_GRUPO, a.numdoc_ref_ent, a.HORA, a.DTADOC, a.MOTIVO_NFE_CANCEL_INTERNO, a.COD_CLIENTE, a.COD_USUARIO, a.COD_EMPRESA, ' +
             'a.FATURADO, a.CONSIGNACAO, a.ORCAMENTO, a.ENTREGUE, a.TOT_BRUTO, a.DESCONTO, a.TOT_LIQUIDO, ' +
             'a.PRAZO_PGTO, a.COD_FOP, a.NUM_CUPOM, a.TIPO_VENDA, a.QTD_PARCELAS, a.PONTO_USADO, a.PROCESSO_ID, ' +
             'c.pronautica, c.proemprego, a.USUARIO_DESFATUROU, a.COD_REPRESENTANTE, a.COD_PRAZO_PGTO, a.CUSTO_TOTAL, a.LUCRO_MEDIO, ' +
@@ -4081,6 +4627,7 @@ begin
             ' V2.COD_FISCAL_ITEM, ' +
             ' V2.CESTA_BASICA, ' +
             ' V2.COD_PRODUTO, ' +
+            ' V2.ITEM_OC, ' +
             ' V2.VOLUME, ' +
             ' V2.QTD, ' +
             ' COALESCE(V2.PRECO_CUSTO, P.CUSTO_TOTAL) AS PRECO_CUSTO, ' +
@@ -4104,7 +4651,7 @@ begin
             ' COALESCE(V2.vlr_agr_item,0) AS VLR_AGR_ITEM, ' +
             ' COALESCE(V2.vlr_bc_st,0) AS VLR_BC_ST, ' +
             ' COALESCE(V2.vlr_icms_st,0) AS VLR_ICMS_ST, ' +
-            ' CASE WHEN V2.PROMOCAO = ''S'' THEN P.PRECO_PROMOCAO ELSE P.PRECO_VENDA END PRECO_VENDA, ' +
+            ' CASE WHEN V2.PROMOCAO = ''S'' THEN P.PRECO_PROMOCAO / 0.65 ELSE P.PRECO_VENDA END PRECO_VENDA, ' +
             ' p.nom_produto, ' +
             ' p.QTD_ESTOQUE, ' +
             ' p.qtd_embalagem, ' +
@@ -4356,6 +4903,7 @@ begin
   StatusPedido;
 
   Prcod_cargaExit(Self);
+  PrNfeEntradaSaidaChange(Self);
 
 end;
 
@@ -4368,7 +4916,7 @@ procedure TFr_vendas_industria2.carrega_vendas2;
 var
   total_custo: double;
 begin
-  // ativa_vendas2(Prnumdoc.Text);
+  ativa_vendas2(Prnumdoc.Text);
   q_vendas2.First;
   // if Fr_vendas_industria2.mmVendas2.Active then  Fr_vendas_industria2.mmVendas2.Close;
   mmVendas2.EmptyTable;
@@ -4396,6 +4944,7 @@ begin
     mmVendas2.Append;
     mmVendas2ID.AsString := q_vendas2.fieldbyname('id').Value;
     mmVendas2COD_PRODUTO.AsString := q_vendas2.fieldbyname('cod_produto').AsString;
+    mmVendas2ITEM_OC.AsString := q_vendas2.fieldbyname('item_oc').AsString;
     mmVendas2PROMOCAO.AsString := q_vendas2.fieldbyname('PROMOCAO').AsString;
 
     if mmVendas2PROMOCAO.AsString = 'S' then
@@ -4447,6 +4996,8 @@ begin
     mmVendas2NAO_VALIDAR_MARGEM.AsString := q_vendas2.fieldbyname('NAO_VALIDAR_MARGEM').AsString;
 
     mmVendas2DESCONTO_MAXIMO.Value := q_vendas2.fieldbyname('DESCONTO_MAXIMO').AsFloat;
+    if mmVendas2PROMOCAO.AsString = 'S' then
+      mmVendas2DESCONTO_MAXIMO.Value := 35;
 
     mmVendas2CODIGO_BARRAS.AsString := q_vendas2.fieldbyname('CODIGO_BARRA').AsString;
 
@@ -4569,15 +5120,6 @@ begin
 
 end;
 
-procedure TFr_vendas_industria2.SpeedButton1Click(Sender: TObject);
-begin
-  if Prcod_cliente.Text <> '' then
-  begin
-    Application.CreateForm(TFr_dados_cliente, Fr_dados_cliente);
-    Fr_dados_cliente.Busca_dados_cliente(Prcod_cliente.Text);
-    Fr_dados_cliente.ShowModal;
-  end;
-end;
 
 procedure TFr_vendas_industria2.CheckStatusNFe;
 var
@@ -4671,7 +5213,7 @@ begin
   while not mmVendas2.Eof do
   begin
     mmVendas2.Edit;
-    dados_produto(mmVendas2COD_PRODUTO.AsString);
+    //dados_produto(mmVendas2COD_PRODUTO.AsString);
     mmVendas2SUB_TOTAL.Value := mmVendas2PRECO_LIQUIDO.Value * mmVendas2QTD.Value;
     mmVendas2PESO_TOTAL.Value := mmVendas2PESO.Value * mmVendas2QTD.Value;
     mmVendas2.post;
@@ -4968,13 +5510,27 @@ begin
         dao.cn.Commit;
         // BtnAltFormaPrazo.Visible := true;
         ControleBoleto;
+        {try
+          RegistrarBoletoApi;
+        except
+          on e: Exception do
+          begin
+            try
+              //LimparBoletos;
+            except
+            end;
+            raise;
+          end;
+        end;}
+
 
       end;
     except
       on e: Exception do
       begin
-        dao.cn.Rollback;
-        dao.msg('Houve um erro Ao Faturar o Pedido!' + #13 + e.Message);
+        if dao.cn.InTransaction then
+          dao.cn.Rollback;
+        BBMessageDlgErroApi('Houve um erro Ao Faturar o Pedido!', e);
       end;
     end;
 
@@ -5091,7 +5647,7 @@ begin
   except
     on e: Exception do
     begin
-      dao.msg('Houve um erro Ao Faturar o Pedido!' + #13 + e.Message);
+      BBMessageDlgErroApi('Houve um erro Ao Faturar o Pedido!', e);
     end;
   end;
 end;
@@ -5306,7 +5862,7 @@ end;
 procedure TFr_vendas_industria2.BtgrapedClick(Sender: TObject);
 var
   comissao, qtd_est_reservado: real;
-  desconto_valor, desconto_valor_geral, vlr_bc, vlricm, vlr_bc_st, VLR_ICMS_ST, preco_cs, trib_icms, enviado: string;
+  desconto_valor, desconto_valor_geral, vlr_bc, vlricm, vlr_bc_st, VLR_ICMS_ST, preco_cs, trib_icms, enviado, item_oc: string;
   IsComplementar: Boolean;
   function NumSql(const AValor: string): string;
   begin
@@ -5362,6 +5918,15 @@ begin
     begin
       Pc_vendas.TabIndex := 0;
       btgraClick(Self);
+      Exit;
+    end;
+
+    if (PrNfeEntradaSaida.ItemIndex = 1) and (Trim(Prnumdoc_ref_ent.Text) = '') then
+    begin
+      dao.msg('Pedido Referente deve ser informado!');
+      Pc_vendas.ActivePage := TaNFe;
+      pgNFE.ActivePage := TabDadosNFE;
+      PrNumdoc_ref_ent.SetFocus;
       Exit;
     end;
 
@@ -5577,8 +6142,13 @@ begin
           else
             desconto_valor_geral := ', ' + NumSql(mmVendas2DESCONTO_VALOR_GERAL.AsString);
 
-          sql_vendas2 := 'INSERT INTO VENDAS2 (NUMDOC, COD_PRODUTO, QTD, ' + ' PRECO, PRECO_CUSTO, SUB_TOTAL, DESCONTO, DESCONTO_VALOR, VOLUME, PRECO_BRUTO, PRECO_BASE, PERC_COMISSAO, VLR_COMISSAO, ' + ' COD_FISCAL_ITEM, ICMS_ITEM, VLR_ICMS_ST, VLR_BC_ST, VLR_ICMS_ITEM, NCM, VLR_BC, IPI_ITEM, VLR_IPI_ITEM, ' + ' VLR_AGR_ITEM, TRIB_ICMS, CESTA_BASICA, COD_SUPERVISOR, PROMOCAO, DESCONTO_MAX, NAO_VALIDAR_MARGEM, CEST, DESCONTO_VALOR_GERAL) ' + ' VALUES (' + Prnumdoc.Text + ', ' + mmVendas2COD_PRODUTO.AsString
-            + ', ' + NumSql(mmVendas2QTD.AsString) + ', ' + NumSql(mmVendas2PRECO_LIQUIDO.AsString) + ', ' + NumSql(mmVendas2PRECO_CUSTO.AsString) + ', ' + NumSql(mmVendas2SUB_TOTAL.AsString) + ', ' + NumSql(mmVendas2DESCONTO.AsString) + desconto_valor + ', ' + NumSql(mmVendas2VOLUME.AsString) + ', ' + NumSql(mmVendas2PRECO_VENDA.AsString) + preco_cs + perc_comissao +
+          if Trim(mmVendas2ITEM_OC.AsString) = '' then
+            item_oc := 'null'
+          else
+            item_oc := NumSql(mmVendas2ITEM_OC.AsString);
+
+          sql_vendas2 := 'INSERT INTO VENDAS2 (NUMDOC, COD_PRODUTO, ITEM_OC, QTD, ' + ' PRECO, PRECO_CUSTO, SUB_TOTAL, DESCONTO, DESCONTO_VALOR, VOLUME, PRECO_BRUTO, PRECO_BASE, PERC_COMISSAO, VLR_COMISSAO, ' + ' COD_FISCAL_ITEM, ICMS_ITEM, VLR_ICMS_ST, VLR_BC_ST, VLR_ICMS_ITEM, NCM, VLR_BC, IPI_ITEM, VLR_IPI_ITEM, ' + ' VLR_AGR_ITEM, TRIB_ICMS, CESTA_BASICA, COD_SUPERVISOR, PROMOCAO, DESCONTO_MAX, NAO_VALIDAR_MARGEM, CEST, DESCONTO_VALOR_GERAL) ' + ' VALUES (' + Prnumdoc.Text + ', ' + mmVendas2COD_PRODUTO.AsString
+            + ', ' + item_oc + ', ' + NumSql(mmVendas2QTD.AsString) + ', ' + NumSql(mmVendas2PRECO_LIQUIDO.AsString) + ', ' + NumSql(mmVendas2PRECO_CUSTO.AsString) + ', ' + NumSql(mmVendas2SUB_TOTAL.AsString) + ', ' + NumSql(mmVendas2DESCONTO.AsString) + desconto_valor + ', ' + NumSql(mmVendas2VOLUME.AsString) + ', ' + NumSql(mmVendas2PRECO_VENDA.AsString) + preco_cs + perc_comissao +
             vlr_comissao + ', ' + QuotedStr(mmVendas2COD_FISCAL_ITEM.AsString) + ', ' + NumSql(mmVendas2ICMS_ITEM.AsString) + ', ' + NumSql(mmVendas2VLR_ICMS_ST.AsString) + ', ' + NumSql(mmVendas2VLR_BC_ST.AsString) + ', ' + NumSql(mmVendas2VLR_ICMS_ITEM.AsString) + ', ' + QuotedStr(mmVendas2NCM.AsString) + ', ' + NumSql(mmVendas2VLR_BC.AsString) + ', ' + NumSql(mmVendas2IPI_ITEM.AsString) + ', ' + NumSql(mmVendas2VLR_IPI_ITEM.AsString) + ', ' + NumSql(mmVendas2VLR_AGR_ITEM.AsString) + trib_icms + ', ' + QuotedStr(cesta_basica) + supervisor + ', ' + QuotedStr(mmVendas2PROMOCAO.AsString) + ', ' + NumSql(mmVendas2DESCONTO_MAXIMO.AsString) + ', ' + QuotedStr(mmVendas2NAO_VALIDAR_MARGEM.AsString) + ', ' + QuotedStr(mmVendas2CEST.AsString) + desconto_valor_geral + ')';
           ExecSqlPedido(sql_vendas2);
 
@@ -5716,7 +6286,7 @@ begin
         dao.cn.StartTransaction;
       ExecSqlPedido('update vendas1 set ATUALIZAR_ESTOQUE = ''0'', cod_usuario = ' + cod_usuario + ' where numdoc = ' + QuotedStr(Prnumdoc.Text));
 
-      if mform <> 'vendas_devolucoes' then
+      if Prcod_cliente.Text <> '' then
       begin
         ExecSqlPedido('DELETE FROM CLIENTE_VISITAS WHERE COD_CLIENTE = ' + Prcod_cliente.Text + ' AND DATA = ' + QuotedStr(FormatDateTime('DD.MM.YYYY', Prdtadoc.Date)));
 
@@ -5907,9 +6477,9 @@ end;
 
 procedure TFr_vendas_industria2.MontaPedido(n_pedido: string);
 var
-  lh, cl, MTAMTOT, i, x, y: integer;
-  mcr1, usuario, observacao: string;
-  total_produtos, total_liquido: real;
+  lh, cl, MTAMTOT, i, x, y, titulo_col: integer;
+  mcr1, usuario, observacao, endereco_completo, titulo_pedido, nome_empresa_faturar: string;
+  total_produtos, total_liquido, total_qtd: real;
   MLHCH: array of string;
   Zebrado : Boolean;
 
@@ -5949,7 +6519,7 @@ begin
              'a.SINCRONIZAR_PALM, a.NUMDOC_REF, a.FRETE_COMBINADO, a.DT_FRETE_COMBINADO, a.EMAIL_NFE, ' +
              'a.EMAIL_PEDIDO, a.PEDIDO_VENDEDOR, a.USUARIO_CHECOU_PEDIDO_VENDEDOR, a.CONTA_BOLETO, ' +
              'a.USUARIO_CHECOU_FRETE_COMBINADO, a.ABERTO_USUARIO, a.MAQUINA_USUARIO_ABERTO, VALORDESCONTOADIC, ' +
-             'c.nom_cliente, c.nom_fantasia, c.cnpj, (select min(dtadoc) from vendas1 v1 where v1.COD_CLIENTE = c.COD_CLIENTE) as dta_cad, c.bairro, c.endereco, c.nr_endereco, ' +
+             'c.nom_cliente, c.nom_fantasia, c.cnpj, (select min(dtadoc) from vendas1 v1 where v1.COD_CLIENTE = c.COD_CLIENTE) as dta_cad, c.bairro, c.endereco, c.nr_endereco, c.complemento, ' +
              'c.cep, c.TIP_PESSOA, c.cpf, c.cnpj,c.rg, c.ie, c.telefone, c.fax, c.email, c.contato, C.CELULAR AS CELULAR_CLIENTE, c.operadora as operadora_cliente, ' +
              'r.nom_representante, s.nom_representante as supervisor, r.celular, r.operadora as operadora_rep, f.nom_fop, p.prazo, e.nom_empresa, a.ORCAMENTO, ' +
              't.nome, cd.nom_cidade, cd.uf, us.logusu, a.DESCONTO_GERAL, a.VLR_DESCONTO_GERAL, c.WHASTAPP from vendas1 a ' +
@@ -5978,9 +6548,24 @@ begin
   usuario := dao.q1.fieldbyname('logusu').AsString;
 
   if dao.q1.fieldbyname('ORCAMENTO').AsString = '1' then
-    FRPRI.RD.ImpF(01, 42, 'ORÇAMENTO', [expandido, NEGRITO])
+    titulo_pedido := 'ORÇAMENTO'
   else
-    FRPRI.RD.ImpF(01, 42, 'PEDIDO', [expandido, NEGRITO]);
+    titulo_pedido := 'PEDIDO';
+
+  nome_empresa_faturar := UpperCase(copy(dao.q1.fieldbyname('nom_empresa').AsString, 1, 20));
+  if Pos('FILHO DO CRIADOR', nome_empresa_faturar) > 0 then
+    titulo_pedido := titulo_pedido + ' FILHO DO CRIADOR'
+  else if Pos('MP', nome_empresa_faturar) > 0 then
+    titulo_pedido := titulo_pedido + ' MP'
+  else if (Pos('M7', nome_empresa_faturar) > 0) or (Pos('CATARINA', nome_empresa_faturar) > 0) or (Pos('PLASFAN', nome_empresa_faturar) > 0) then
+    titulo_pedido := titulo_pedido + ' PLASFAN'
+  else
+    titulo_pedido := titulo_pedido + ' PLASFAN';
+
+  titulo_col := ((FRPRI.RD.TamanhoQteColunas - (Length(titulo_pedido) * 2)) div 2) + 1;
+  if titulo_col < 1 then
+    titulo_col := 1;
+  FRPRI.RD.ImpF(01, titulo_col, titulo_pedido, [expandido, NEGRITO]);
 
   FRPRI.RD.impC(02, 09, '-----------------------------------------------------------------------------------------------', [comp12, NEGRITO]);
 
@@ -6003,8 +6588,12 @@ begin
   FRPRI.RD.impC(05, 21, 'CLIENTE:', [comp12, NEGRITO]);
   FRPRI.RD.ImpF(05, 26, dao.q1.fieldbyname('nom_cliente').AsString + ' /' + copy(dao.q1.fieldbyname('nom_fantasia').AsString, 1, 40), [comp12]);
 
+  endereco_completo := dao.q1.fieldbyname('endereco').AsString + ', ' + dao.q1.fieldbyname('nr_endereco').AsString;
+  if Trim(dao.q1.fieldbyname('complemento').AsString) <> '' then
+    endereco_completo := endereco_completo + ' - ' + dao.q1.fieldbyname('complemento').AsString;
+
   FRPRI.RD.impC(06, 02, 'END:', [comp12, NEGRITO]);
-  FRPRI.RD.ImpF(06, 07, dao.q1.fieldbyname('endereco').AsString + ', ' + dao.q1.fieldbyname('nr_endereco').AsString, [comp12]);
+  FRPRI.RD.ImpF(06, 07, endereco_completo, [comp12]);
 
   FRPRI.RD.impC(06, 60, 'BAIRRO:', [comp12, NEGRITO]);
   FRPRI.RD.ImpF(06, 68, dao.q1.fieldbyname('bairro').AsString, [comp12]);
@@ -6064,6 +6653,7 @@ begin
 
   dao.q2.First;
   total_produtos := 0;
+  total_qtd := 0;
   Zebrado := False;
   while not (dao.q2.Eof) do
   begin
@@ -6093,6 +6683,7 @@ begin
       FRPRI.RD.impval(lh, 85, '###,##0.00', dao.q2.fieldbyname('sub_total').AsFloat, [comp12]);
     end;
     total_produtos := total_produtos + dao.q2.fieldbyname('sub_total').AsFloat;
+    total_qtd := total_qtd + dao.q2.fieldbyname('qtd').AsFloat;
     Zebrado := not Zebrado;
 
     dao.q2.next;
@@ -6111,8 +6702,14 @@ begin
   case modelo_desconto of
     1:
       begin
-        FRPRI.RD.impC(lh, 02, 'FOR.PAGAMEN.:', [comp12, NEGRITO]);
-        FRPRI.RD.ImpF(lh, 15, dao.q1.fieldbyname('nom_fop').AsString + ' ' + dao.q1.fieldbyname('prazo').AsString, [comp12]);
+        FRPRI.RD.impC(lh, 02, 'PESO:', [comp12, NEGRITO]);
+        FRPRI.RD.impval(lh, 6, '0.000', dao.q1.fieldbyname('peso_nota').AsFloat, [comp12]);
+
+        FRPRI.RD.impC(lh, 20, 'VOLUMES:', [comp12, NEGRITO]);
+        FRPRI.RD.impval(lh, 28, '##0.00', dao.q1.fieldbyname('volume_nota').AsFloat, [comp12]);
+
+        FRPRI.RD.impC(lh, 43, 'TOT. QTD.:', [comp12, NEGRITO]);
+        FRPRI.RD.impval(lh, 52, '###,##0.00', total_qtd, [comp12]);
 
         FRPRI.RD.impC(lh, 76, 'TOT.PRODUTOS:', [comp12, NEGRITO]);
         FRPRI.RD.impval(lh, 85, '###,##0.00', dao.q1.fieldbyname('tot_liquido').AsFloat, [comp12]);
@@ -6122,11 +6719,8 @@ begin
 
         total_liquido := dao.q1.fieldbyname('tot_liquido').AsFloat - dao.q1.fieldbyname('VLR_DESCONTO_GERAL').AsFloat;
 
-        FRPRI.RD.impC(lh, 02, 'PESO:', [comp12, NEGRITO]);
-        FRPRI.RD.impval(lh, 6, '0.000', dao.q1.fieldbyname('peso_nota').AsFloat, [comp12]);
-
-        FRPRI.RD.impC(lh, 35, 'VOLUMES:', [comp12, NEGRITO]);
-        FRPRI.RD.impval(lh, 38, '##0.00', dao.q1.fieldbyname('volume_nota').AsFloat, [comp12]);
+        FRPRI.RD.impC(lh, 02, 'FOR.PAGAMEN.:', [comp12, NEGRITO]);
+        FRPRI.RD.ImpF(lh, 15, dao.q1.fieldbyname('nom_fop').AsString + ' ' + dao.q1.fieldbyname('prazo').AsString, [comp12]);
 
         FRPRI.RD.impC(lh, 78, 'DESCONTO:', [comp12, NEGRITO]);
         FRPRI.RD.impval(lh, 89, '##0.00', dao.q1.fieldbyname('VLR_DESCONTO_GERAL').AsFloat, [comp12]);
@@ -6140,6 +6734,8 @@ begin
       begin
         FRPRI.RD.impC(lh, 02, 'TOT.PRODUTOS:', [comp12, NEGRITO]);
         FRPRI.RD.impval(lh, 15, '###,##0.00', total_produtos, [comp12]);
+        FRPRI.RD.impC(lh, 43, 'TOT. QTD.:', [comp12, NEGRITO]);
+        FRPRI.RD.impval(lh, 52, '###,##0.00', total_qtd, [comp12]);
 
         FRPRI.RD.impC(lh, 36, 'DESCONTO:', [comp12, NEGRITO]);
         FRPRI.RD.impval(lh, 42, '##0.00', dao.q1.fieldbyname('VALORDESCONTOADIC').AsFloat, [comp12]);
@@ -6343,44 +6939,82 @@ begin
 end;
 
 procedure TFr_vendas_industria2.ativa_cr1(numdoc: string);
+var
+  QApi: TFDQuery;
+  LDataPagamento: TDateTime;
+  LValorPago: Double;
 begin
+  QApi := TFDQuery.Create(nil);
+  try
+    QApi.Connection := dao.cn;
+    QApi.SQL.Text :=
+      'select cr.id, cr.titulo, cr.sequencia, ' +
+      '       c.api_key_cobranca, c.client_id_cobranca, c.client_secret_cobranca, ' +
+      '       c.convenio, c.codigo_cedente, c.nr_agencia, e.cnpj as cnpj_beneficiario, b.nr_banco, coalesce(cr.boleto_registrado, false) as boleto_registrado ' +
+      'from cr1 cr ' +
+      'inner join vendas1 v on v.numdoc = cr.nr_documento ' +
+      'inner join conta_corrente c on c.id = coalesce(cr.conta_boleto, v.conta_boleto) ' +
+      'inner join banco b on b.id = c.id_banco ' +
+      'inner join empresa e on e.cod_empresa = c.id_empresa ' +
+      'left join fop fp on fp.cod_fop = cr.cod_fop ' +
+      'where cr.nr_documento = :numdoc ' +
+      '  and upper(trim(fp.nom_fop)) = ''BOLETO'' ' +
+      '  and coalesce(cr.boleto_registrado, false) = false ' +
+      'order by cr.sequencia';
+    QApi.ParamByName('numdoc').AsInteger := StrToIntDef(numdoc, 0);
+    QApi.Open;
+
+    while not QApi.Eof do
+    begin
+      try
+        if BoletoRegistradoNaApi(QApi, LDataPagamento, LValorPago) then
+          BBMarcarBoletoRegistrado(QApi.FieldByName('id').AsInteger, LDataPagamento, LValorPago);
+      except
+        on E: Exception do
+          BBLogApi('ativa_cr1 verificar boleto registrado ERRO - cr1_id=' + QApi.FieldByName('id').AsString + ', erro=' + E.Message);
+      end;
+      QApi.Next;
+    end;
+  finally
+    QApi.Free;
+  end;
+
   with q_cr1 do
   begin
-    close;
-    sql.Clear;
-    sql.Add('select cr.id, cr.titulo, cr.sequencia, cr.dtaven, cast(coalesce(cr.valor, 0) as numeric(15,2)) as valor, cr.cod_fop, fp.nom_fop, cr.dtarec, ' +
-            ' cast(Coalesce(cr.valor_recebido,0) as numeric(15,2)) as valor_recebido, cr.BOLETO_REMESSA_ORDEM, fp.conta_padrao, cr.Instrucao_boleto from cr1 cr ' +
+    Close;
+    SQL.Clear;
+    SQL.Add('select cr.id, cr.titulo, cr.sequencia, cr.dtaven, cast(coalesce(cr.valor, 0) as numeric(15,2)) as valor, cr.cod_fop, fp.nom_fop, cr.dtarec, ' +
+            ' cast(Coalesce(cr.valor_recebido,0) as numeric(15,2)) as valor_recebido, cr.BOLETO_REMESSA_ORDEM, coalesce(cr.boleto_registrado, false) as boleto_registrado, fp.conta_padrao, cr.Instrucao_boleto from cr1 cr ' +
             'left join fop fp on fp.cod_fop=cr.cod_fop ' +
             'where cr.nr_documento =' + QuotedStr(numdoc) + ' order by cr.dtaven ');
     Open;
 
-    q_cr1.fieldbyname('titulo').DisplayLabel := 'Titulo';
-    q_cr1.fieldbyname('sequencia').DisplayLabel := 'Seq.';
-    q_cr1.fieldbyname('Instrucao_boleto').DisplayLabel := 'Instrução';
-    q_cr1.fieldbyname('dtaven').DisplayLabel := 'Vencimento';
-    q_cr1.fieldbyname('valor').DisplayLabel := 'Valor';
-    q_cr1.fieldbyname('cod_fop').DisplayLabel := 'F.Pagto';
-    q_cr1.fieldbyname('nom_fop').DisplayLabel := 'Forma Pagamento';
-    q_cr1.fieldbyname('dtarec').DisplayLabel := 'Data Recebimento';
-    q_cr1.fieldbyname('valor_recebido').DisplayLabel := 'Valor Recebido';
-    q_cr1.fieldbyname('BOLETO_REMESSA_ORDEM').DisplayLabel := 'Remessa Assoc.';
-    q_cr1.fieldbyname('conta_padrao').DisplayLabel := 'Conta Padrão';
+    q_cr1.FieldByName('titulo').DisplayLabel := 'Titulo';
+    q_cr1.FieldByName('sequencia').DisplayLabel := 'Seq.';
+    q_cr1.FieldByName('Instrucao_boleto').DisplayLabel := 'Instrução';
+    q_cr1.FieldByName('dtaven').DisplayLabel := 'Vencimento';
+    q_cr1.FieldByName('valor').DisplayLabel := 'Valor';
+    q_cr1.FieldByName('cod_fop').DisplayLabel := 'F.Pagto';
+    q_cr1.FieldByName('nom_fop').DisplayLabel := 'Forma Pagamento';
+    q_cr1.FieldByName('dtarec').DisplayLabel := 'Data Recebimento';
+    q_cr1.FieldByName('valor_recebido').DisplayLabel := 'Valor Recebido';
+    q_cr1.FieldByName('BOLETO_REMESSA_ORDEM').DisplayLabel := 'Remessa Assoc.';
+    q_cr1.FieldByName('boleto_registrado').DisplayLabel := 'Reg.';
+    q_cr1.FieldByName('conta_padrao').DisplayLabel := 'Conta Padrão';
 
-    if trim(PrCONTA_BOLETO.Text) <> '' then
+    if Trim(PrCONTA_BOLETO.Text) <> '' then
     begin
       MontaArquivoCobrancaEnvio;
-      BtnBoleto.Enabled := true;
-      BtnEmailBoleto.Enabled := true;
+      BtnBoleto.Enabled := True;
+      BtnEmailBoleto.Enabled := True;
     end
     else
     begin
-      BtnBoleto.Enabled := false;
-      BtnEmailBoleto.Enabled := false;
+      BtnBoleto.Enabled := False;
+      BtnEmailBoleto.Enabled := False;
     end;
   end;
 end;
-
-
 procedure TFr_vendas_industria2.Btinsere_chequeClick(Sender: TObject);
 begin
   if Crtitulo.Text = '' then
@@ -7172,6 +7806,18 @@ end;
 function TFr_vendas_industria2.LimparBoletos: boolean;
 begin
   Result := true;
+
+  {try
+    BaixarBoletoApi;
+  except
+    on e: Exception do
+    begin
+      Result := false;
+      BBMessageDlgErroApi('Houve um erro ao baixar o boleto na API do Banco do Brasil!', e);
+      Exit;
+    end;
+  end;}
+
   // dao.Geral5('select * from cr1 where nr_documento=' + Prnumdoc.Text);
   // if dao.q5.RecordCount = 0 then
   // begin
@@ -7193,7 +7839,8 @@ begin
     dao.Execsql('delete from cr1 where nr_documento=' + Prnumdoc.Text);
     dao.cn.Commit;
   except
-    dao.cn.Rollback;
+    if dao.cn.InTransaction then
+      dao.cn.Rollback;
   end;
   (* end
     else
@@ -8358,6 +9005,12 @@ begin
         if natop_id = '5551' then
           natop_id := '1551';
 
+        if natop_id = '5556' then
+          natop_id := '1556';
+
+        if natop_id = '6556' then
+          natop_id := '2556';
+
         if natop_id = '5152' then
           natop_id := '1152';
 
@@ -8844,6 +9497,12 @@ begin
 
             if Prod.cfop = '5551' then
               Prod.cfop := '1551';
+
+            if Prod.cfop = '6556' then
+              Prod.cfop := '2556';
+
+            if Prod.cfop = '5556' then
+              Prod.cfop := '1556';
 
             if Prod.cfop = '5152' then
               Prod.cfop := '1202';
@@ -10122,8 +10781,8 @@ var
 
   procedure SetaData;
   var
-    dataarr: TStringList;
     horastr: string;
+    dataarr: TStringList;
   begin
     horastr := copy(dataStr, Pos('T', dataStr) + 1, 8);
     dataStr := copy(dataStr, 1, Pos('T', dataStr) - 1);
@@ -10421,7 +11080,7 @@ begin
   q_foto.ParamByName('produto').value := produto;
   q_foto.Open;
 
-  zzreal.Value := q_foto.fieldbyname('QTD_ESTOQUE').AsFloat;
+{  zzreal.Value := q_foto.fieldbyname('QTD_ESTOQUE').AsFloat;
   zzreservado.Value := q_foto.fieldbyname('QTD_RESERVADO').AsFloat;
   zztotal.Value := q_foto.fieldbyname('QTD_TOTAL').AsFloat;
   Zzcusto.Value := mmVendas2PRECO_CUSTO.Value;
@@ -10435,7 +11094,7 @@ begin
 
   zzunidade.Text := q_foto.fieldbyname('UNIDADE').AsString;
   zzqtd_embalagem.Value := q_foto.fieldbyname('QTD_EMBALAGEM').AsFloat;
-
+                                              }
   if q_foto.fieldbyname('imagem_bd').IsNull then
   begin
     Foto.Picture := nil;
@@ -10593,7 +11252,7 @@ begin
     nfe_duplicada := false;
     Pc_vendas.TabIndex := 0;
 
-    if mform <> 'vendas_devolucoes' then
+    if (prcod_cliente.Text <> '') and (Lbnom_fop.Caption <> 'DEVOLUÇÃO') then
       if not ChecarLiberacao then
         Exit;
 
@@ -10922,6 +11581,372 @@ begin
   Pc_vendas.TabIndex := 3;
 end;
 
+procedure TFr_vendas_industria2.RegistrarBoletoApi;
+var
+  Q: TFDQuery;
+  Api: TBBApiCobrancas;
+  ApiCEF: TCEFApiCobrancas;
+  Boleto: TBBRegistroBoleto;
+  BoletoCEF: TCEFOperacaoBoleto;
+  HeaderCEF: TCEFHeader;
+  Resposta: TBBRespostaRegistroBoleto;
+  RespostaCEF: TCEFRespostaServico;
+  Banco, ApiKey, ClientId, ClientSecret, DocPagador, TituloCliente, CodigoBeneficiarioCEF, NossoNumeroCEF: string;
+  Ambiente: TBBApiAmbiente;
+  AmbienteCEF: TCEFApiAmbiente;
+  VariacaoCarteira: Integer;
+  LDataPagamento: TDateTime;
+  LValorPago: Double;
+begin
+  Q := TFDQuery.Create(nil);
+  try
+    Q.Connection := dao.cn;
+    Q.SQL.Text :=
+      'select cr.id, cr.titulo, cr.sequencia, cr.dtaven, cr.valor, ' +
+      '       c.api_key_cobranca, c.client_id_cobranca, c.client_secret_cobranca, ' +
+      '       c.convenio, c.codigo_cedente, c.nr_agencia, e.cnpj as cnpj_beneficiario, c.carteira, c.modalidade, c.tipo_cobranca, b.nr_banco, ' +
+      '       cl.tip_pessoa, cl.nom_cliente, cl.cnpj, cl.cpf, cl.endereco, cl.nr_endereco, ' +
+      '       cl.bairro, cl.cep, cl.telefone, cl.email, cd.nom_cidade, cd.uf ' +
+      'from cr1 cr ' +
+      'inner join vendas1 v on v.numdoc = cr.nr_documento ' +
+      'inner join conta_corrente c on c.id = coalesce(cr.conta_boleto, v.conta_boleto) ' +
+      'inner join banco b on b.id = c.id_banco ' +
+      'inner join empresa e on e.cod_empresa = c.id_empresa ' +
+      'inner join fop fp on fp.cod_fop = cr.cod_fop ' +
+      'inner join cliente cl on cl.cod_cliente = cr.cod_cliente ' +
+      'left join cidades cd on cd.cod_cidade = cl.cod_cidade ' +
+      'where cr.nr_documento = :numdoc ' +
+      '  and upper(trim(fp.nom_fop)) = ''BOLETO'' ' +
+      'order by cr.sequencia';
+    Q.ParamByName('numdoc').AsInteger := StrToIntDef(Prnumdoc.Text, 0);
+    Q.Open;
+
+    while not Q.Eof do
+    begin
+      Banco := BBOnlyNumbers(BBFieldStr(Q, 'nr_banco', ''));
+      ApiKey := Trim(BBFieldStr(Q, 'api_key_cobranca', ''));
+      ClientId := Trim(BBFieldStr(Q, 'client_id_cobranca', ''));
+      ClientSecret := Trim(BBFieldStr(Q, 'client_secret_cobranca', ''));
+
+      if ((Banco = '1') or (Banco = '001')) and (ApiKey <> '') and
+         (ClientId <> '') and (ClientSecret <> '') then
+      begin
+        Boleto := TBBRegistroBoleto.Create;
+        Api := TBBApiCobrancas.Create;
+        try
+          Ambiente := BBAmbienteApi;
+          Api.Ambiente := Ambiente;
+          Api.AppKey := ApiKey;
+          Api.ObterTokenClientCredentials(ClientId, ClientSecret, BB_COBRANCA_SCOPE).Free;
+
+          if UpperCase(Trim(BBFieldStr(Q, 'tip_pessoa', ''))) = 'J' then
+          begin
+            if Api.Ambiente = bbProducao then
+            begin
+              DocPagador := BBOnlyNumbers(BBFieldStr(Q, 'cnpj', ''));
+              if not BBIsValidCNPJ(DocPagador) then
+                raise Exception.Create('CNPJ invalido para registro do boleto BB. Cliente: ' + BBFieldStr(Q, 'nom_cliente', ''));
+            end
+            else
+              DocPagador := '00000000000191';
+
+            Boleto.Pagador.TipoInscricao := 2;
+          end
+          else
+          begin
+            if Api.Ambiente = bbProducao then
+            begin
+              DocPagador := BBOnlyNumbers(BBFieldStr(Q, 'cpf', ''));
+              if not BBIsValidCPF(DocPagador) then
+                raise Exception.Create('CPF invalido para registro do boleto BB. Cliente: ' + BBFieldStr(Q, 'nom_cliente', ''));
+            end
+            else
+              DocPagador := '00000000191';
+
+            Boleto.Pagador.TipoInscricao := 1;
+          end;
+
+          Boleto.Pagador.Nome := Copy(BBFieldStr(Q, 'nom_cliente', ''), 1, 60);
+
+          TituloCliente := BBMontarCampoNossoNumero(Q);
+          if Length(TituloCliente) <> 20 then
+            raise Exception.Create('Numero titulo cliente do Banco do Brasil invalido. Verifique o convenio e o titulo do boleto.');
+
+          Boleto.NumeroConvenio := StrToInt64Def(BBOnlyNumbers(BBFieldStr(Q, 'convenio', '')), 0);
+          Boleto.NumeroCarteira := StrToIntDef(BBOnlyNumbers(BBFieldStr(Q, 'carteira', '')), 0);
+          VariacaoCarteira := StrToIntDef(BBOnlyNumbers(BBFieldStr(Q, 'modalidade', '')), 0);
+          if VariacaoCarteira <= 0 then
+            raise Exception.Create('Variacao da carteira do Banco do Brasil nao informada. Preencha o campo Modalidade na conta corrente do boleto.');
+          Boleto.NumeroVariacaoCarteira := VariacaoCarteira;
+          Boleto.CodigoModalidade := StrToIntDef(BBOnlyNumbers(BBFieldStr(Q, 'tipo_cobranca', '')), 1);
+          Boleto.DataEmissao := BBDate(Date);
+          Boleto.DataVencimento := BBDate(BBFieldDate(Q, 'dtaven'));
+          Boleto.ValorOriginal := BBFieldFloat(Q, 'valor');
+          Boleto.CodigoAceite := 'N';
+          Boleto.CodigoTipoTitulo := 2;
+          Boleto.DescricaoTipoTitulo := 'DM';
+          Boleto.IndicadorPermissaoRecebimentoParcial := 'N';
+          Boleto.NumeroTituloBeneficiario := BBNumeroTituloBeneficiario(Q);
+          Boleto.NumeroTituloCliente := TituloCliente;
+          Boleto.Pagador.NumeroInscricao := StrToInt64Def(DocPagador, 0);
+          Boleto.Pagador.Endereco := Copy(Trim(BBFieldStr(Q, 'endereco', '') + ', ' + BBFieldStr(Q, 'nr_endereco', '')), 1, 60);
+          Boleto.Pagador.Cep := StrToIntDef(BBOnlyNumbers(BBFieldStr(Q, 'cep', '')), 0);
+          Boleto.Pagador.Cidade := Copy(BBFieldStr(Q, 'nom_cidade', ''), 1, 30);
+          Boleto.Pagador.Bairro := Copy(BBFieldStr(Q, 'bairro', ''), 1, 30);
+          Boleto.Pagador.Uf := Copy(BBFieldStr(Q, 'uf', ''), 1, 2);
+          Boleto.Pagador.Telefone := Copy(BBOnlyNumbers(BBFieldStr(Q, 'telefone', '')), 1, 15);
+          Boleto.Pagador.Email := Copy(BBFieldStr(Q, 'email', ''), 1, 60);
+
+          BBLogApi('Registrar boleto - ambiente=' + BBAmbienteNome(Ambiente) +
+            ', cr1_id=' + Q.FieldByName('id').AsString + ', titulo=' + TituloCliente +
+            ', convenio=' + IntToStr(Boleto.NumeroConvenio));
+          try
+            if not BoletoRegistradoNaApi(Q, LDataPagamento, LValorPago) then
+            begin
+              Resposta := Api.RegistrarBoleto(Boleto);
+              Resposta.Free;
+              BBMarcarBoletoRegistrado(Q.FieldByName('id').AsInteger, 0, 0);
+              BBLogApi('Registrar boleto OK - ambiente=' + BBAmbienteNome(Ambiente) +
+                ', cr1_id=' + Q.FieldByName('id').AsString + ', titulo=' + TituloCliente);
+            end
+            else
+            begin
+              BBMarcarBoletoRegistrado(Q.FieldByName('id').AsInteger, LDataPagamento, LValorPago);
+              BBLogApi('Registrar boleto ignorado, ja registrado - ambiente=' + BBAmbienteNome(Ambiente) +
+                ', cr1_id=' + Q.FieldByName('id').AsString + ', titulo=' + TituloCliente);
+            end;
+          except
+            on E: Exception do
+            begin
+              BBLogApi('Registrar boleto ERRO - ambiente=' + BBAmbienteNome(Ambiente) +
+                ', cr1_id=' + Q.FieldByName('id').AsString + ', titulo=' + TituloCliente + ', erro=' + E.Message);
+              raise;
+            end;
+          end;
+        finally
+          Api.Free;
+          Boleto.Free;
+        end;
+      end
+      else if Banco = '104' then
+      begin
+        CodigoBeneficiarioCEF := CEFCodigoBeneficiarioApi(Q);
+        NossoNumeroCEF := CEFMontarNossoNumeroApi(Q);
+        if (CodigoBeneficiarioCEF <> '') and (NossoNumeroCEF <> '') and
+           (CEFCNPJBeneficiarioApi(Q) <> '') then
+        begin
+          AmbienteCEF := CEFAmbienteApi;
+          CEFLogApi('Registrar boleto - ambiente=' + CEFAmbienteNome(AmbienteCEF) +
+            ', cr1_id=' + Q.FieldByName('id').AsString + ', nosso_numero=' + NossoNumeroCEF +
+            ', codigo_beneficiario=' + CodigoBeneficiarioCEF);
+          try
+            if BoletoRegistradoNaApi(Q, LDataPagamento, LValorPago) then
+            begin
+              BBMarcarBoletoRegistrado(Q.FieldByName('id').AsInteger, LDataPagamento, LValorPago);
+              CEFLogApi('Registrar boleto ignorado, ja registrado - ambiente=' + CEFAmbienteNome(AmbienteCEF) +
+                ', cr1_id=' + Q.FieldByName('id').AsString + ', nosso_numero=' + NossoNumeroCEF);
+            end
+            else
+            begin
+              BoletoCEF := TCEFOperacaoBoleto.Create;
+              HeaderCEF := nil;
+              ApiCEF := TCEFApiCobrancas.Create;
+              try
+                ApiCEF.Ambiente := AmbienteCEF;
+                BoletoCEF.CodigoBeneficiario := CodigoBeneficiarioCEF;
+                BoletoCEF.Titulo.NossoNumero := NossoNumeroCEF;
+                BoletoCEF.Titulo.NumeroDocumento := BBNumeroTituloBeneficiario(Q);
+                BoletoCEF.Titulo.DataVencimento := CEFDataApi(BBFieldDate(Q, 'dtaven'));
+                BoletoCEF.Titulo.Valor := BBFieldFloat(Q, 'valor');
+                BoletoCEF.Titulo.TipoEspecie := '99';
+                BoletoCEF.Titulo.FlagAceite := 'N';
+                BoletoCEF.Titulo.DataEmissao := CEFDataApi(Date);
+                BoletoCEF.Titulo.CodigoMoeda := '9';
+                if UpperCase(Trim(BBFieldStr(Q, 'tip_pessoa', ''))) = 'J' then
+                begin
+                  BoletoCEF.Titulo.Pagador.CNPJ := BBOnlyNumbers(BBFieldStr(Q, 'cnpj', ''));
+                  BoletoCEF.Titulo.Pagador.RazaoSocial := Copy(BBFieldStr(Q, 'nom_cliente', ''), 1, 40);
+                end
+                else
+                begin
+                  BoletoCEF.Titulo.Pagador.CPF := BBOnlyNumbers(BBFieldStr(Q, 'cpf', ''));
+                  BoletoCEF.Titulo.Pagador.Nome := Copy(BBFieldStr(Q, 'nom_cliente', ''), 1, 40);
+                end;
+                BoletoCEF.Titulo.Pagador.Endereco.Logradouro := Copy(Trim(BBFieldStr(Q, 'endereco', '') + ', ' + BBFieldStr(Q, 'nr_endereco', '')), 1, 40);
+                BoletoCEF.Titulo.Pagador.Endereco.Bairro := Copy(BBFieldStr(Q, 'bairro', ''), 1, 15);
+                BoletoCEF.Titulo.Pagador.Endereco.Cidade := Copy(BBFieldStr(Q, 'nom_cidade', ''), 1, 15);
+                BoletoCEF.Titulo.Pagador.Endereco.UF := Copy(BBFieldStr(Q, 'uf', ''), 1, 2);
+                BoletoCEF.Titulo.Pagador.Endereco.CEP := BBOnlyNumbers(BBFieldStr(Q, 'cep', ''));
+                HeaderCEF := CEFNovoHeaderApi(Q, CodigoBeneficiarioCEF, NossoNumeroCEF,
+                  BBFieldDate(Q, 'dtaven'), BBFieldFloat(Q, 'valor'), True);
+                RespostaCEF := ApiCEF.IncluirBoleto(BoletoCEF, HeaderCEF);
+                try
+                  if not RespostaCEF.Sucesso then
+                    raise Exception.Create('Erro API CEF: ' + RespostaCEF.ControleMensagem);
+                finally
+                  RespostaCEF.Free;
+                end;
+                BBMarcarBoletoRegistrado(Q.FieldByName('id').AsInteger, 0, 0);
+                CEFLogApi('Registrar boleto OK - ambiente=' + CEFAmbienteNome(AmbienteCEF) +
+                  ', cr1_id=' + Q.FieldByName('id').AsString + ', nosso_numero=' + NossoNumeroCEF);
+              finally
+                ApiCEF.Free;
+                HeaderCEF.Free;
+                BoletoCEF.Free;
+              end;
+            end;
+          except
+            on E: Exception do
+            begin
+              CEFLogApi('Registrar boleto ERRO - ambiente=' + CEFAmbienteNome(AmbienteCEF) +
+                ', cr1_id=' + Q.FieldByName('id').AsString + ', nosso_numero=' + NossoNumeroCEF + ', erro=' + E.Message);
+              raise;
+            end;
+          end;
+        end;
+      end;
+
+      Q.Next;
+    end;
+  finally
+    Q.Free;
+  end;
+end;
+
+procedure TFr_vendas_industria2.BaixarBoletoApi;
+var
+  Q: TFDQuery;
+  Api: TBBApiCobrancas;
+  ApiCEF: TCEFApiCobrancas;
+  HeaderCEF: TCEFHeader;
+  Resposta: TBBRespostaBaixaBoleto;
+  RespostaCEF: TCEFRespostaServico;
+  Banco, ApiKey, ClientId, ClientSecret, NumeroTitulo, CodigoBeneficiarioCEF, NossoNumeroCEF: string;
+  Ambiente: TBBApiAmbiente;
+  AmbienteCEF: TCEFApiAmbiente;
+  NumeroConvenio: Int64;
+  LDataPagamento: TDateTime;
+  LValorPago: Double;
+begin
+  Q := TFDQuery.Create(nil);
+  try
+    Q.Connection := dao.cn;
+    Q.SQL.Text :=
+      'select cr.id, cr.titulo, cr.sequencia, c.api_key_cobranca, c.client_id_cobranca, ' +
+      '       c.client_secret_cobranca, c.convenio, c.codigo_cedente, c.nr_agencia, e.cnpj as cnpj_beneficiario, b.nr_banco ' +
+      'from cr1 cr ' +
+      'inner join vendas1 v on v.numdoc = cr.nr_documento ' +
+      'inner join conta_corrente c on c.id = coalesce(cr.conta_boleto, v.conta_boleto) ' +
+      'inner join banco b on b.id = c.id_banco ' +
+      'inner join empresa e on e.cod_empresa = c.id_empresa ' +
+      'inner join fop fp on fp.cod_fop = cr.cod_fop ' +
+      'where cr.nr_documento = :numdoc ' +
+      '  and upper(trim(fp.nom_fop)) = ''BOLETO'' ' +
+      'order by cr.sequencia';
+    Q.ParamByName('numdoc').AsInteger := StrToIntDef(Prnumdoc.Text, 0);
+    Q.Open;
+
+    while not Q.Eof do
+    begin
+      Banco := BBOnlyNumbers(BBFieldStr(Q, 'nr_banco', ''));
+      ApiKey := Trim(BBFieldStr(Q, 'api_key_cobranca', ''));
+      ClientId := Trim(BBFieldStr(Q, 'client_id_cobranca', ''));
+      ClientSecret := Trim(BBFieldStr(Q, 'client_secret_cobranca', ''));
+      NumeroConvenio := StrToInt64Def(BBOnlyNumbers(BBFieldStr(Q, 'convenio', '')), 0);
+      NumeroTitulo := BBMontarCampoNossoNumero(Q);
+
+      if ((Banco = '1') or (Banco = '001')) and (ApiKey <> '') and
+         (ClientId <> '') and (ClientSecret <> '') and
+         (NumeroConvenio > 0) and (NumeroTitulo <> '') then
+      begin
+        Api := TBBApiCobrancas.Create;
+        try
+          Ambiente := BBAmbienteApi;
+          Api.Ambiente := Ambiente;
+          Api.AppKey := ApiKey;
+          BBLogApi('Baixar boleto - ambiente=' + BBAmbienteNome(Ambiente) + ', titulo=' + NumeroTitulo + ', convenio=' + IntToStr(NumeroConvenio));
+          Api.ObterTokenClientCredentials(ClientId, ClientSecret, BB_COBRANCA_SCOPE).Free;
+
+          try
+            if BoletoRegistradoNaApi(Q, LDataPagamento, LValorPago) then
+            begin
+              BBMarcarBoletoRegistrado(Q.FieldByName('id').AsInteger, LDataPagamento, LValorPago);
+              Resposta := Api.BaixarBoleto(NumeroTitulo, NumeroConvenio);
+              Resposta.Free;
+              BBLogApi('Baixar boleto OK - ambiente=' + BBAmbienteNome(Ambiente) + ', titulo=' + NumeroTitulo + ', convenio=' + IntToStr(NumeroConvenio));
+            end
+            else
+              BBLogApi('Baixar boleto ignorado, nao registrado - ambiente=' + BBAmbienteNome(Ambiente) + ', titulo=' + NumeroTitulo + ', convenio=' + IntToStr(NumeroConvenio));
+          except
+            on e: Exception do
+            begin
+              if BBErroBaixaIgnoravel(e) then
+                BBLogApi('Baixar boleto ignorado - ambiente=' + BBAmbienteNome(Ambiente) + ', titulo=' + NumeroTitulo + ', convenio=' + IntToStr(NumeroConvenio) + ', erro=' + e.Message)
+              else
+              begin
+                BBLogApi('Baixar boleto ERRO - ambiente=' + BBAmbienteNome(Ambiente) + ', titulo=' + NumeroTitulo + ', convenio=' + IntToStr(NumeroConvenio) + ', erro=' + e.Message);
+                raise;
+              end;
+            end;
+          end;
+        finally
+          Api.Free;
+        end;
+      end
+      else if Banco = '104' then
+      begin
+        CodigoBeneficiarioCEF := CEFCodigoBeneficiarioApi(Q);
+        NossoNumeroCEF := CEFMontarNossoNumeroApi(Q);
+        if (CodigoBeneficiarioCEF <> '') and (NossoNumeroCEF <> '') and
+           (CEFCNPJBeneficiarioApi(Q) <> '') then
+        begin
+          AmbienteCEF := CEFAmbienteApi;
+          CEFLogApi('Baixar boleto - ambiente=' + CEFAmbienteNome(AmbienteCEF) +
+            ', nosso_numero=' + NossoNumeroCEF + ', codigo_beneficiario=' + CodigoBeneficiarioCEF);
+          try
+            if BoletoRegistradoNaApi(Q, LDataPagamento, LValorPago) then
+            begin
+              BBMarcarBoletoRegistrado(Q.FieldByName('id').AsInteger, LDataPagamento, LValorPago);
+              ApiCEF := TCEFApiCobrancas.Create;
+              HeaderCEF := nil;
+              try
+                ApiCEF.Ambiente := AmbienteCEF;
+                HeaderCEF := CEFNovoHeaderApi(Q, CodigoBeneficiarioCEF, NossoNumeroCEF, 0, 0, False);
+                RespostaCEF := ApiCEF.BaixarBoleto(CodigoBeneficiarioCEF, NossoNumeroCEF, HeaderCEF);
+                try
+                  if not RespostaCEF.Sucesso then
+                    raise Exception.Create('Erro API CEF: ' + RespostaCEF.ControleMensagem);
+                finally
+                  RespostaCEF.Free;
+                end;
+                CEFLogApi('Baixar boleto OK - ambiente=' + CEFAmbienteNome(AmbienteCEF) +
+                  ', nosso_numero=' + NossoNumeroCEF + ', codigo_beneficiario=' + CodigoBeneficiarioCEF);
+              finally
+                HeaderCEF.Free;
+                ApiCEF.Free;
+              end;
+            end
+            else
+              CEFLogApi('Baixar boleto ignorado, nao registrado - ambiente=' + CEFAmbienteNome(AmbienteCEF) +
+                ', nosso_numero=' + NossoNumeroCEF + ', codigo_beneficiario=' + CodigoBeneficiarioCEF);
+          except
+            on E: Exception do
+            begin
+              CEFLogApi('Baixar boleto ERRO - ambiente=' + CEFAmbienteNome(AmbienteCEF) +
+                ', nosso_numero=' + NossoNumeroCEF + ', codigo_beneficiario=' + CodigoBeneficiarioCEF + ', erro=' + E.Message);
+              raise;
+            end;
+          end;
+        end;
+      end;
+
+      Q.Next;
+    end;
+  finally
+    Q.Free;
+  end;
+end;
+
 procedure TFr_vendas_industria2.CarregaDados;
 begin
   ativa_vendas1(Prnumdoc.Text);
@@ -11139,7 +12164,7 @@ end;
 
 procedure TFr_vendas_industria2.ClonarPedidoCancelado;
 var
-  novo_numdoc: string;
+  novo_numdoc, item_oc: string;
 begin
   LiberaItemRepetido := true;
   try
@@ -11199,7 +12224,12 @@ begin
       else
         perc_comissao := ', ' + FMFUN.BuscaTroca(mmVendas2PERC_COMISSAO.AsString, ',', '.');
 
-      sql_vendas2 := 'INSERT INTO VENDAS2 (NUMDOC, COD_PRODUTO, QTD, ' + ' PRECO, PRECO_CUSTO, SUB_TOTAL, DESCONTO, VOLUME, PRECO_BRUTO, PERC_COMISSAO, VLR_COMISSAO, ' + ' COD_FISCAL_ITEM, ICMS_ITEM, VLR_ICMS_ST, VLR_BC_ST, VLR_ICMS_ITEM, NCM, VLR_BC, IPI_ITEM, VLR_IPI_ITEM, ' + ' VLR_AGR_ITEM, TRIB_ICMS, CESTA_BASICA, COD_SUPERVISOR, PROMOCAO, CEST, DESCONTO_VALOR_GERAL) ' + ' VALUES (' + novo_numdoc + ', ' + mmVendas2COD_PRODUTO.AsString + ', ' + FMFUN.BuscaTroca(mmVendas2QTD.AsString, ',', '.') + ', ' +
+      if Trim(mmVendas2ITEM_OC.AsString) = '' then
+        item_oc := 'null'
+      else
+        item_oc := FMFUN.BuscaTroca(mmVendas2ITEM_OC.AsString, ',', '.');
+
+      sql_vendas2 := 'INSERT INTO VENDAS2 (NUMDOC, COD_PRODUTO, ITEM_OC, QTD, ' + ' PRECO, PRECO_CUSTO, SUB_TOTAL, DESCONTO, VOLUME, PRECO_BRUTO, PERC_COMISSAO, VLR_COMISSAO, ' + ' COD_FISCAL_ITEM, ICMS_ITEM, VLR_ICMS_ST, VLR_BC_ST, VLR_ICMS_ITEM, NCM, VLR_BC, IPI_ITEM, VLR_IPI_ITEM, ' + ' VLR_AGR_ITEM, TRIB_ICMS, CESTA_BASICA, COD_SUPERVISOR, PROMOCAO, CEST, DESCONTO_VALOR_GERAL) ' + ' VALUES (' + novo_numdoc + ', ' + mmVendas2COD_PRODUTO.AsString + ', ' + item_oc + ', ' + FMFUN.BuscaTroca(mmVendas2QTD.AsString, ',', '.') + ', ' +
         FMFUN.BuscaTroca(mmVendas2PRECO_LIQUIDO.AsString, ',', '.') + ', ' + FMFUN.BuscaTroca(mmVendas2PRECO_CUSTO.AsString, ',', '.') + ', ' + FMFUN.BuscaTroca(mmVendas2SUB_TOTAL.AsString, ',', '.') + ', ' + FMFUN.BuscaTroca(mmVendas2DESCONTO.AsString, ',', '.') + ', ' + FMFUN.BuscaTroca(mmVendas2VOLUME.AsString, ',', '.') + ', ' + FMFUN.BuscaTroca(mmVendas2PRECO_VENDA.AsString, ',', '.') + perc_comissao + vlr_comissao + ', ' + mmVendas2COD_FISCAL_ITEM.AsString + ', ' + FMFUN.BuscaTroca(mmVendas2ICMS_ITEM.AsString, ',', '.') + ', ' +
         FMFUN.BuscaTroca(mmVendas2VLR_ICMS_ST.AsString, ',', '.') + ', ' + FMFUN.BuscaTroca(mmVendas2VLR_BC_ST.AsString, ',', '.') + ', ' + FMFUN.BuscaTroca(mmVendas2VLR_ICMS_ITEM.AsString, ',', '.') + ', ' + QuotedStr(mmVendas2NCM.AsString) + ', ' + FMFUN.BuscaTroca(mmVendas2VLR_BC.AsString, ',', '.') + ', ' + FMFUN.BuscaTroca(mmVendas2IPI_ITEM.AsString, ',', '.') + ', ' + FMFUN.BuscaTroca(mmVendas2VLR_IPI_ITEM.AsString, ',', '.') + ', ' + FMFUN.BuscaTroca(mmVendas2VLR_AGR_ITEM.AsString, ',', '.') + ', ' +
         FMFUN.BuscaTroca(mmVendas2TRIB_ICMS.AsString, ',', '.') + ', ' + QuotedStr(cesta_basica) + supervisor + ', ' + QuotedStr(mmVendas2PROMOCAO.AsString) + ', ' + QuotedStr(mmVendas2CEST.AsString) + ', ' + FMFUN.BuscaTroca(mmVendas2DESCONTO_VALOR_GERAL.AsString, ',', '.') + ')';
@@ -11507,8 +12537,8 @@ var
 
   procedure SetaData;
   var
-    dataarr: TStringList;
     horastr: string;
+    dataarr: TStringList;
   begin
     horastr := copy(dataStr, Pos('T', dataStr) + 1, 8);
     dataStr := copy(dataStr, 1, Pos('T', dataStr) - 1);
@@ -12021,6 +13051,35 @@ begin
   LiberaItemRepetido := false;
 end;
 
+procedure TFr_vendas_industria2.grCRDrawColumnCell(Sender: TObject; const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
+const
+  IsChecked: array [boolean] of Integer = (DFCS_BUTTONCHECK, DFCS_BUTTONCHECK or
+    DFCS_CHECKED);
+var
+  DrawState: Integer;
+  DrawRect: TRect;
+  LGrid: TDBGrid;
+  LLeft: integer;
+  LTop: integer;
+begin
+  if (Column.Field <> nil) and SameText(Column.Field.FieldName, 'boleto_registrado') then
+  begin
+    grCR.Canvas.FillRect(Rect);
+    if Column.Field.AsBoolean then
+    begin
+      DrawRect := Rect;
+      DrawRect.Left := Rect.Left + ((Rect.Right - Rect.Left - 16) div 2);
+      DrawRect.Top := Rect.Top + ((Rect.Bottom - Rect.Top - 16) div 2);
+      DrawRect.Right := DrawRect.Left + 16;
+      DrawRect.Bottom := DrawRect.Top + 16;
+      DrawFrameControl(grCR.Canvas.Handle, DrawRect, DFC_MENU, DFCS_MENUCHECK);
+    end;
+    Exit;
+  end;
+
+  TDBGrid(Sender).DefaultDrawDataCell(Rect, Column.Field, State);
+end;
+
 procedure TFr_vendas_industria2.DBGrid1DrawColumnCell(Sender: TObject; const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
 begin
   if Column.Field = mmVendas2DESCONTO then
@@ -12275,12 +13334,14 @@ var
     Medesconto.Left := Medesconto.Left - posicao;
     Medesconto_Valor.Left := Medesconto_Valor.Left - posicao;
     Mesub_total.Left := Mesub_total.Left - posicao;
+    MeITEM_OC.Left := MeITEM_OC.Left - posicao;
     MePERC_COMISSAO.Left := MePERC_COMISSAO.Left - posicao;
 
     lbDesc.Left := lbDesc.Left - posicao;
     lbDescValor.Left := lbDescValor.Left - posicao;
     lbPrecoLiq.Left := lbPrecoLiq.Left - posicao;
     lbTotalLiq.Left := lbTotalLiq.Left - posicao;
+    lbItemOC.Left := lbItemOC.Left - posicao;
     lbComis.Left := lbComis.Left - posicao;
     { lbICMSItem.Left := lbICMSItem.Left - posicao;
       //    lbBC_ST.Left := lbBC_ST.Left - posicao;
@@ -13112,10 +14173,15 @@ var
   NFe: boolean;
   valor_total, vl_frete: currency;
 begin
-  if not q_cr1.fieldbyname('BOLETO_REMESSA_ORDEM').IsNull then
+  q_cr1.First;
+  while not q_cr1.eof do
   begin
-    showmessage('Não é permitido alterar a forma de Pagamento onde há Boletos Associados à Remessas.');
-    Exit;
+    if not q_cr1.fieldbyname('BOLETO_REMESSA_ORDEM').IsNull then
+    begin
+      showmessage('Não é permitido alterar a forma de Pagamento onde há Boletos Associados à Remessas.');
+      Exit;
+    end;
+    q_cr1.Next;
   end;
 
   if BtnAltFormaPrazo.Caption = 'Alterar Forma e Prazo de Pagamento' then
@@ -13882,7 +14948,7 @@ begin
     Exit;
   end;
 
-  if trim(mmVendas2COD_PRODUTO.AsString) <> '' then
+  if (trim(mmVendas2COD_PRODUTO.AsString) <> '') and (not Prconsumidor_final.Checked) then
     if not FMFUN.ValidarQuantidade(mmVendas2COD_PRODUTO.AsString, mmVendas2QTD.Value) then
     begin
       Meqtd.SetFocus;
@@ -14065,6 +15131,426 @@ begin
       dao.msg('Erro ao gravar Carta de Corre'#231#227'o: ' + E.Message);
     end;
   end;
+end;
+
+procedure TFr_vendas_industria2.btnImpXMLDevClick(Sender: TObject);
+var
+  NodeInf, NodeEmit: IXMLNode;
+  NodeDet, NodeProd, NodeImp, NodeICMS, NodeIPI, NodeAux: IXMLNode;
+  Produto, CodProduto, ChaveXML: string;
+  Item: Integer;
+
+  function FindChild(ANode: IXMLNode; const AName: string): IXMLNode;
+  begin
+    Result := nil;
+    if ANode <> nil then
+      Result := ANode.ChildNodes.FindNode(AName);
+  end;
+
+  function NodeText(ANode: IXMLNode; const AName: string): string;
+  var
+    LNode: IXMLNode;
+  begin
+    Result := '';
+    LNode := FindChild(ANode, AName);
+    if LNode <> nil then
+      Result := LNode.Text;
+  end;
+
+  function XMLValor(const AValue: string): string;
+  begin
+    Result := StringReplace(AValue, '.', ',', [rfReplaceAll]);
+  end;
+
+  function ApenasNumeros(const AValue: string): string;
+  var
+    I: Integer;
+  begin
+    Result := '';
+    for I := 1 to Length(AValue) do
+      if AValue[I] in ['0'..'9'] then
+        Result := Result + AValue[I];
+  end;
+
+  function FormataDocumento(const AValue: string): string;
+  var
+    Doc: string;
+  begin
+    Doc := ApenasNumeros(AValue);
+    if Length(Doc) = 14 then
+      Result := Copy(Doc, 1, 2) + '.' + Copy(Doc, 3, 3) + '.' + Copy(Doc, 6, 3) + '/' + Copy(Doc, 9, 4) + '-' + Copy(Doc, 13, 2)
+    else if Length(Doc) = 11 then
+      Result := Copy(Doc, 1, 3) + '.' + Copy(Doc, 4, 3) + '.' + Copy(Doc, 7, 3) + '-' + Copy(Doc, 10, 2)
+    else
+      Result := AValue;
+  end;
+
+  function DocumentoNode(ANode: IXMLNode): string;
+  begin
+    Result := NodeText(ANode, 'CNPJ');
+    if Result = '' then
+      Result := NodeText(ANode, 'CPF');
+  end;
+
+  procedure AjustaXML(const AArquivoXML: string);
+  var
+    LArquivo: TStringList;
+  begin
+    LArquivo := TStringList.Create;
+    try
+      LArquivo.LoadFromFile(AArquivoXML);
+      LArquivo.Text := StringReplace(LArquivo.Text, '&amp;', 'e', [rfReplaceAll]);
+      LArquivo.Text := StringReplace(LArquivo.Text, 'Õ', 'O', [rfReplaceAll]);
+      LArquivo.Text := StringReplace(LArquivo.Text, '&amp;quo;', '', [rfReplaceAll]);
+      LArquivo.Text := StringReplace(LArquivo.Text, 'ï»¿', '', [rfReplaceAll]);
+      LArquivo.Text := StringReplace(LArquivo.Text, #13#10 + ' ', '', [rfReplaceAll]);
+      LArquivo.Text := Fmfun.AnsiToAscii(LArquivo.Text, false);
+      LArquivo.SaveToFile(AArquivoXML);
+    finally
+      LArquivo.Free;
+    end;
+  end;
+
+  function BuscaInfNFe: IXMLNode;
+  var
+    Root, NFe: IXMLNode;
+  begin
+    Result := nil;
+    Root := XMLNFe.DocumentElement;
+    if Root = nil then
+      Exit;
+
+    if SameText(Root.NodeName, 'infNFe') then
+      Result := Root
+    else
+    begin
+      if SameText(Root.NodeName, 'NFe') then
+        NFe := Root
+      else
+        NFe := FindChild(Root, 'NFe');
+
+      if NFe <> nil then
+        Result := FindChild(NFe, 'infNFe')
+      else
+        Result := FindChild(Root, 'infNFe');
+    end;
+  end;
+
+  function BuscaPrimeiroDet(ANodeInf: IXMLNode): IXMLNode;
+  var
+    I: Integer;
+  begin
+    Result := nil;
+    if ANodeInf = nil then
+      Exit;
+
+    for I := 0 to ANodeInf.ChildNodes.Count - 1 do
+      if SameText(ANodeInf.ChildNodes[I].NodeName, 'det') then
+      begin
+        Result := ANodeInf.ChildNodes[I];
+        Break;
+      end;
+  end;
+
+  function ProximoDet(ANodeDet: IXMLNode): IXMLNode;
+  begin
+    Result := nil;
+    if ANodeDet <> nil then
+      Result := ANodeDet.NextSibling;
+
+    while (Result <> nil) and (not SameText(Result.NodeName, 'det')) do
+      Result := Result.NextSibling;
+  end;
+
+  function PrimeiroFilho(ANode: IXMLNode): IXMLNode;
+  begin
+    Result := nil;
+    if (ANode <> nil) and (ANode.ChildNodes.Count > 0) then
+      Result := ANode.ChildNodes[0];
+  end;
+
+  function BuscaProdutoXML(const ACodFornecedor, ACodProdutoFornecedor, ACodBarras: string): string;
+  begin
+    Result := '';
+
+    if (ACodFornecedor <> '') and (ACodProdutoFornecedor <> '') then
+    begin
+      dao.Geral1('SELECT a.ID, a.COD_PRODUTO, a.COD_FORNECEDOR, a.COD_PRODUTO_FORNECEDOR FROM PRODUTO_FORNECEDOR a WHERE a.COD_FORNECEDOR = ' +
+        ACodFornecedor + ' AND A.COD_PRODUTO_FORNECEDOR = ' + QuotedStr(ACodProdutoFornecedor));
+      if not dao.Q1.IsEmpty then
+      begin
+        Result := dao.Q1.FieldByName('COD_PRODUTO').AsString;
+        Exit;
+      end;
+    end;
+
+    if ACodBarras <> '' then
+    begin
+      dao.Geral1('select p.cod_produto from produto p left join cod_barras cb on cb.cod_produto = p.cod_produto where cb.cod_barras = ' + QuotedStr(ACodBarras));
+      if not dao.Q1.IsEmpty then
+      begin
+        Result := dao.Q1.FieldByName('COD_PRODUTO').AsString;
+        Exit;
+      end;
+    end;
+
+    if (ACodProdutoFornecedor <> '') and FMFUN.verificaNumerico(ACodProdutoFornecedor) then
+    begin
+      dao.Geral1('select cod_produto from produto where cod_produto = ' + QuotedStr(ACodProdutoFornecedor));
+      if not dao.Q1.IsEmpty then
+        Result := dao.Q1.FieldByName('COD_PRODUTO').AsString;
+    end;
+  end;
+
+  procedure ConverterUnidade(const Unidade, IdProdutoFornecedor: string);
+  begin
+    if (Trim(Unidade) = '') or (Trim(IdProdutoFornecedor) = '') then
+      Exit;
+
+    dao.Geral5('SELECT a.QUANT_UNID FROM PRODUTO_FORNECEDOR_UNIDADE a WHERE trim(A.UNIDADE) = ' +
+      QuotedStr(UpperCase(Unidade)) + ' and a.produto_fornecedor_id = ' + IdProdutoFornecedor);
+    if dao.Q5.IsEmpty then
+    begin
+      Application.CreateForm(TFr_produto_fornecedor_unidade, Fr_produto_fornecedor_unidade);
+      try
+        Fr_produto_fornecedor_unidade.modo_insert := true;
+        Fr_produto_fornecedor_unidade.unidade := Unidade;
+        Fr_produto_fornecedor_unidade.id := IdProdutoFornecedor;
+        Fr_produto_fornecedor_unidade.ShowModal;
+        if Fr_produto_fornecedor_unidade.ModalResult = mrOk then
+          dao.Geral5('SELECT a.QUANT_UNID FROM PRODUTO_FORNECEDOR_UNIDADE a WHERE trim(A.UNIDADE) = ' +
+            QuotedStr(UpperCase(Unidade)) + ' and a.produto_fornecedor_id = ' + IdProdutoFornecedor)
+        else
+          Exit;
+      finally
+        Fr_produto_fornecedor_unidade.Free;
+      end;
+    end;
+
+    if not dao.Q5.IsEmpty then
+    begin
+      Meqtd.Value := Meqtd.Value * dao.Q5.FieldByName('QUANT_UNID').AsFloat;
+      if dao.Q5.FieldByName('QUANT_UNID').AsFloat <> 0 then
+        Mepreco.Value := Mepreco.Value / dao.Q5.FieldByName('QUANT_UNID').AsFloat;
+      CalculaSubTotais;
+    end;
+  end;
+
+  procedure PreencheEmpresaFaturarDestinatario;
+  var
+    NodeDest: IXMLNode;
+    Documento: string;
+  begin
+    NodeDest := FindChild(NodeInf, 'dest');
+    Documento := ApenasNumeros(DocumentoNode(NodeDest));
+    if Documento = '' then
+      Exit;
+
+    dao.Geral5('select cod_empresa from empresa where regexp_replace(coalesce(cnpj, ''''), ''[^0-9]'', '''', ''g'') = ' + QuotedStr(Documento));
+    if not dao.Q5.IsEmpty then
+    begin
+      Pc_vendas.activepage := tab_finalizar;
+      Prempresa_faturar.Text := dao.Q5.FieldByName('cod_empresa').AsString;
+      Prempresa_faturarExit(Self);
+    end;
+  end;
+  procedure PreencheFornecedor(ANodeEmit: IXMLNode);
+  var
+    NodeEnder: IXMLNode;
+    Documento: string;
+  begin
+    Documento := FormataDocumento(DocumentoNode(ANodeEmit));
+    if Documento = '' then
+      Exit;
+
+    dao.Geral1('select * from fornecedor f where cnpcpf = ' + QuotedStr(Documento));
+    if not dao.Q1.IsEmpty then
+    begin
+      Prcod_fornecedor.Text := dao.Q1.FieldByName('cod_fornecedor').AsString;
+      Prcod_fornecedorExit(Self);
+      Exit;
+    end;
+
+    Application.CreateForm(TFr_fornecedor, Fr_fornecedor);
+    try
+      Fr_fornecedor.xml_nfe := true;
+      Fr_fornecedor.xml_razao_socia := NodeText(ANodeEmit, 'xNome');
+      Fr_fornecedor.xml_nome_fantasia := NodeText(ANodeEmit, 'xFant');
+      Fr_fornecedor.xml_ie := NodeText(ANodeEmit, 'IE');
+      Fr_fornecedor.xml_cnpj := Documento;
+
+      NodeEnder := FindChild(ANodeEmit, 'enderEmit');
+      if NodeEnder <> nil then
+      begin
+        Fr_fornecedor.xml_endereco := NodeText(NodeEnder, 'xLgr');
+        Fr_fornecedor.xml_nr := NodeText(NodeEnder, 'nro');
+        Fr_fornecedor.xml_bairro := NodeText(NodeEnder, 'xBairro');
+        Fr_fornecedor.xml_cidade := NodeText(NodeEnder, 'xMun');
+        Fr_fornecedor.xml_uf := NodeText(NodeEnder, 'UF');
+        Fr_fornecedor.xml_cep := NodeText(NodeEnder, 'CEP');
+        Fr_fornecedor.xml_fone := NodeText(NodeEnder, 'fone');
+      end;
+
+      Fr_fornecedor.ShowModal;
+      if Fr_fornecedor.ModalResult = mrOk then
+      begin
+        Prcod_fornecedor.Text := Fr_fornecedor.Prcod_fornecedor.Text;
+        Prcod_fornecedorExit(Self);
+      end;
+    finally
+      Fr_fornecedor.Free;
+    end;
+  end;
+
+
+begin
+  if not OD.Execute then
+    Exit;
+
+  XMLNFe.Active := true;
+  XMLNFe.Encoding := 'iso-8859-1';
+  try
+    XMLNFe.LoadFromFile(OD.FileName);
+  except
+    AjustaXML(OD.FileName);
+    XMLNFe.LoadFromFile(OD.FileName);
+  end;
+
+  NodeInf := BuscaInfNFe;
+  if NodeInf = nil then
+  begin
+    dao.msg('XML de NF-e invalido. Nao foi encontrada a tag infNFe.');
+    Exit;
+  end;
+
+  ChaveXML := '';
+  try
+    ChaveXML := StringReplace(VarToStr(NodeInf.Attributes['Id']), 'NFe', '', [rfReplaceAll]);
+  except
+    ChaveXML := '';
+  end;
+
+  if Length(ChaveXML) = 44 then
+  begin
+    edChaveNfeRef.Text := ChaveXML;
+    if Trim(Prnumdoc.Text) <> '' then
+    begin
+      btnInsNfeDevClick(Self);
+      edChaveNfeRef.Text := ChaveXML;
+    end;
+  end;
+
+  PreencheEmpresaFaturarDestinatario;
+
+  NodeEmit := FindChild(NodeInf, 'emit');
+  PreencheFornecedor(NodeEmit);
+
+
+  NodeDet := BuscaPrimeiroDet(NodeInf);
+  Item := 0;
+  while NodeDet <> nil do
+  begin
+    NodeProd := FindChild(NodeDet, 'prod');
+    if NodeProd <> nil then
+    begin
+      Produto := NodeText(NodeProd, 'xProd');
+      CodProduto := BuscaProdutoXML(Prcod_fornecedor.Text, NodeText(NodeProd, 'cProd'), NodeText(NodeProd, 'cEAN'));
+
+      if CodProduto = '' then
+      begin
+        Application.CreateForm(Tfm_produto_fornecedor, fm_produto_fornecedor);
+        try
+          fm_produto_fornecedor.EmCOD_PRODUTO_FORNECEDOR.Text := NodeText(NodeProd, 'cProd');
+          fm_produto_fornecedor.lbProdutoFornecedor.Caption := Produto;
+          fm_produto_fornecedor.EmCOD_PRODUTO_FORNECEDOR.Enabled := false;
+          fm_produto_fornecedor.ShowModal;
+
+          if fm_produto_fornecedor.ModalResult = mrOk then
+          begin
+            CodProduto := fm_produto_fornecedor.Emcod_produto.Text;
+            if (Prcod_fornecedor.Text <> '') and (NodeText(NodeProd, 'cProd') <> '') then
+              dao.Execsql('INSERT INTO PRODUTO_FORNECEDOR (COD_PRODUTO, COD_FORNECEDOR, COD_PRODUTO_FORNECEDOR) VALUES (' +
+                CodProduto + ',' + Prcod_fornecedor.Text + ',' + QuotedStr(NodeText(NodeProd, 'cProd')) + ')');
+          end;
+        finally
+          fm_produto_fornecedor.Free;
+        end;
+      end;
+
+      if CodProduto <> '' then
+      begin
+        Pc_vendas.ActivePage := tab_mercadorias;
+        btnovClick(Self);
+        if not (mmVendas2.State in [dsInsert, dsEdit]) then
+        begin
+          if not mmVendas2.Active then
+            mmVendas2.Open;
+          readonly_false('Me');
+          mmVendas2.Append;
+          modo_insert_me := true;
+          Menumdoc.Text := Prnumdoc.Text;
+          Medtadoc.Text := Prdtadoc.Text;
+          Mecod_cliente.Text := Prcod_cliente.Text;
+          mmVendas2VOLUME.Value := 1;
+        end;
+
+        mmVendas2COD_PRODUTO.AsString := CodProduto;
+        Mecod_produtoExit(Self);
+        mmVendas2QTD.AsString := XMLValor(NodeText(NodeProd, 'qCom'));
+        mmVendas2PRECO_LIQUIDO.AsString := XMLValor(NodeText(NodeProd, 'vUnCom'));
+        mmVendas2SUB_TOTAL.AsString := XMLValor(NodeText(NodeProd, 'vProd'));
+
+        if (Prcod_fornecedor.Text <> '') and (NodeText(NodeProd, 'cProd') <> '') then
+        begin
+          dao.Geral1('SELECT a.ID FROM PRODUTO_FORNECEDOR a WHERE a.COD_FORNECEDOR = ' + Prcod_fornecedor.Text +
+            ' AND A.COD_PRODUTO_FORNECEDOR = ' + QuotedStr(NodeText(NodeProd, 'cProd')));
+          if not dao.Q1.IsEmpty then
+            ConverterUnidade(NodeText(NodeProd, 'uCom'), dao.Q1.FieldByName('ID').AsString);
+        end;
+
+        NodeImp := FindChild(NodeDet, 'imposto');
+        NodeICMS := PrimeiroFilho(FindChild(NodeImp, 'ICMS'));
+        if NodeICMS <> nil then
+        begin
+          if NodeText(NodeICMS, 'pICMS') <> '' then
+            Meicms_item.Text := XMLValor(NodeText(NodeICMS, 'pICMS'));
+          if NodeText(NodeICMS, 'vICMS') <> '' then
+            Mevlr_icms_item.Text := XMLValor(NodeText(NodeICMS, 'vICMS'));
+          if NodeText(NodeICMS, 'vBC') <> '' then
+            Mevlr_bc.Text := XMLValor(NodeText(NodeICMS, 'vBC'));
+          if NodeText(NodeICMS, 'vBCST') <> '' then
+            Mevlr_bc_st.Text := XMLValor(NodeText(NodeICMS, 'vBCST'));
+          if NodeText(NodeICMS, 'vICMSST') <> '' then
+            Mevlr_icms_st.Text := XMLValor(NodeText(NodeICMS, 'vICMSST'));
+          if NodeText(NodeICMS, 'CST') <> '' then
+            MeTrib_ICMS.Text := NodeText(NodeICMS, 'CST')
+          else if NodeText(NodeICMS, 'CSOSN') <> '' then
+            MeTrib_ICMS.Text := NodeText(NodeICMS, 'CSOSN');
+        end;
+
+        NodeIPI := FindChild(FindChild(NodeImp, 'IPI'), 'IPITrib');
+        if NodeIPI <> nil then
+        begin
+          if NodeText(NodeIPI, 'pIPI') <> '' then
+            Meipi_item.Text := XMLValor(NodeText(NodeIPI, 'pIPI'));
+          if NodeText(NodeIPI, 'vIPI') <> '' then
+            Mevlr_ipi_item.Text := XMLValor(NodeText(NodeIPI, 'vIPI'));
+        end;
+
+        CalculaSubTotais;
+        btgraClick(Self);
+        if mmVendas2.State = dsBrowse then
+          Inc(Item)
+        else
+          Exit;
+      end;
+    end;
+
+    NodeAux := NodeDet;
+    NodeDet := ProximoDet(NodeAux);
+  end;
+  somaTotal;
+  Pc_vendas.ActivePage := tab_mercadorias;
 end;
 
 procedure TFr_vendas_industria2.DadosCCe;
@@ -14838,7 +16324,7 @@ begin
     Mevolume.Enabled := false
   end;
 
-  if mform <> 'vendas_devolucoes' then
+  if Lbnom_fop.Caption <> 'DEVOLUÇÃO' then
   begin
     Mecod_fiscal_item.Enabled := false;
     MeTrib_ICMS.Enabled := false;
@@ -15231,6 +16717,21 @@ end;
 procedure TFr_vendas_industria2.cbMesChange(Sender: TObject);
 begin
   CarregaTotaisEmpresa
+end;
+
+procedure TFr_vendas_industria2.SpeedButton1Click(Sender: TObject);
+begin
+  if Prcod_cliente.Text <> '' then
+  begin
+    try
+      Application.CreateForm(TFr_Cliente, Fr_Cliente);
+      Fr_Cliente.dados_incompletos := true;
+      Fr_Cliente.cliente := Prcod_cliente.Text;
+      Fr_Cliente.ShowModal;
+    finally
+      Fr_Cliente.Free;
+    end;
+  end;
 end;
 
 procedure TFr_vendas_industria2.StatusPedido;
@@ -15702,6 +17203,7 @@ procedure TFr_vendas_industria2.Prtot_liquidoExit(Sender: TObject);
 begin
   total_liquido_anterior := Prtot_liquido.Value;
   CalcularDesconto;
+  CarregarPedidosRefEntrada;
 end;
 
 procedure TFr_vendas_industria2.BtnEnviarPedidoClick(Sender: TObject);
@@ -15731,8 +17233,12 @@ end;
 
 procedure TFr_vendas_industria2.PrVLR_DESCONTO_GERALExit(Sender: TObject);
 begin
-  PrDESCONTO_GERAL.Value := (PrVLR_DESCONTO_GERAL.Value / Prtot_liquido.Value) * 100;
-  PrDESCONTO_GERALExit(Self);
+  if Prtot_liquido.Value > 0 then
+    PrDESCONTO_GERAL.Value := (PrVLR_DESCONTO_GERAL.Value / Prtot_liquido.Value) * 100
+  else
+    PrDESCONTO_GERAL.Value := 0;
+
+  PrDESCONTO_GERALExit(PrVLR_DESCONTO_GERAL);
 end;
 
 procedure TFr_vendas_industria2.Medesconto_ValorKeyPress(Sender: TObject; var Key: Char);
@@ -15823,6 +17329,41 @@ procedure TFr_vendas_industria2.btgraClick(Sender: TObject);
 var
   comissao_item, volume, perc_descontado, perc_comissao: real;
   produto: string;
+
+  function ProdutoJaIncluidoNoPedido(const ACodProduto: string): Boolean;
+  var
+    BookmarkAtual: TBookmark;
+    Total: Integer;
+  begin
+    Result := false;
+    if (Trim(ACodProduto) = '') or (not mmVendas2.Active) or mmVendas2.IsEmpty then
+      Exit;
+
+    Total := 0;
+    BookmarkAtual := mmVendas2.GetBookmark;
+    mmVendas2.DisableControls;
+    try
+      mmVendas2.First;
+      while not mmVendas2.Eof do
+      begin
+        if SameText(mmVendas2COD_PRODUTO.AsString, ACodProduto) then
+          Inc(Total);
+
+        if Total > 1 then
+        begin
+          Result := true;
+          Break;
+        end;
+
+        mmVendas2.Next;
+      end;
+    finally
+      if mmVendas2.BookmarkValid(BookmarkAtual) then
+        mmVendas2.GotoBookmark(BookmarkAtual);
+      mmVendas2.FreeBookmark(BookmarkAtual);
+      mmVendas2.EnableControls;
+    end;
+  end;
 begin
   readonly_false('Pr');
   produto_alterado := false;
@@ -15971,6 +17512,29 @@ begin
 
   mmVendas2.post;
 
+  if ProdutoJaIncluidoNoPedido(produto) then
+  begin
+    dao.msg('Produto ja incluido no pedido.');
+    if modo_insert_me then
+    begin
+      mmVendas2.Delete;
+      mmVendas2.Append;
+      Menumdoc.Text := Prnumdoc.Text;
+      Medtadoc.Text := Prdtadoc.Text;
+      Mecod_cliente.Text := Prcod_cliente.Text;
+      mmVendas2VOLUME.Value := 1;
+      modo_insert_me := true;
+    end
+    else
+      mmVendas2.Edit;
+
+    readonly_false('Me');
+    HabilitaBotoesItens(0);
+    Mecod_produto.Clear;
+    Mecod_produto.SetFocus;
+    Exit;
+  end;
+
   readonly_true('Me');
   if not cliente_alterado or (Prnumdoc.Text = '') then
   begin
@@ -16070,11 +17634,15 @@ begin
     '       v1.OBSERVACOES_PEDIDO, ' +
     '       v2.ID, ' +
     '       v2.NUMDOC, ' +
-    '       cast (v2.COD_PRODUTO || ''-'' || pr.NOM_PRODUTO || '' '' || ' +
-    '             coalesce(case ' +
-    '                        when pf.COD_PRODUTO is not null then ' +
-    '                          ''[Cód Forn.: '' || pf.COD_PRODUTO_FORNECEDOR||'']'' ' +
-    '                      end, '''') as varchar(200)) as PRODUTO, ' +
+    '       cast (v2.COD_PRODUTO || ''-'' || pr.NOM_PRODUTO || '' '' ||coalesce((select  case '+
+    '                                                                                    when pf.COD_PRODUTO is not null '+
+    '                                                                                    then ''[Cód Forn.: '' || pf.COD_PRODUTO_FORNECEDOR||'']'' '+
+    '                                                                                    end '+
+    '                                                      from '+
+    '                                                        PRODUTO_FORNECEDOR pf '+
+    '                                                      LEFT OUTER JOIN FORNECEDOR fr ON fr.COD_FORNECEDOR = pf.COD_FORNECEDOR AND pr.FORNECEDOR_PRINCIPAL = fr.COD_FORNECEDOR '+
+    '                                                      where pf.COD_PRODUTO = pr.COD_PRODUTO '+
+    '                                                      limit 1), '''') as varchar (200)) as PRODUTO, '+
     '       pr.UNIDADE, ' +
     '       v2.QTD, ' +
     '       v2.PRECO, ' +
@@ -16097,11 +17665,8 @@ begin
     '     LEFT OUTER JOIN PRAZO p ON (p.ID = v1.COD_PRAZO_PGTO) ' +
     '     LEFT OUTER JOIN FOP f ON (f.COD_FOP = v1.COD_FOP) ' +
     '     INNER JOIN PRODUTO pr ON (pr.COD_PRODUTO = v2.COD_PRODUTO) ' +
-    '     INNER JOIN PRODUTO_FORNECEDOR pf ON pf.COD_PRODUTO = pr.COD_PRODUTO ' +
-    '     INNER JOIN FORNECEDOR fr ON fr.COD_FORNECEDOR = pf.COD_FORNECEDOR ' +
-    '                               AND pr.FORNECEDOR_PRINCIPAL = fr.COD_FORNECEDOR ' +
     'WHERE 1 = 1 ' +
-    '  and v1.numdoc = '+pedido +
+    '  and v1.numdoc = '+pedido + ' ' +
     'ORDER BY a.COD_REPRESENTANTE, ' +
     '         a.NR_CONEXAO, ' +
     '         v1.NUMDOC, ' +
@@ -16133,21 +17698,63 @@ begin
   // sbDANFCe.Enabled := not q_cce.IsEmpty;
 end;
 
+procedure TFr_vendas_industria2.CarregarPedidosRefEntrada;
+begin
+  PrNumdoc_ref_ent.Items.Clear;
+  PrNumdoc_ref_ent.ItemIndex := -1;
+
+  if (PrNfeEntradaSaida.ItemIndex <> 1) or
+     (Trim(Prcod_cliente.Text) = '') or
+     (Prtot_liquido.Value <= 0) then
+    Exit;
+
+  with dao.q5 do
+  begin
+    Close;
+    SQL.Clear;
+    SQL.Add('select numdoc from vendas1 ' +
+            'where cod_cliente = :p_cod_cliente ' +
+            '  and cast(tot_liquido as numeric(15,2)) = :p_total_liquido ' +
+            '  and numdoc <> :p_numdoc ' +
+            '  and nfeentradasaida = ''0'' ' +
+            'order by numdoc');
+    ParamByName('p_cod_cliente').AsInteger := StrToIntDef(Prcod_cliente.Text, 0);
+    ParamByName('p_total_liquido').AsFloat := roundto(Prtot_liquido.Value, -2);
+    ParamByName('p_numdoc').AsInteger := StrToIntDef(Prnumdoc.Text, 0);
+    Open;
+
+    while not Eof do
+    begin
+      PrNumdoc_ref_ent.Items.Add(FieldByName('numdoc').AsString);
+      Next;
+    end;
+
+    if (q_vendas1.FindField('numdoc_ref_ent') <> nil) and
+       (not q_vendas1.FieldByName('numdoc_ref_ent').IsNull) then
+      PrNumdoc_ref_ent.ItemIndex := PrNumdoc_ref_ent.Items.IndexOf(q_vendas1.FieldByName('numdoc_ref_ent').AsString);
+
+    if (PrNumdoc_ref_ent.ItemIndex < 0) and (PrNumdoc_ref_ent.Items.Count = 1) then
+      PrNumdoc_ref_ent.ItemIndex := 0;
+    PrNumdoc_ref_ent.Enabled := Btgraped.Enabled;
+  end;
+end;
+
 procedure TFr_vendas_industria2.PrNfeEntradaSaidaChange(Sender: TObject);
 begin
+  gbPedidoRef.Visible := PrNfeEntradaSaida.ItemIndex = 1;
   if PrNfeEntradaSaida.ItemIndex = 1 then
   begin
     dao.Geral2('select F.cod_fop from fop f where f.nom_fop like ''%DEVOLUÇÃO%'' LIMIT 1');
     if dao.q2.RecordCount > 0 then
       Prcod_fop.Text := DAO.Q2.FieldByName('COD_FOP').AsString;
+    CarregarPedidosRefEntrada;
+    Prcod_fopExit(Self);
+    PrCONTA_BOLETOExit(Self);
   end
   else begin
-    Prcod_fop.Clear;
-    Prcod_prazo_pgto.Clear;
+    PrNumdoc_ref_ent.Items.Clear;
+    PrNumdoc_ref_ent.ItemIndex := -1;
   end;
-
-  Prcod_fopExit(Self);
-  PrCONTA_BOLETOExit(Self);
 end;
 
 procedure TFr_vendas_industria2.PrNUMDOC_DESTINOChange(Sender: TObject);
@@ -16292,10 +17899,10 @@ begin
 
           dao.Execsql('delete from vendas2 where numdoc = ' + QuotedStr(Prnumdoc.Text));
 
-          dao.Execsql('insert into vendas2 (NUMDOC, COD_PRODUTO, QTD, PRECO, PRECO_CUSTO, SUB_TOTAL, DESCONTO, DESCONTO_VALOR, VOLUME, ' +
+          dao.Execsql('insert into vendas2 (NUMDOC, COD_PRODUTO, ITEM_OC, QTD, PRECO, PRECO_CUSTO, SUB_TOTAL, DESCONTO, DESCONTO_VALOR, VOLUME, ' +
                       'PRECO_BRUTO, PRECO_BASE, PERC_COMISSAO, VLR_COMISSAO, COD_FISCAL_ITEM, ICMS_ITEM, VLR_ICMS_ST, VLR_BC_ST, VLR_ICMS_ITEM, ' +
                       'NCM, VLR_BC, IPI_ITEM, VLR_IPI_ITEM, VLR_AGR_ITEM, TRIB_ICMS, CESTA_BASICA, COD_SUPERVISOR, PROMOCAO, DESCONTO_MAX, NAO_VALIDAR_MARGEM, CEST, DESCONTO_VALOR_GERAL) ' +
-                      'select ' + QuotedStr(Prnumdoc.Text) + ', COD_PRODUTO, QTD, PRECO, PRECO_CUSTO, SUB_TOTAL, DESCONTO, DESCONTO_VALOR, VOLUME, ' +
+                      'select ' + QuotedStr(Prnumdoc.Text) + ', COD_PRODUTO, ITEM_OC, QTD, PRECO, PRECO_CUSTO, SUB_TOTAL, DESCONTO, DESCONTO_VALOR, VOLUME, ' +
                       'PRECO_BRUTO, PRECO_BASE, PERC_COMISSAO, VLR_COMISSAO, COD_FISCAL_ITEM, ICMS_ITEM, VLR_ICMS_ST, VLR_BC_ST, VLR_ICMS_ITEM, ' +
                       'NCM, VLR_BC, IPI_ITEM, VLR_IPI_ITEM, VLR_AGR_ITEM, TRIB_ICMS, CESTA_BASICA, COD_SUPERVISOR, PROMOCAO, DESCONTO_MAX, NAO_VALIDAR_MARGEM, CEST, DESCONTO_VALOR_GERAL ' +
                       'from vendas2 where numdoc = ' + QuotedStr(PrNumdoc_Ref.Text));
@@ -16346,6 +17953,8 @@ end;
 
 procedure TFr_vendas_industria2.CarregaChaveNfeDev;
 begin
+  if (Prnumdoc.Text = '') then exit;
+
   q_NFe_Ref.close;
   q_NFe_Ref.sql.Text := 'SELECT a.ID, a.CHAVE_NFE FROM NFE_REF_DEV a where a.NUMDOC = ' + Prnumdoc.Text;
   q_NFe_Ref.Open;
@@ -16406,6 +18015,9 @@ begin
 end;
 
 procedure TFr_vendas_industria2.PrDESCONTO_GERALExit(Sender: TObject);
+var
+  total_desconto_rateio, total_itens_rateio, desconto_rateio, desconto_acumulado: real;
+  contador_itens: integer;
 begin
   if desconto_prazo < PrDESCONTO_GERAL.Value then
   begin
@@ -16414,10 +18026,23 @@ begin
     Exit;
   end;
 
-  PrVLR_DESCONTO_GERAL.Value := Prtot_liquido.Value * (PrDESCONTO_GERAL.Value / 100);
+  if Sender = PrVLR_DESCONTO_GERAL then
+    PrVLR_DESCONTO_GERAL.Value := RoundTo(PrVLR_DESCONTO_GERAL.Value, -2)
+  else
+    PrVLR_DESCONTO_GERAL.Value := RoundTo(Prtot_liquido.Value * (PrDESCONTO_GERAL.Value / 100), -2);
+
+  total_desconto_rateio := PrVLR_DESCONTO_GERAL.Value;
 
   if not mmVendas2.IsEmpty then
   begin
+    total_itens_rateio := 0;
+    mmVendas2.First;
+    while not mmVendas2.Eof do
+    begin
+      total_itens_rateio := total_itens_rateio + mmVendas2SUB_TOTAL.Value;
+      mmVendas2.Next;
+    end;
+
     mmVendas2.First;
 
     WindowList := DisableTaskWindows(fm_splash.Handle);
@@ -16429,22 +18054,32 @@ begin
     carregando_item := true;
     Pc_vendas.TabIndex := 0;
     pnWait.Visible := true;
+    desconto_acumulado := 0;
+    contador_itens := 0;
 
     while not mmVendas2.Eof do
     begin
       checar_qtd := false;
+      Inc(contador_itens);
+
+      if total_itens_rateio > 0 then
+      begin
+        if contador_itens = mmVendas2.RecordCount then
+          desconto_rateio := RoundTo(total_desconto_rateio - desconto_acumulado, -2)
+        else
+          desconto_rateio := RoundTo(total_desconto_rateio * (mmVendas2SUB_TOTAL.Value / total_itens_rateio), -2);
+      end
+      else
+        desconto_rateio := 0;
+
       mmVendas2.Edit;
-      mmVendas2DESCONTO_VALOR_GERAL.Value := mmVendas2SUB_TOTAL.Value * (PrDESCONTO_GERAL.Value / 100);
+      mmVendas2DESCONTO_VALOR_GERAL.Value := desconto_rateio;
+      mmVendas2.Post;
 
-{      mmVendas2PRECO_LIQUIDO.Value := mmVendas2PRECO_LIQUIDO.Value - (roundto(mmVendas2PRECO_LIQUIDO.Value * (PrDESCONTO_GERAL.Value / 100), (CasasDecimais * (-1))));
-      mmVendas2SUB_TOTAL.Value := mmVendas2PRECO_LIQUIDO.Value * mmVendas2QTD.Value;
-      mmVendas2DESCONTO_VALOR_GERAL.Value := 0;  }
-
-
-      mmVendas2.post;
+      desconto_acumulado := RoundTo(desconto_acumulado + desconto_rateio, -2);
       fm_splash.ggProgress.AddProgress(1);
-      fm_splash.refresh;
-      mmVendas2.next;
+      fm_splash.Refresh;
+      mmVendas2.Next;
     end;
 
     EnableTaskWindows(WindowList);
@@ -16458,6 +18093,29 @@ begin
 end;
 
 end.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

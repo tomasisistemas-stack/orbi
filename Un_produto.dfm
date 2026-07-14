@@ -2086,7 +2086,7 @@ object Fr_produtos: TFr_produtos
         TabOrder = 7
         SkinData.SkinSection = 'GROUPBOX'
         object Label4: TsLabel
-          Left = 167
+          Left = 138
           Top = 13
           Width = 27
           Height = 13
@@ -2099,7 +2099,7 @@ object Fr_produtos: TFr_produtos
           Font.Style = []
         end
         object Label5: TsLabel
-          Left = 376
+          Left = 401
           Top = 13
           Width = 76
           Height = 13
@@ -2181,7 +2181,7 @@ object Fr_produtos: TFr_produtos
           Font.Style = []
         end
         object Label52: TsLabel
-          Left = 245
+          Left = 216
           Top = 13
           Width = 50
           Height = 13
@@ -2194,7 +2194,7 @@ object Fr_produtos: TFr_produtos
           Font.Style = []
         end
         object Label68: TsLabel
-          Left = 321
+          Left = 292
           Top = 13
           Width = 51
           Height = 13
@@ -2206,10 +2206,23 @@ object Fr_produtos: TFr_produtos
           Font.Name = 'MS Sans Serif'
           Font.Style = []
         end
+        object sLabel3: TsLabel
+          Left = 345
+          Top = 13
+          Width = 12
+          Height = 13
+          Caption = 'M'#179
+          ParentFont = False
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+        end
         object PrRef_fabrica: TsEdit
-          Left = 375
+          Left = 401
           Top = 26
-          Width = 115
+          Width = 89
           Height = 21
           Color = clWhite
           Font.Charset = DEFAULT_CHARSET
@@ -2219,7 +2232,7 @@ object Fr_produtos: TFr_produtos
           Font.Style = []
           MaxLength = 15
           ParentFont = False
-          TabOrder = 5
+          TabOrder = 6
           Text = 'Edit3'
           OnKeyPress = PrNom_produtoKeyPress
           SkinData.SkinSection = 'EDIT'
@@ -2246,7 +2259,7 @@ object Fr_produtos: TFr_produtos
           Font.Style = []
           MaxLength = 10
           ParentFont = False
-          TabOrder = 6
+          TabOrder = 7
           Text = 'Edit3'
           OnKeyPress = Prcod_prateleiraKeyPress
           SkinData.SkinSection = 'EDIT'
@@ -2275,7 +2288,7 @@ object Fr_produtos: TFr_produtos
           Font.Style = [fsBold]
           ParentFont = False
           ReadOnly = True
-          TabOrder = 7
+          TabOrder = 8
           BoundLabel.Indent = 0
           BoundLabel.Font.Charset = DEFAULT_CHARSET
           BoundLabel.Font.Color = clWindowText
@@ -2305,7 +2318,7 @@ object Fr_produtos: TFr_produtos
           Font.Style = []
           ParentFont = False
           ReadOnly = True
-          TabOrder = 8
+          TabOrder = 9
           BoundLabel.Indent = 0
           BoundLabel.Font.Charset = DEFAULT_CHARSET
           BoundLabel.Font.Color = clWindowText
@@ -2352,7 +2365,7 @@ object Fr_produtos: TFr_produtos
           DisplayFormat = '0.00000'
         end
         object PrPeso: TsCurrencyEdit
-          Left = 164
+          Left = 135
           Top = 26
           Width = 79
           Height = 21
@@ -2384,7 +2397,7 @@ object Fr_produtos: TFr_produtos
         object Prunidade: TsComboEdit
           Left = 87
           Top = 26
-          Width = 76
+          Width = 47
           Height = 21
           AutoSize = False
           Color = clWhite
@@ -2414,7 +2427,7 @@ object Fr_produtos: TFr_produtos
           GlyphMode.Grayed = False
         end
         object PrMts_Rolo: TsCurrencyEdit
-          Left = 245
+          Left = 216
           Top = 26
           Width = 74
           Height = 21
@@ -2444,7 +2457,7 @@ object Fr_produtos: TFr_produtos
           DisplayFormat = '0.00000'
         end
         object PrQtd_Multipla: TsCurrencyEdit
-          Left = 321
+          Left = 292
           Top = 26
           Width = 52
           Height = 21
@@ -2472,6 +2485,35 @@ object Fr_produtos: TFr_produtos
           GlyphMode.Grayed = False
           DecimalPlaces = 3
           DisplayFormat = '0'
+        end
+        object PrM3: TsCurrencyEdit
+          Left = 345
+          Top = 26
+          Width = 55
+          Height = 21
+          AutoSize = False
+          Color = clWhite
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 5
+          OnKeyPress = PrNom_produtoKeyPress
+          BoundLabel.Indent = 0
+          BoundLabel.Font.Charset = DEFAULT_CHARSET
+          BoundLabel.Font.Color = clWindowText
+          BoundLabel.Font.Height = -11
+          BoundLabel.Font.Name = 'MS Sans Serif'
+          BoundLabel.Font.Style = []
+          BoundLabel.Layout = sclLeft
+          BoundLabel.MaxWidth = 0
+          BoundLabel.UseSkinColor = True
+          SkinData.SkinSection = 'EDIT'
+          GlyphMode.Blend = 0
+          GlyphMode.Grayed = False
+          DisplayFormat = '0.00'
         end
       end
       object GroupBox3: TsGroupBox
@@ -8995,8 +9037,8 @@ object Fr_produtos: TFr_produtos
       '  and v2.cod_produto = :produto'
       '  and v1.DTA_DOCUMENTO between :dtini and :dtfim'
       'order by v1.DTA_DOCUMENTO ')
-    Left = 208
-    Top = 56
+    Left = 456
+    Top = 336
     ParamData = <
       item
         Name = 'PRODUTO'

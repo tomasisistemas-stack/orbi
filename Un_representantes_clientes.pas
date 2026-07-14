@@ -105,6 +105,7 @@ type
     procedure dgRepKeyPress(Sender: TObject; var Key: Char);
     procedure dgEstadoKeyPress(Sender: TObject; var Key: Char);
     procedure dgMesoKeyPress(Sender: TObject; var Key: Char);
+    procedure dgMicroKeyPress(Sender: TObject; var Key: Char);
     procedure dgCidadeKeyPress(Sender: TObject; var Key: Char);
     procedure dgRepDblClick(Sender: TObject);
     procedure dgEstadoDblClick(Sender: TObject);
@@ -114,6 +115,8 @@ type
     procedure dgCargaDrawColumnCell(Sender: TObject; const Rect: TRect;
       DataCol: Integer; Column: TColumn; State: TGridDrawState);
     procedure dgCargaDblClick(Sender: TObject);
+    procedure dgCargaKeyPress(Sender: TObject; var Key: Char);
+    procedure dgCargaTitleClick(Column: TColumn);
     procedure CheckTodosClick(Sender: TObject);
     procedure Prcod_representanteButtonClick(Sender: TObject);
     procedure Prcod_representanteExit(Sender: TObject);
@@ -124,6 +127,7 @@ type
     procedure dgBairroKeyPress(Sender: TObject; var Key: Char);
   private
     { Private declarations }
+    ordem_clientes: string;
     procedure Monta_SgCarga;
     procedure Carrega_SgCarga;
     procedure limpa_campos(prefixo: ShortString);
@@ -171,7 +175,7 @@ var
 implementation
 
 uses Un_localizar, UnPri, Un_dao, Un_veiculos, UnFun, Un_fechamento_carga,
-  Un_dm, Un_vendas_industria2;
+  Un_dm, Un_vendas_industria2, Un_splash;
 
 {$R *.dfm}
 
@@ -743,54 +747,106 @@ end;
 
 procedure TFr_representantes_clientes.dgRepKeyPress(Sender: TObject; var Key: Char);
 begin
-  if (key = Chr(9)) then
+  if Key = Chr(32) then
+  begin
+    dgRepDblClick(Sender);
+    if not mmRep.Eof then
+      mmRep.Next;
+    Key := #0;
+    Exit;
+  end;
+
+  if Key = Chr(9) then
     Exit;
 
-  if (dgRep.SelectedField.FieldName = CheckRep.DataField) then
+  if (dgRep.SelectedField <> nil) and (dgRep.SelectedField.FieldName = CheckRep.DataField) then
   begin
     CheckRep.SetFocus;
-    SendMessage(CheckRep.Handle, WM_Char, word(Key), 0);
+    SendMessage(CheckRep.Handle, WM_Char, Word(Key), 0);
   end;
 end;
 
-procedure TFr_representantes_clientes.dgEstadoKeyPress(Sender: TObject;
-  var Key: Char);
+procedure TFr_representantes_clientes.dgEstadoKeyPress(Sender: TObject; var Key: Char);
 begin
-  if (key = Chr(9)) then
+  if Key = Chr(32) then
+  begin
+    dgEstadoDblClick(Sender);
+    if not mmUF.Eof then
+      mmUF.Next;
+    Key := #0;
+    Exit;
+  end;
+
+  if Key = Chr(9) then
     Exit;
 
-  if (dgEstado.SelectedField.FieldName = CheckUF.DataField) then
+  if (dgEstado.SelectedField <> nil) and (dgEstado.SelectedField.FieldName = CheckUF.DataField) then
   begin
     CheckUF.SetFocus;
-    SendMessage(CheckUF.Handle, WM_Char, word(Key), 0);
+    SendMessage(CheckUF.Handle, WM_Char, Word(Key), 0);
   end;
-
 end;
 
-procedure TFr_representantes_clientes.dgMesoKeyPress(Sender: TObject;
-  var Key: Char);
+procedure TFr_representantes_clientes.dgMesoKeyPress(Sender: TObject; var Key: Char);
 begin
-  if (key = Chr(9)) then
+  if Key = Chr(32) then
+  begin
+    dgMesoDblClick(Sender);
+    if not mmMeso.Eof then
+      mmMeso.Next;
+    Key := #0;
+    Exit;
+  end;
+
+  if Key = Chr(9) then
     Exit;
 
-  if (dgMeso.SelectedField.FieldName = CheckMeso.DataField) then
+  if (dgMeso.SelectedField <> nil) and (dgMeso.SelectedField.FieldName = CheckMeso.DataField) then
   begin
     CheckMeso.SetFocus;
-    SendMessage(CheckMeso.Handle, WM_Char, word(Key), 0);
+    SendMessage(CheckMeso.Handle, WM_Char, Word(Key), 0);
   end;
-
 end;
 
-procedure TFr_representantes_clientes.dgCidadeKeyPress(Sender: TObject;
-  var Key: Char);
+procedure TFr_representantes_clientes.dgMicroKeyPress(Sender: TObject; var Key: Char);
 begin
-  if (key = Chr(9)) then
+  if Key = Chr(32) then
+  begin
+    dgMicroDblClick(Sender);
+    if not mmMicro.Eof then
+      mmMicro.Next;
+    Key := #0;
+    Exit;
+  end;
+
+  if Key = Chr(9) then
     Exit;
 
-  if (dgCidade.SelectedField.FieldName = CheckCidades.DataField) then
+  if (dgMicro.SelectedField <> nil) and (dgMicro.SelectedField.FieldName = CheckMicro.DataField) then
+  begin
+    CheckMicro.SetFocus;
+    SendMessage(CheckMicro.Handle, WM_Char, Word(Key), 0);
+  end;
+end;
+
+procedure TFr_representantes_clientes.dgCidadeKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Key = Chr(32) then
+  begin
+    dgCidadeDblClick(Sender);
+    if not mmCidades.Eof then
+      mmCidades.Next;
+    Key := #0;
+    Exit;
+  end;
+
+  if Key = Chr(9) then
+    Exit;
+
+  if (dgCidade.SelectedField <> nil) and (dgCidade.SelectedField.FieldName = CheckCidades.DataField) then
   begin
     CheckCidades.SetFocus;
-    SendMessage(CheckCidades.Handle, WM_Char, word(Key), 0);
+    SendMessage(CheckCidades.Handle, WM_Char, Word(Key), 0);
   end;
 end;
 
@@ -1098,6 +1154,7 @@ end;
 procedure TFr_representantes_clientes.CarregarClientes;
 var
   cmd: string;
+  clientes_marcados: TStringList;
 begin
   cmd := 'SELECT distinct c.cod_cliente, c.cod_cliente||''-''||c.NOM_CLIENTE as CLIENTE, R.ID||''-''||r.NOM_REPRESENTANTE as representante, cd.nom_cidade||''-''||cd.uf as cidade, c.bairro ' +
     'FROM cliente c ' +
@@ -1125,25 +1182,59 @@ begin
   if lista_bairros <> '' then
     cmd := cmd + ' and c.bairro in (' + lista_bairros + ') ';
 
+  if ordem_clientes <> '' then
+    cmd := cmd + ' ORDER BY ' + ordem_clientes;
 
-  dao.Geral1(cmd);
+  clientes_marcados := TStringList.Create;
+  mmClientes.DisableControls;
+  try
+    if mmClientes.Active then
+    begin
+      mmClientes.First;
+      while not mmClientes.Eof do
+      begin
+        if mmClientesCheck.Value then
+          clientes_marcados.Add(mmClientescod_cliente.AsString);
+        mmClientes.Next;
+      end;
+    end;
 
-  mmClientes.Open;
-  mmClientes.EmptyTable;
-  while not dao.Q1.Eof do
-  begin
-    mmClientes.Append;
-    mmClientesCLIENTE.AsString := dao.Q1.fieldbyname('CLIENTE').AsString;
-    mmClientesREPRESENTANTE.AsString := dao.Q1.fieldbyname('REPRESENTANTE').AsString;
-    mmClientescod_cliente.AsString := dao.Q1.fieldbyname('COD_CLIENTE').AsString;
-    mmClientescidade.AsString := dao.Q1.fieldbyname('cidade').AsString;
-    mmClientesbairro.AsString := dao.Q1.fieldbyname('bairro').AsString;
-    mmClientesCheck.Value := false;
+    fm_splash.lbStatus.Caption := 'Carregando Clientes...';
+    fm_splash.ggProgress.Visible := True;
+    fm_splash.ggProgress.MaxValue := 1;
+    fm_splash.ggProgress.Progress := 0;
+    fm_splash.Show;
+    fm_splash.Update;
 
-    mmClientes.post;
-    dao.Q1.Next;
+    dao.Geral1(cmd);
+
+    fm_splash.ggProgress.MaxValue := dao.Q1.RecordCount;
+    fm_splash.ggProgress.Progress := 0;
+    fm_splash.Update;
+
+    mmClientes.Open;
+    mmClientes.EmptyTable;
+    while not dao.Q1.Eof do
+    begin
+      mmClientes.Append;
+      mmClientesCLIENTE.AsString := dao.Q1.fieldbyname('CLIENTE').AsString;
+      mmClientesREPRESENTANTE.AsString := dao.Q1.fieldbyname('REPRESENTANTE').AsString;
+      mmClientescod_cliente.AsString := dao.Q1.fieldbyname('COD_CLIENTE').AsString;
+      mmClientescidade.AsString := dao.Q1.fieldbyname('cidade').AsString;
+      mmClientesbairro.AsString := dao.Q1.fieldbyname('bairro').AsString;
+      mmClientesCheck.Value := clientes_marcados.IndexOf(mmClientescod_cliente.AsString) >= 0;
+
+      mmClientes.post;
+      dao.Q1.Next;
+      fm_splash.ggProgress.AddProgress(1);
+      fm_splash.Update;
+    end;
+    mmClientes.First;
+  finally
+    fm_splash.Hide;
+    mmClientes.EnableControls;
+    clientes_marcados.Free;
   end;
-  mmClientes.First;
 end;
 
 procedure TFr_representantes_clientes.dgCargaDrawColumnCell(Sender: TObject;
@@ -1255,17 +1346,65 @@ begin
   end;
 end;
 
-procedure TFr_representantes_clientes.dgBairroKeyPress(Sender: TObject;
-  var Key: Char);
+procedure TFr_representantes_clientes.dgBairroKeyPress(Sender: TObject; var Key: Char);
 begin
-  if (key = Chr(9)) then
+  if Key = Chr(32) then
+  begin
+    dgBairroDblClick(Sender);
+    if not mmBairro.Eof then
+      mmBairro.Next;
+    Key := #0;
+    Exit;
+  end;
+
+  if Key = Chr(9) then
     Exit;
 
-  if (dgBairro.SelectedField.FieldName = CheckBairro.DataField) then
+  if (dgBairro.SelectedField <> nil) and (dgBairro.SelectedField.FieldName = CheckBairro.DataField) then
   begin
     CheckBairro.SetFocus;
-    SendMessage(CheckBairro.Handle, WM_Char, word(Key), 0);
+    SendMessage(CheckBairro.Handle, WM_Char, Word(Key), 0);
   end;
+end;
+
+procedure TFr_representantes_clientes.dgCargaKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Key = Chr(32) then
+  begin
+    dgCargaDblClick(Sender);
+    if not mmClientes.Eof then
+      mmClientes.Next;
+    Key := #0;
+    Exit;
+  end;
+
+  if Key = Chr(9) then
+    Exit;
+
+  if (dgCarga.SelectedField <> nil) and (dgCarga.SelectedField.FieldName = CheckClientes.DataField) then
+  begin
+    CheckClientes.SetFocus;
+    SendMessage(CheckClientes.Handle, WM_Char, Word(Key), 0);
+  end;
+end;
+
+procedure TFr_representantes_clientes.dgCargaTitleClick(Column: TColumn);
+begin
+  if (Column.Field = nil) or SameText(Column.FieldName, CheckClientes.DataField) then
+    Exit;
+
+  if SameText(Column.FieldName, 'CLIENTE') then
+    ordem_clientes := 'CLIENTE'
+  else if SameText(Column.FieldName, 'REPRESENTANTE') then
+    ordem_clientes := 'REPRESENTANTE'
+  else if SameText(Column.FieldName, 'cidade') then
+    ordem_clientes := 'cidade'
+  else if SameText(Column.FieldName, 'bairro') then
+    ordem_clientes := 'bairro'
+  else
+    Exit;
+
+  CarregarClientes;
 end;
 
 procedure TFr_representantes_clientes.dgCargaDblClick(Sender: TObject);

@@ -14,7 +14,7 @@ object Fr_contas_pagar: TFr_contas_pagar
   Font.Style = []
   KeyPreview = True
   OldCreateOrder = False
-  Position = poMainFormCenter
+  Position = poOwnerFormCenter
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnKeyPress = FormKeyPress
@@ -701,8 +701,8 @@ object Fr_contas_pagar: TFr_contas_pagar
           TabOrder = 9
           SkinData.SkinSection = 'GROUPBOX'
           object ed_titulo2: TsEdit
-            Left = -5
-            Top = 19
+            Left = 6
+            Top = 17
             Width = 100
             Height = 21
             Color = clWhite
@@ -3331,7 +3331,7 @@ object Fr_contas_pagar: TFr_contas_pagar
     end
     object mmContasPagarHISTORICO: TStringField
       FieldName = 'HISTORICO'
-      Size = 100
+      Size = 1000
     end
     object mmContasPagarDTAVEN: TDateField
       Alignment = taCenter
@@ -3406,7 +3406,7 @@ object Fr_contas_pagar: TFr_contas_pagar
       item
         Name = 'HISTORICO'
         DataType = ftString
-        Size = 100
+        Size = 1000
       end
       item
         Name = 'DTAVEN'
@@ -3451,7 +3451,7 @@ object Fr_contas_pagar: TFr_contas_pagar
     end
     object mmParcelasHISTORICO: TStringField
       FieldName = 'HISTORICO'
-      Size = 500
+      Size = 1000
     end
     object mmParcelasDTAVEN: TDateField
       Alignment = taCenter

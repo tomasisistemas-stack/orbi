@@ -3,7 +3,7 @@ object Fr_conta_corrente: TFr_conta_corrente
   Top = 185
   BorderIcons = [biSystemMenu]
   Caption = 'Conta corrente'
-  ClientHeight = 502
+  ClientHeight = 636
   ClientWidth = 500
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -20,7 +20,7 @@ object Fr_conta_corrente: TFr_conta_corrente
   TextHeight = 13
   object Panel1: TsPanel
     Left = 0
-    Top = 460
+    Top = 594
     Width = 500
     Height = 42
     Align = alBottom
@@ -499,7 +499,7 @@ object Fr_conta_corrente: TFr_conta_corrente
     Left = 0
     Top = 0
     Width = 500
-    Height = 460
+    Height = 594
     Align = alClient
     TabOrder = 1
     SkinData.SkinSection = 'GROUPBOX'
@@ -1100,7 +1100,6 @@ object Fr_conta_corrente: TFr_conta_corrente
         Top = 15
         Width = 38
         Height = 21
-        TabStop = False
         AutoSize = False
         Color = clWhite
         Font.Charset = DEFAULT_CHARSET
@@ -1109,7 +1108,6 @@ object Fr_conta_corrente: TFr_conta_corrente
         Font.Name = 'MS Sans Serif'
         Font.Style = []
         ParentFont = False
-        ReadOnly = True
         TabOrder = 0
         SkinData.SkinSection = 'EDIT'
         BoundLabel.Indent = 0
@@ -1139,6 +1137,109 @@ object Fr_conta_corrente: TFr_conta_corrente
         TabOrder = 0
       end
     end
+    object gbApiCobranca: TsGroupBox
+      Left = 3
+      Top = 456
+      Width = 494
+      Height = 42
+      Caption = 'API Key Cobran'#231'a'
+      TabOrder = 16
+      SkinData.SkinSection = 'GROUPBOX'
+      object Prapi_key_cobranca: TsEdit
+        Left = 6
+        Top = 14
+        Width = 482
+        Height = 21
+        Color = clWhite
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        MaxLength = 500
+        ParentFont = False
+        TabOrder = 0
+        SkinData.SkinSection = 'EDIT'
+        BoundLabel.Indent = 0
+        BoundLabel.Font.Charset = DEFAULT_CHARSET
+        BoundLabel.Font.Color = clWindowText
+        BoundLabel.Font.Height = -11
+        BoundLabel.Font.Name = 'MS Sans Serif'
+        BoundLabel.Font.Style = []
+        BoundLabel.Layout = sclLeft
+        BoundLabel.MaxWidth = 0
+        BoundLabel.UseSkinColor = True
+      end
+    end
+    object gbClientIdCobranca: TsGroupBox
+      Left = 3
+      Top = 500
+      Width = 494
+      Height = 42
+      Caption = 'Client ID Cobran'#231'a'
+      TabOrder = 17
+      SkinData.SkinSection = 'GROUPBOX'
+      object Prclient_id_cobranca: TsEdit
+        Left = 6
+        Top = 14
+        Width = 482
+        Height = 21
+        Color = clWhite
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        MaxLength = 500
+        ParentFont = False
+        TabOrder = 0
+        SkinData.SkinSection = 'EDIT'
+        BoundLabel.Indent = 0
+        BoundLabel.Font.Charset = DEFAULT_CHARSET
+        BoundLabel.Font.Color = clWindowText
+        BoundLabel.Font.Height = -11
+        BoundLabel.Font.Name = 'MS Sans Serif'
+        BoundLabel.Font.Style = []
+        BoundLabel.Layout = sclLeft
+        BoundLabel.MaxWidth = 0
+        BoundLabel.UseSkinColor = True
+      end
+    end
+    object gbClientSecretCobranca: TsGroupBox
+      Left = 3
+      Top = 544
+      Width = 494
+      Height = 42
+      Caption = 'Client Secret Cobran'#231'a'
+      TabOrder = 18
+      SkinData.SkinSection = 'GROUPBOX'
+      object Prclient_secret_cobranca: TsEdit
+        Left = 6
+        Top = 14
+        Width = 482
+        Height = 21
+        Color = clWhite
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        MaxLength = 500
+        ParentFont = False
+        PasswordChar = '*'
+        TabOrder = 0
+        SkinData.SkinSection = 'EDIT'
+        BoundLabel.Indent = 0
+        BoundLabel.Font.Charset = DEFAULT_CHARSET
+        BoundLabel.Font.Color = clWindowText
+        BoundLabel.Font.Height = -11
+        BoundLabel.Font.Name = 'MS Sans Serif'
+        BoundLabel.Font.Style = []
+        BoundLabel.Layout = sclLeft
+        BoundLabel.MaxWidth = 0
+        BoundLabel.UseSkinColor = True
+      end
+    end
   end
   object q_conta_corrente: TFDQuery
     Connection = dao.CN
@@ -1146,3 +1247,7 @@ object Fr_conta_corrente: TFr_conta_corrente
     Top = 13
   end
 end
+
+
+
+

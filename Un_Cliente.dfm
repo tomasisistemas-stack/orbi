@@ -522,8 +522,6 @@ object Fr_Cliente: TFr_Cliente
               Align = alClient
               TabOrder = 0
               SkinData.SkinSection = 'GROUPBOX'
-              ExplicitLeft = 2
-              ExplicitTop = 1
               object Label33: TsLabel
                 Left = 8
                 Top = 8
@@ -4282,6 +4280,19 @@ object Fr_Cliente: TFr_Cliente
         end
       end
     end
+    object tbLocalizacao: TsTabSheet
+      Caption = 'Localiza'#231#227'o'
+      SkinData.CustomColor = False
+      SkinData.CustomFont = False
+      object cefLocalizacao: TCEFWindowParent
+        Left = 0
+        Top = 0
+        Width = 681
+        Height = 500
+        Align = alClient
+        TabOrder = 0
+      end
+    end
   end
   object Panel1: TsPanel
     Left = 0
@@ -4811,6 +4822,10 @@ object Fr_Cliente: TFr_Cliente
       OnClick = BtLocalizarClick
       SkinData.SkinSection = 'BUTTON'
     end
+  end
+  object chrLocalizacao: TChromium
+    Left = 632
+    Top = 517
   end
   object q_cliente: TFDQuery
     Connection = dao.CN

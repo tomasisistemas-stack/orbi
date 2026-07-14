@@ -892,6 +892,15 @@ begin
     SetaVersao;
   end;
 
+  if versao_banco < '1.04.49' then
+  begin
+    script.Add('ALTER TABLE CONTA_CORRENTE ADD API_KEY_COBRANCA VARCHAR(500);');
+    script.Add('ALTER TABLE CONTA_CORRENTE ADD API_KEY_EXTRATO VARCHAR(500);');
+
+    ExecuteSQL;
+    SetaVersao;
+  end;
+
   script.Free;
 
 end;
@@ -900,4 +909,3 @@ end;
 
 
 end.
-

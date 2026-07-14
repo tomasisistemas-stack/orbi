@@ -557,6 +557,10 @@ type
     procedure S6Click(Sender: TObject);
     procedure C9Click(Sender: TObject);
   private
+    FUltimaGeracaoRankingVendas: TDateTime;
+    FUltimaGeracaoComissaoDesconto: TDateTime;
+    procedure GerarRankingVendasDiario;
+    procedure GerarComissaoDescontoDiario;
     procedure CarregarListaMenu;
     procedure AvisoAniversariantes;
 
@@ -697,13 +701,8 @@ type
 
 const
   ////////////////////////////////////////////////////////////
-<<<<<<< HEAD
-  versao: ShortString = '2.00.69';
-=======
-  versao: ShortString = '2.00.68';
->>>>>>> ea249b0eb181edecb8a4b97e553e293fa1d1b47d
-  ////////////////////////////////////////////////////////////
-
+  versao: ShortString = '2.00.82';
+  ///////////////////////////////////////////////////////////
 var
 
 
@@ -1682,10 +1681,13 @@ end;
 
 procedure TFRPRI.DesabilitaTimers;
 begin
-  //TmUpdate.Enabled := False;
+  TmUpdate.Enabled := False;
   TmPedidoVendedor.Enabled := False;
   TmPedidoPalm.Enabled := False;
   TmContaVencida.Enabled := False;
+  TmReiniciaTimers.Enabled := False;
+  tmChamaGravador.Enabled := False;
+  TmAlertas.Enabled := False;
 end;
 
 procedure TFRPRI.ContasaReceber1Click(Sender: TObject);
@@ -5283,6 +5285,56 @@ begin
     CheckPedidoPalm;
 end;
 
+procedure TFRPRI.GerarComissaoDescontoDiario;
+begin
+  if Trunc(FUltimaGeracaoComissaoDesconto) = Date then
+    Exit;
+  if Fr_opc_relatorios <> nil then
+    Exit;
+
+  FUltimaGeracaoComissaoDesconto := Date;
+  try
+    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+    try
+      Fr_opc_relatorios.GerarComissaoDescontoDiario;
+    finally
+      FreeAndNil(Fr_opc_relatorios);
+    end;
+  except
+    on E: Exception do
+      OutputDebugString(PChar('Falha ao gerar comissao/desconto diario: ' + E.Message));
+  end;
+end;
+procedure TFRPRI.GerarRankingVendasDiario;
+var
+  PastaDia, ArquivoJpg: string;
+begin
+  if Trunc(FUltimaGeracaoRankingVendas) = Date then
+    Exit;
+  if Fr_opc_relatorios <> nil then
+    Exit;
+
+  PastaDia := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName)) +
+    'Relatorios\RankingVendas\' + FormatDateTime('yyyy_mm_dd', Date);
+  ArquivoJpg := IncludeTrailingPathDelimiter(PastaDia) + 'ranking_vendas.jpg';
+
+  FUltimaGeracaoRankingVendas := Date;
+  if FileExists(ArquivoJpg) then
+    Exit;
+
+  try
+    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+    try
+      Fr_opc_relatorios.GerarRankingVendasDiario;
+    finally
+      FreeAndNil(Fr_opc_relatorios);
+    end;
+  except
+    on E: Exception do
+      OutputDebugString(PChar('Falha ao gerar ranking de vendas diario: ' + E.Message));
+  end;
+end;
+
 procedure TFRPRI.tmHoraTimer(Sender: TObject);
 begin
   FMFUN.TrimAppMemorySize;
@@ -5291,6 +5343,13 @@ begin
 
   if not Habilita_Consultas then
     Exit;
+
+
+  if SameText(Trim(nom_usuario), 'CLAUDIO') then
+  begin
+    GerarRankingVendasDiario;
+    GerarComissaoDescontoDiario;
+  end;
 
   if (GetASyncKeyState(VK_F2) <> 0) then
   begin

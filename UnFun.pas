@@ -157,7 +157,7 @@ type
     procedure AlterarProcessoPedido(processo, pedido: string);
     procedure GravarProcessoPedido(status, processo, pedido: string);
     procedure ListaNCM(chamou, ncm: string; cest: boolean);
-
+    function MontaNossoNumero(Numero: string): string;
     procedure MontaCobrancaItem(NomeCliente, TipoPessoa, cnpj, cpf, Endereco, NrEndereco, Bairro, NomeCidade, sUF, CEP, carteira_conta, Boleto_Avalista, Titulo, Sequencia, Instrucao: string;
       Vencto: TDateTime; dias_protesto, dias_baixa, isento: Integer; Valor: Double);
 
@@ -201,6 +201,100 @@ end;
 
 {$IFDEF ORBI}
 
+function TFMFUN.MontaNossoNumero(Numero: string): string;
+var
+  p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13: string;
+  Soma, resto: Integer;
+  function converteLetra(letra: string): string;
+  var
+    variavel: string;
+    letter: char;
+  begin
+    variavel := '';
+    if letra = '' then
+      exit;
+    letra := UpperCase(letra);
+    letter := letra[1];
+
+    case letter of // converte letra em número
+      'A':
+        variavel := '1';
+      'B':
+        variavel := '2';
+      'C':
+        variavel := '3';
+      'D':
+        variavel := '4';
+      'E':
+        variavel := '5';
+      'F':
+        variavel := '6';
+      'G':
+        variavel := '7';
+      'H':
+        variavel := '8';
+      'I':
+        variavel := '9';
+      'J':
+        variavel := '10';
+      'K':
+        variavel := '11';
+      'L':
+        variavel := '12';
+      'M':
+        variavel := '13';
+      'N':
+        variavel := '14';
+      'O':
+        variavel := '15';
+      'P':
+        variavel := '16';
+      'Q':
+        variavel := '17';
+      'R':
+        variavel := '18';
+      'S':
+        variavel := '19';
+      'T':
+        variavel := '20';
+      'U':
+        variavel := '21';
+      'V':
+        variavel := '22';
+      'W':
+        variavel := '23';
+      'X':
+        variavel := '24';
+      'Y':
+        variavel := '25';
+      'Z':
+        variavel := '26';
+    end; // case letra
+    if variavel = '' then
+      variavel := letra;
+    Result := variavel;
+  end;
+
+begin
+  p1 := Copy(Numero, 1, 1);
+  p2 := Copy(Numero, 2, 1);
+  p3 := Copy(Numero, 3, 1);
+  p4 := Copy(Numero, 4, 1);
+  p5 := Copy(Numero, 5, 1);
+  p6 := Copy(Numero, 6, 1);
+  p7 := Copy(Numero, 7, 1);
+  p8 := Copy(Numero, 8, 1);
+  p9 := Copy(Numero, 9, 1);
+  p10 := Copy(Numero, 10, 1);
+  p11 := Copy(Numero, 11, 1);
+  p12 := Copy(Numero, 12, 1);
+  p13 := Copy(Numero, 13, 1);
+  Result := converteLetra(p1) + converteLetra(p2) + converteLetra(p3) + converteLetra(p4) + converteLetra(p5) + converteLetra(p6) + converteLetra(p7) + converteLetra(p8) + converteLetra(p9) +
+    converteLetra(p10) + converteLetra(p11) + converteLetra(p12) + converteLetra(p13);
+end;
+
+
+
 procedure TFMFUN.MontaCobrancaItem(NomeCliente, TipoPessoa, cnpj, cpf, Endereco, NrEndereco, Bairro, NomeCidade, sUF, CEP, carteira_conta, Boleto_Avalista, Titulo, Sequencia, Instrucao: string;
   Vencto: TDateTime; dias_protesto, dias_baixa, isento: Integer; Valor: Double);
 
@@ -210,98 +304,6 @@ var
   sequencial_arquivo: Integer;
   MensagemPadrao: TStrings;
   TituloBoleto: TACBrTitulo;
-  function MontaNossoNumero(Numero: string): string;
-  var
-    p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13: string;
-    Soma, resto: Integer;
-    function converteLetra(letra: string): string;
-    var
-      variavel: string;
-      letter: char;
-    begin
-      variavel := '';
-      if letra = '' then
-        exit;
-      letra := UpperCase(letra);
-      letter := letra[1];
-
-      case letter of // converte letra em número
-        'A':
-          variavel := '1';
-        'B':
-          variavel := '2';
-        'C':
-          variavel := '3';
-        'D':
-          variavel := '4';
-        'E':
-          variavel := '5';
-        'F':
-          variavel := '6';
-        'G':
-          variavel := '7';
-        'H':
-          variavel := '8';
-        'I':
-          variavel := '9';
-        'J':
-          variavel := '10';
-        'K':
-          variavel := '11';
-        'L':
-          variavel := '12';
-        'M':
-          variavel := '13';
-        'N':
-          variavel := '14';
-        'O':
-          variavel := '15';
-        'P':
-          variavel := '16';
-        'Q':
-          variavel := '17';
-        'R':
-          variavel := '18';
-        'S':
-          variavel := '19';
-        'T':
-          variavel := '20';
-        'U':
-          variavel := '21';
-        'V':
-          variavel := '22';
-        'W':
-          variavel := '23';
-        'X':
-          variavel := '24';
-        'Y':
-          variavel := '25';
-        'Z':
-          variavel := '26';
-      end; // case letra
-      if variavel = '' then
-        variavel := letra;
-      Result := variavel;
-    end;
-
-  begin
-    p1 := Copy(Numero, 1, 1);
-    p2 := Copy(Numero, 2, 1);
-    p3 := Copy(Numero, 3, 1);
-    p4 := Copy(Numero, 4, 1);
-    p5 := Copy(Numero, 5, 1);
-    p6 := Copy(Numero, 6, 1);
-    p7 := Copy(Numero, 7, 1);
-    p8 := Copy(Numero, 8, 1);
-    p9 := Copy(Numero, 9, 1);
-    p10 := Copy(Numero, 10, 1);
-    p11 := Copy(Numero, 11, 1);
-    p12 := Copy(Numero, 12, 1);
-    p13 := Copy(Numero, 13, 1);
-    Result := converteLetra(p1) + converteLetra(p2) + converteLetra(p3) + converteLetra(p4) + converteLetra(p5) + converteLetra(p6) + converteLetra(p7) + converteLetra(p8) + converteLetra(p9) +
-      converteLetra(p10) + converteLetra(p11) + converteLetra(p12) + converteLetra(p13);
-  end;
-
 begin
   TituloBoleto := ACBrBoleto1.CriarTituloNaLista;
 

@@ -5371,7 +5371,7 @@ begin
     '            when 1 ' +#13+
     '            then case ' +#13+
     '                 when (v1.nfe_dev is null and coalesce(cast(v1.nfeentradasaida as integer), 0) = 0) ' +#13+
-    '                  and coalesce(V1.PROCESSO_ID, 0) NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') '+
+    '                  and coalesce(V1.NUMDOC, 0) NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) '+
     '                 then ''FATURADO'' ' +#13+
     '                 else case when coalesce(cast(v1.tiponfe as integer),0) = 1 ' +
     '                      then ''FATURADO-COMPLEMENTAR'' '+

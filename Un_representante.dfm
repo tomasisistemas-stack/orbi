@@ -1753,6 +1753,19 @@ object Fr_representante: TFr_representante
         end
       end
     end
+    object tabLocalizacao: TsTabSheet
+      Caption = 'Localiza'#231#227'o'
+      SkinData.CustomColor = False
+      SkinData.CustomFont = False
+      object cefLocalizacao: TCEFWindowParent
+        Left = 0
+        Top = 0
+        Width = 732
+        Height = 552
+        Align = alClient
+        TabOrder = 0
+      end
+    end
   end
   object Panel1: TsPanel
     Left = 0
@@ -1825,6 +1838,10 @@ object Fr_representante: TFr_representante
       OnClick = BitBtn1Click
       SkinData.SkinSection = 'BUTTON'
     end
+  end
+  object chrLocalizacao: TChromium
+    Left = 640
+    Top = 642
   end
   object q_representante: TFDQuery
     Connection = dao.CN

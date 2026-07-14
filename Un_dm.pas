@@ -1386,6 +1386,10 @@ type
     q_ranking_produtosqtd: TFMTBCDField;
     q_ranking_produtospreco: TFMTBCDField;
     q_ranking_produtosvalor_total: TFMTBCDField;
+    q_ranking_produtosqtd_estoque: TFMTBCDField;
+    q_ranking_produtosqtd_estoque_min: TBCDField;
+    q_ranking_produtosqtd_estoque_max: TBCDField;
+    q_ranking_produtosmedia_mensal: TFMTBCDField;
     frxDBDataset1: TfrxDBDataset;
     q_palm_pedidosnr_conexao: TIntegerField;
     q_palm_pedidoscod_representante: TIntegerField;
@@ -1469,6 +1473,8 @@ type
     q_ranking_vendas_completoperc_positivacao: TFMTBCDField;
     q_ranking_vendas_completoticket_medio: TFMTBCDField;
     q_ranking_vendas_completoperc_desconto: TFMTBCDField;
+    q_ordem_compraqtd_multipla: TBCDField;
+    q_ordem_compram3: TBCDField;
     procedure ftpSiteWorkBegin(Sender: TObject; AWorkMode: TWorkMode;
       const AWorkCountMax: Integer);
     procedure ftpSiteWork(Sender: TObject; AWorkMode: TWorkMode;

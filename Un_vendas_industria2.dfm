@@ -496,9 +496,10 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       Font.Name = 'Tahoma'
       Font.Style = [fsBold]
       ParentFont = False
+      OnClick = SpeedButton1Click
     end
     object Prnumdoc: TsEdit
-      Left = 6
+      Left = 7
       Top = 22
       Width = 95
       Height = 21
@@ -1759,6 +1760,14 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           end
           item
             Expanded = False
+            FieldName = 'ITEM_OC'
+            Title.Alignment = taCenter
+            Title.Caption = 'Item OC'
+            Width = 65
+            Visible = True
+          end
+          item
+            Expanded = False
             FieldName = 'NCM'
             Title.Alignment = taCenter
             Width = 70
@@ -1956,8 +1965,21 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           Font.Name = 'Tahoma'
           Font.Style = []
         end
+        object lbItemOC: TsLabel
+          Left = 555
+          Top = 54
+          Width = 44
+          Height = 13
+          Caption = 'Item OC:'
+          ParentFont = False
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = []
+        end
         object Label18: TsLabel
-          Left = 1072
+          Left = 1080
           Top = 3
           Width = 25
           Height = 13
@@ -1972,7 +1994,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           ExplicitLeft = 1142
         end
         object Label19: TsLabel
-          Left = 1107
+          Left = 1115
           Top = 3
           Width = 24
           Height = 13
@@ -2160,7 +2182,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           DataSource = dsVendas2
         end
         object Shape2: TShape
-          Left = 1834
+          Left = 1842
           Top = 133
           Width = 14
           Height = 15
@@ -2170,7 +2192,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           ExplicitLeft = -251
         end
         object sLabel3: TsLabel
-          Left = 1853
+          Left = 1861
           Top = 133
           Width = 150
           Height = 16
@@ -2251,7 +2273,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           Font.Style = []
         end
         object lbComis: TsLabel
-          Left = 556
+          Left = 620
           Top = 52
           Width = 50
           Height = 13
@@ -2666,6 +2688,32 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           DisplayFormat = 'R$ #,##0.0000'
           DataSource = dsVendas2
           DataField = 'SUB_TOTAL'
+        end
+        object MeITEM_OC: TsDBEdit
+          Left = 555
+          Top = 67
+          Width = 60
+          Height = 21
+          Color = clWhite
+          DataField = 'ITEM_OC'
+          DataSource = dsVendas2
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = []
+          ParentFont = False
+          TabOrder = 10
+          SkinData.SkinSection = 'EDIT'
+          BoundLabel.Indent = 0
+          BoundLabel.Font.Charset = DEFAULT_CHARSET
+          BoundLabel.Font.Color = clWindowText
+          BoundLabel.Font.Height = -11
+          BoundLabel.Font.Name = 'Tahoma'
+          BoundLabel.Font.Style = []
+          BoundLabel.Layout = sclLeft
+          BoundLabel.MaxWidth = 0
+          BoundLabel.UseSkinColor = True
         end
         object zzqtd_embalagem: TsCurrencyEdit
           Left = 1089
@@ -3348,7 +3396,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           Font.Style = []
           ParentBiDiMode = False
           ParentFont = False
-          TabOrder = 13
+          TabOrder = 38
           OnExit = Meicms_itemExit
           OnKeyPress = Meicms_itemKeyPress
           BoundLabel.Indent = 0
@@ -3652,9 +3700,9 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           DataField = 'PRECO_BASE'
         end
         object Medesconto_Valor: TsDBCalcEdit
-          Left = 621
+          Left = 617
           Top = 67
-          Width = 59
+          Width = 68
           Height = 21
           AutoSize = False
           BiDiMode = bdRightToLeft
@@ -3667,7 +3715,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           ParentBiDiMode = False
           ParentFont = False
           ReadOnly = True
-          TabOrder = 11
+          TabOrder = 12
           Visible = False
           OnExit = Medesconto_ValorExit
           OnKeyPress = Medesconto_ValorKeyPress
@@ -3702,7 +3750,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           Font.Style = []
           ParentFont = False
           ReadOnly = True
-          TabOrder = 12
+          TabOrder = 13
           Visible = False
           BoundLabel.Indent = 0
           BoundLabel.Font.Charset = DEFAULT_CHARSET
@@ -3722,7 +3770,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           DataField = 'VLR_BC'
         end
         object MePERC_COMISSAO: TsDBCalcEdit
-          Left = 555
+          Left = 620
           Top = 67
           Width = 60
           Height = 21
@@ -3734,7 +3782,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           Font.Name = 'Tahoma'
           Font.Style = []
           ParentFont = False
-          TabOrder = 10
+          TabOrder = 11
           OnExit = MePERC_COMISSAOExit
           BoundLabel.Indent = 0
           BoundLabel.Font.Charset = DEFAULT_CHARSET
@@ -5802,7 +5850,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
             265)
         end
       end
-      object sDBGrid1: TDBGrid
+      object grCR: TDBGrid
         Left = 0
         Top = 0
         Width = 1264
@@ -5825,6 +5873,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         TitleFont.Height = -11
         TitleFont.Name = 'Tahoma'
         TitleFont.Style = []
+        OnDrawColumnCell = grCRDrawColumnCell
       end
     end
     object tab_analise: TsTabSheet
@@ -6946,6 +6995,44 @@ object Fr_vendas_industria2: TFr_vendas_industria2
                   'Entrada')
               end
             end
+            object gbPedidoRef: TsGroupBox
+              Left = 329
+              Top = 194
+              Width = 105
+              Height = 38
+              Caption = 'Pedido Ref.:'
+              TabOrder = 8
+              Visible = False
+              SkinData.SkinSection = 'GROUPBOX'
+              object PrNumdoc_ref_ent: TsComboBox
+                Left = 4
+                Top = 13
+                Width = 95
+                Height = 19
+                Alignment = taLeftJustify
+                BoundLabel.Indent = 0
+                BoundLabel.Font.Charset = DEFAULT_CHARSET
+                BoundLabel.Font.Color = clWindowText
+                BoundLabel.Font.Height = -11
+                BoundLabel.Font.Name = 'Tahoma'
+                BoundLabel.Font.Style = []
+                BoundLabel.Layout = sclLeft
+                BoundLabel.MaxWidth = 0
+                BoundLabel.UseSkinColor = True
+                SkinData.SkinSection = 'COMBOBOX'
+                VerticalAlignment = taAlignTop
+                Style = csDropDownList
+                Color = clWhite
+                Font.Charset = ANSI_CHARSET
+                Font.Color = clBlack
+                Font.Height = -9
+                Font.Name = 'Tahoma'
+                Font.Style = []
+                ItemIndex = -1
+                ParentFont = False
+                TabOrder = 0
+              end
+            end
           end
         end
         object TabCCe: TsTabSheet
@@ -7441,6 +7528,258 @@ object Fr_vendas_industria2: TFr_vendas_industria2
                 6666693334FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF}
               ParentFont = False
               OnClick = btnCanNfeDevClick
+            end
+            object btnImpXMLDev: TSpeedButton
+              Left = 680
+              Top = 39
+              Width = 153
+              Height = 28
+              Caption = 'Importar XML'
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clWindowText
+              Font.Height = -11
+              Font.Name = 'Tahoma'
+              Font.Style = [fsBold]
+              Glyph.Data = {
+                961D0000424D961D00000000000036000000280000002F000000280000000100
+                200000000000601D000000000000000000000000000000000000F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F3F4F300F3F4F400F5F5F500F3F1ED00F1F4
+                F300F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F3F4F300F4F3F500F4F7F700F1E4D900F1D3C100F3E8E200F4F5
+                F600F3F4F300F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F5F5F500F4F4F400F5F5F500F4F4F400F4F4F400F4F4F400F4F3
+                F400F4F4F400F3F5F500F3EEEB00F9D1AE00E7AC8400EFCDB900F5EEEA00F3F4
+                F500F3F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F5F5F500F1F1F100E9E9
+                E900E5E5E500E6E6E600EAEAEA00F0F0F000F4F4F400F4F4F400F2F6F400F4F3
+                F500F1DED400F4CDAE00FFD8B600F8CDA600EBB08800EFD4BF00F5F1F100F4F5
+                F500F3F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F5F5F400ECEAEC00D9D3D800D3CCD000D2CB
+                D100D0CCCF00CFCECE00D2D4D300DCDDDD00E9E9E900F1F1F000F5DCCD00FBD0
+                AC00FFD7B300FFD5B500FFD8B700FBD4AF00EAA98200F0DFCE00F6F3F400F4F4
+                F400F3F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F5F500F3EEF100CFD2CD00A6C8AC007FB78D0077B5860094BD
+                A000B8C4B900BBB4B700B1ABAE00B5B4B600C9C1BA00FACDAB00FFD7B500FFD6
+                B500FFD6B500FFD5B500FFDBBB00E9AB8000ECAF8900F2E6DE00F4F5F600F3F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F300FBF5FC00CCDCCD0065B379001D883F004DA0630061A76B00479D5400258C
+                41003B98580084AD95009CACAF00ACA3AA00BBADA400F4C8A600FCD5B200FED8
+                B600FED7B600FBD3B200FAD2AB00EDB28600F2D8CA00F4F5F700F3F4F400F3F4
+                F300F3F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F6F5F600EDF0
+                EB007FBD8D002B8C4C00E8EBE500FFFFFF0058DCE10027C4BC005BC9B10063B4
+                8500238D44002294520045B1A00074AAB400B8A8A700E0BAA000F8CBA900F8CD
+                AD00FCD4B300FFDAB900F4C39A00F1D2C000F3F5F700F4F5F500F4F4F400F4F4
+                F300F3F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F9F6F900CBE2CD00419B
+                5C00A3C1AD00FFF6FD0063DDDD0008B9B20069C4C000DAE7EC00F3FAFB00D7E9
+                DB006FB684001A873900249E6F0022AAAD0083A1A000E7B99900F8CCA600F9CF
+                AA00FAD2B100F0BB9400EFB38F00F3E2DA00F4F3F500F1F6F500F2F4F500F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400FCF7FB00B6DBBB002F924B00D2CF
+                CF00E1EFF10020CBC90041BCB000E0CCCD00F3F1F000F7F5F500F9F7FA00FCF9
+                F800BAD9C000439A5600178F4E009EAE9500DDB09800DAB99C00F4CBAE00FED7
+                B800F9D2AC00E6986600ECAF8400EED0B900F3E4DC00F4F1F300F4F2F200F3F2
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400FCF7FB00B2D5B50032925000D5CFCF00B6E4
+                E40012C6BE008AC2BD00D6CED000F1F1F100F4F4F400F4F3F400F5F4F500FFFA
+                FF00DDECDD0069B37F001C873B00BFB99300E0B09900DBB79C00F1C8A900FAD1
+                B000FDD8B300E9A27200E6996700EDAF8700EEC3A500EFC3A600F0D6C500F3EF
+                F100F4F4F500F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400FBF7FB00B7D9BC0036955100D0CAC900A0DDDF0013C2
+                BD009BC4C200D0CCCD00EEEEEE00F4F5F500F5F3F400F2F6F500F5F2F000F9D5
+                C300EBCCAE008CC7930012853A00A4AD8700D1A48F00D5AF9200F8CFAE00FFD9
+                B700FEDCBA00FACFAD00EB9E6B00EA9E6D00EA9C6B00EBA57900F0D7C700F6F4
+                F500F3F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400FAF6F900C5E0CA00409E5A00BAC0B700A6D5DB0015C4BD0091C6
+                C300CFC8C800EAEAEA00F5F5F500F4F4F500F6F4F300D1B59E00936A4E008265
+                52007C6A580081AC8500108336006A7D5B008A6A5D00A68E7600E8C1A500FCD2
+                AF00FAD3B100F9D0AD00F9D5B200FBD8B600EAA77800EDB18D00F2E6DE00F2F6
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F8F5F700D7E9DA0059AB700090B29900BED0D5001EC5C0006CC6BE00CFC6
+                C600E1E1E100F5F5F500F2F2F100E0E3E000E3DED900FDFFFF00FFFFFF00FFFF
+                FF00F6F6F4009BC8A300188C3F005D6E51005E474000927D6700F5CBAA00FFD7
+                B800FFD7B600FFD8B500F9CEAE00F6C99F00E7986300ECC5AA00F4F1EE00F3F4
+                F500F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F5F4
+                F500F2F3F1007EBD8A005EA26F00DBCED6002DC4C4003AC0B400D6C9CA00D5D5
+                D500F1F1F100FBFCFC00FFFFFF00FFFFFF00FFFFFF00FEFFFC00FDFEFC00FFFF
+                FF00FFFFFF009DD0AA001A8F43008789690098716200DBB99E00F8D1B200FFD7
+                B600FFD6B400FCD4B200FBD7B700EEAF8400EBAE8500F5E7E200F4F5F600F3F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F3F400FCFA
+                FC00A9D3B00039965600D5CBC9005EC4C5000EB9AE00CCCFCF00CBC8C800F4F4
+                F400FFFFFF00FFFFFF00C5BFB800CEAE9600FDD2AD00FBD2AE00F9D0AC00F7D0
+                B400F8E3CE008DC79C001B894100D2B79A00D3AD9500E6BFA100FDD3B300FFD6
+                B500FFD6B600F8D0AB00FAD3AF00E89A6A00F0D5C100F6F3F800F3F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F3F4F300FBF5F900D4E6
+                D50053AB6C0099B79C0096C4C90014BBB3008CCBC500CAC3C400FFFFFF00FFFF
+                FF00CCCBC800725C4A00FCD2B000FED4B300FAD0AD00F8CAA800FFD8B500FFD5
+                B400F0D9B80075B58200268C4400E5B9A000D0AE9500EBC5A600FED5B300FFD7
+                B600F9D0AF00FAD2AC00E99E6B00EEC2A200F2F0EF00F4F4F500F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F3F4F300F5F4F500F7F6F60091C4
+                9700459C6300DACDD3002CB8B9002DBCAD00DFD3D600FFFFFF00FFFFFF008472
+                6300987C6800FDD3B100FFD9B700FFD7B500FDD4AE00FFDCB900FFDAB800FFDC
+                B900E8DDBE0053A76900589B5F00E3B59F00D4B39700F4CBAC00FFD6B500FFD8
+                B500FAD4B400EEAE8000EBB48F00F2EEEA00F4F5F600F3F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F3F3F300F4F3F300FAF8FA00C4E0C7004AA2
+                6000B3C0AD0074BDC2000AB4A500AAD7D300FFFFFF00FFFFFF00786654007B65
+                5200AF927C00B1937B00B0937A00B3927700AF8E7600B2937B00B1927B00B690
+                7800AAB79700228D460097A97E00D9B09600DCBA9D00FAD3B100F9D1AF00FAD3
+                B200F3BE9200ECB08B00F5ECEA00F4F6F600F3F4F400F3F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F3F300F4F4F400F4F4F400F5F4F500F4F5F30086C290004E9E
+                6400CCCBD2002BB0AE004FAF9C00FFFFFF00FFFFFF00B8B0A800A89F9400A99F
+                9500A99F9500A99F9600A99F9600A99E9400A99D9400A99E9500AAA298009381
+                74008EB68D0012823A00D8B89A00D0A98C00E7BF9D00FFD6B600FFDABA00EFB5
+                8900EAAB8100F2E4DB00F2F4F600F4F3F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F3F4
+                F400F3F4F400F4F4F500F4F4F400F4F4F500FCF9FC00C7DFCD004DA66700A1AE
+                8D0099937B008E865A00FFFEFA00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
+                FF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00DDD7D3007D6F
+                5C0070B27D0044934E00E5B4A000D8B39700F7CDAE00FFDABA00EFB78A00E999
+                6600ECB69600F1E2D800F5F4F800F2F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F3F4F400F4F4F500F5F3
+                F700F2ECEA00F0D8C900F2D8CB00F6EAE600F9F6F80093C89F003F9A5400CE9E
+                7C00E1B59800F2E5DD00FFFFFF00EEECEA00907F7100B09E9100FADCC700FDE2
+                C900FAE0C700FBE1C800F7D8C000F8E4D000FFFFFF00F4F5F10064433400B1BB
+                9B002C944F00A0AF8200D7AE9500E1BDA100FED5B600FCD5B400E7A37400E89B
+                6600EEC1A500F6EEEA00F5F5F600F4F4F400F3F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F3F4F500F3EEEB00F0D7C900ECC3
+                A500EDA37500E99E6E00EAB99700F8DBD000D8D5B60063B37D0077A87800DFAF
+                9600DDBEA500FCFFFF00FFFFFF008C7663006C594500BA9B8300FFD6B300FFD9
+                B700FFD8B100FCD1AB00FBE0C400FFFFFF00FEFFFD00634B3A00C7A68E00A4CC
+                A40021873D00E0B89E00D2AF9500F2CCAC00FFD9B900F9D2AF00E4935E00EBA3
+                7600EECAB400F3EEEB00F2F5F600F4F4F400F3F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F3F3F500EFD3C000E99E7000F3BF9600F5CA
+                A500F4C49A00E99B6900E69F7000FFD3AE00B4D2AF0041A06100B0AF8600D5A5
+                8900E3D9D300FFFFFF00F7F4EF007F634F0073604E00AA927B00E7C3A700FAD4
+                B200F7CBA700F2E1CE00FFFFFF00EFEEEE006C574500E7B89700E5D9B600449E
+                600085A67300DAAE9700E4BD9E00FFD6B600FAD4B300F2C39800E6965E00E9A4
+                7300EFCFB900F7F1F400F3F4F400F4F3F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F300F2F5F600F3E8E400F1C09F00F7CAA500F6CAA400FFDAB900FDD6
+                B600FAD6B100F1B99200F9CFA800FED8B8008DC79B003F9D5C00DCB59900D1AD
+                8F00ECEAEA00FFFFFF00F8F4F100967C6D0069503F00745B4700816551009B84
+                7100FEFFFF00FFFFFF00BDB9B300AE8B6F00FDD4B000FFD9BB00ACCAA0001D87
+                4000DCB49B00D3AE9200F5CFAE00F7CBAA00F9D4B400F2BF9300EA976300E9AD
+                8500F3E4DA00F2F6F600F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F300F3F6F800F4E4D900FED5B100FED7B900FCD4B400FBD1B100FED5B400FED6
+                B600FFD9B800FED4B500FDCFAD00E4D4B1006CB786005BA56500DEAF9600D3A9
+                8C00F1E6E600FFFFFF00FFFFFF00F5F4F200D9D5D400E1E1DE00FFFFFF00FFFF
+                FF00FCFFFF00C0A08700F8CCA700FBD3AF00FFD7B700E5D8B9004AA162008BA0
+                7100D5AC9200E4BD9E00FCD4B100FAD5B000FDDABA00E9A16F00E9A17000F1D5
+                C600F5F5F700F3F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F3F7
+                FA00F5D4B300FDD2B000FCD3B100FED6B500FFD6B500FFD6B500FFD5B500FFD5
+                B400FFD6B500FED5B500FFD7B500C7D4B10052A8700083AE7D00DFAB9300D4AE
+                8F00EFD8C300FEF9F600FFFFFF00FFFFFF00FFFFFF00FEFFFF00FAF4ED00EFCC
+                B000FDD0A800FDD6B300FAD2AF00FAD1AF00FFD9BA009FC89D00308C4700DDAF
+                9500D6AD8F00FACDAD00F9D0A900FAD6B600EDAF7D00E7A06F00F1D7C900F3F6
+                F700F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F3F3F400F4F5F600F4EB
+                E000FFD5B000FFD8B700FFD6B500FFD5B400FFD6B500FFD8B600FFD8B700FFD7
+                B600FED6B400FFD7B600FFDABB00B6D1AA0040A06100A1B08400DBB09600DAB4
+                9500F3C6A400FCD2B200FDDABC00FDDBBC00FCD3B300FFD2AE00F9D0AC00FBD3
+                B200FFD6B500FFD6B500FCD4B300FECDAC00D5D9B4002F934E00B8AE8B00D4AB
+                9200F0C5A000F6CDA900FDD8B600E9A17400EAAF8500F2E3DA00F4F4F600F3F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F3F3F400F4F4F400F5F6F800E9C4
+                AC00F3CAA800FFD6B300FFD6B500FCD4B200EFC7AA00F1C8AB00FCD2B300FFD7
+                B500F5CDAD00F2C9AA00FCD1B400A4CEA600399C5A00B2B89100DAAF9400D9B5
+                9C00F3C9AB00FFD4B300FFD5B400FFD5B400FFD6B500F9CEAA00F9D0AC00FFD6
+                B600FFD5B500FFD6B500FCD2AF00F3D7B6006CB379006D9E6700DBAE9800EEC4
+                A300FFD3B000F3CBA500DFBCA800F4E0D400F2F1F100F3F5F400F4F3F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F3F3F300F5F5F500EEEFF0008F918E007F73
+                6C00E9CAB000FFDABA00E0BFA3008A77680076635000C7A78E00FFE0C200C7AC
+                950076635400AE927A00FEDCBB009AC99E00399A5D00BBB99500D8B19600D8B4
+                9800EEC8A900FED5B300FFD6B500FFD6B500FFD7B600F9CFAF00FFD6B500FFD6
+                B400FFD6B500FAD1B000FFD7B700A5CA9E00388C4C00DFB29B00C7A27F00999F
+                7D00CFBBB100D7D6D700F0F5F400F4F4F500F4F3F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F3F3F300F5F5F500FFFFFF00EEEEEE0061646500D0CD
+                CB00FBEFE100FFFFFF00FFFFFF0073615400A6886F00FFFFFE00FFFFFF009A8E
+                87008D735D00FFD6B500FAD9B9008EC89B00389B5B00B7BA9500DDB09800D4B2
+                9600EBC4A400FCD2B100FFD6B600FED6B500FFD6B500F7CFAD00FED6B600FFD8
+                B600FFD8B500FECCA700C6D1AF002A8F4600CCAC96007DA6930036BCB000D5CC
+                CF00CFCED000F2F2F200F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F3F3F300F3F3F300FFFFFF00FFFFFF005F606200B3ABA900FFFF
+                FF00FFFFFF00FFFFFF00998C810091725C00FDF0E100FFFFFF00BDB7AE007A62
+                4F00F4CEB000FFDEBD00FCD9BA0099CB9F00379B5D00ACB88E00E5B49B00D0B0
+                9400E5BEA200F8CFAF00FFD5B500FFD7B600FAD2AF00FFD9B900EFBF9500F2D0
+                B900F8E6DC00D4E2D00039985700B6BFB40082C3C5001BBEB500CACFCE00CDCB
+                CC00EFEFEF00F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F2F2F200FEFEFE00FFFFFF0076787700A5A09F00FFFFFF00F1EF
+                EF00FFFFFF00BDB5AE007B624C00EFDBC800FFFFFF00DFDCD8005E4636009C7F
+                6800A7866C00AF8B7100CDB09600A2CFA400399E5B008DB28300E4B49700D3AF
+                9600DDB89B00FAC9AC00FFD2AF00F0C29E00E9BF9F00F0DED300F5F0F300F9F8
+                FC00DDEBDE00439E6000A9B7A80095CCC9001EC1B700BEC9CB00CECBCB00EFEF
+                EF00F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F3F3F300FBFBFB00FFFFFF0098979600C0C2C000FFFFFF009B8C8200FFFF
+                FF00DEDBD80069554300DCC2A600FFFFFF00FEFFFF00D2CDC900D4D0CF00D8D4
+                D30090817700997F6700FFD8B900B4D2AB004CA568005EA66E00D7BB9A00D8AB
+                92006A967E00A0ABA200C8BABA00CCCCCE00E2E2E300EFF0F000FAF6F900D9E7
+                D9003E9A5900AFBAAE0096D3D30019C0B500BCC4C500D3CFD000F2F2F200F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F3F3
+                F300F8F8F800FFFFFF00B3B3B300FBFCFC00E7E5E200896C5700FFFFFF00FFFF
+                FF00644F4300C5A48900FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FCEC
+                D800F9CDAB00FFDAB700FFD6B500CBD1AE006FB483003E9C5A007DA97D0040AA
+                A2000498900053A7A500B0B2B100BFB5B600C7C3C300D6D0D500B5D5BA00298B
+                4800DACCCE006DD5D2001FB9AF00CAC3C400E1DDDE00F5F5F500F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F3F3F300F5F5
+                F500FFFFFF00F7F7F700FFFFFF00A9A6A500B09F9100FFFFFF00FFFFFF006D6E
+                6D00A07C6300FFFFF900FFFFFF0088796C00684E3D00AEA7A300B2A29300BAA2
+                8D00DFB69800F9CFB300FFD5B400F2D8B6009CC9A0004BA362004FA3690057BB
+                A10026ACA100119D960051A4A50090A3A800AFB8AD006FB17B005997650099CF
+                D40026C4B8005EBBB500DBCFD000EFEFEF00F5F5F500F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F3F3F300F3F3F300FFFF
+                FF00FFFFFF00FFFFFF00777A7900D7DBDC00FEFFFF00FFFFFF00969594009372
+                5D00FBEFE200FFFFFF00DFDCD800BBB2AC00BDBEBF00C4C4C8006F707300A5A4
+                A300F9F9FA00F2F7F700FCD4B400FCC7A900DAE2CE0088C298004FA05E004A9E
+                5B0054AC79004FAE810055B3880046A4630027904E0034BDB30013BBAF0034BB
+                B200E0D7D800EEECEC00F5F5F500F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F2F2F200FFFFFF00FFFF
+                FF00F9F9F900D9D9D900F3F3F300FAFAFA00FFFFFF00EEE8E300DDCABE00F5EF
+                EC00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00E5E5E500E2E2E300F5F5
+                F500F3F5F700F4E8DF00F4E1D300F9F3F300FDFAFF00E1EDE400B4D5B9007EB9
+                8B0062AA740062AB75007AC3A00057D1CB0056CDCC00A0DEDA00F8EEEF00F6F3
+                F300F5F5F500F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F3F3F300F3F3F300F3F3F300F4F4
+                F400F6F6F600F4F4F400F3F3F300F4F3F300F3F7F600F5F8FA00F5F5F400F2F3
+                F500F0DDCF00F3ECEB00F2F3F300F3F3F300F6F6F600F6F6F600F4F4F400F4F4
+                F300F4F4F700F3F4F700F4F4F400F2F4F400F7F5F600FBF8FB00FFFBFF00FFFC
+                FF00FFFCFF00FFF9FE00FFF8FA00FFF8F800FEF6F700F7F4F400F6F4F400F3F4
+                F300F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F3F3F300F3F3F300F3F3F300F4F4
+                F400F4F4F400F3F3F300F3F3F300F4F3F400F4F4F300F3F3F400F4F4F400F5F5
+                F700F5F4F400F3F3F300F3F3F300F4F4F400F4F4F400F4F4F400F4F4F400F3F4
+                F300F4F4F300F4F4F300F4F3F300F4F3F400F4F3F400F3F3F400F4F3F400F4F3
+                F300F3F4F300F4F4F400F4F4F400F4F4F400F3F4F400F3F4F300F4F4F400F4F4
+                F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400F4F4F400}
+              ParentFont = False
+              OnClick = btnImpXMLDevClick
             end
             object edChaveNfeRef: TsEdit
               Left = 6
@@ -8486,7 +8825,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           1264
           23)
         object Shape10: TShape
-          Left = -711
+          Left = -695
           Top = 5
           Width = 14
           Height = 15
@@ -8494,7 +8833,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           ExplicitLeft = 1102
         end
         object sLabel10: TsLabel
-          Left = -692
+          Left = -676
           Top = 5
           Width = 112
           Height = 16
@@ -8509,7 +8848,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           ExplicitLeft = -268
         end
         object Shape6: TShape
-          Left = -853
+          Left = -837
           Top = 5
           Width = 14
           Height = 15
@@ -8518,7 +8857,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           ExplicitLeft = 960
         end
         object sLabel9: TsLabel
-          Left = -834
+          Left = -818
           Top = 5
           Width = 84
           Height = 16
@@ -9493,6 +9832,11 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         Size = 7
       end
       item
+        Name = 'ITEM_OC'
+        DataType = ftString
+        Size = 30
+      end
+      item
         Name = 'SUB_TOTAL_BRUTO'
         DataType = ftCurrency
       end
@@ -9589,6 +9933,10 @@ object Fr_vendas_industria2: TFr_vendas_industria2
     end
     object mmVendas2COD_PRODUTO: TIntegerField
       FieldName = 'COD_PRODUTO'
+    end
+    object mmVendas2ITEM_OC: TStringField
+      FieldName = 'ITEM_OC'
+      Size = 30
     end
     object mmVendas2NOM_PRODUTO: TStringField
       FieldName = 'NOM_PRODUTO'
@@ -9781,11 +10129,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
     Left = 152
     Top = 160
     Bitmap = {
-<<<<<<< HEAD
-      494C010101006409640910001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
-=======
-      494C010101005C095C0910001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
->>>>>>> ea249b0eb181edecb8a4b97e553e293fa1d1b47d
+      494C01010100C809C80910001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -10081,10 +10425,11 @@ object Fr_vendas_industria2: TFr_vendas_industria2
     PrintOptions.Printer = 'Default'
     PrintOptions.PrintOnSheet = 0
     ReportOptions.CreateDate = 40180.423318680600000000
-    ReportOptions.LastChange = 46157.386623101860000000
+    ReportOptions.LastChange = 46178.436914918980000000
     ScriptLanguage = 'PascalScript'
     ScriptText.Strings = (
       'var linhas, linha_final : integer;'
+      '    ZebraFlag: Integer;'
       ''
       'procedure GroupHeader2OnAfterPrint(Sender: TfrxComponent);'
       'begin'
@@ -10107,10 +10452,65 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       '  end;'
       'end;'
       ''
+      'procedure ZebraBandOnBeforePrint(Sender: TfrxComponent);'
       'begin'
+      '  if Sender is TfrxBand then'
+      '  begin'
+      '    ZebraFlag := ZebraFlag + 1;'
+      '    with TfrxMasterData(Sender) do'
+      '    begin'
+      '      if (ZebraFlag mod 2) = 0 then'
+      '        TfrxBrushFill(Fill).BackColor := $00E0E0E0'
+      '      else'
+      '        TfrxBrushFill(Fill).BackColor := clwhite;'
+      '    end;'
+      '  end;'
+      'end;'
       ''
+      ''
+      'procedure DetailData1OnBeforePrint(Sender: TfrxComponent);'
+      'var'
+      '  Produto: String;'
+      '  Linhas: Integer;'
+      '  AlturaLinha: Extended;'
+      'begin'
+      '  ZebraBandOnBeforePrint(Sender);'
+      ''
+      '  Produto := <dst_palm_pedidos."PRODUTO">;'
+      '  Linhas := 1;'
+      ''
+      '  if Length(Produto) > 100 then'
+      '  begin'
+      '    Linhas := 3;'
+      '    mmProduto.WordWrap := true;'
+      '  end'
+      '  else if Length(Produto) > 50 then'
+      '  begin'
+      '    Linhas := 2;'
+      '    mmProduto.WordWrap := true;'
+      '  end'
+      '  else'
+      '  begin'
+      '    mmProduto.Text := Produto;'
+      '    mmProduto.WordWrap := false;'
+      '  end;'
+      ''
+      '  AlturaLinha := 17.007885 * Linhas;'
+      '  DetailData1.Height := AlturaLinha;'
+      '  mmProduto.Height := AlturaLinha;'
+      '  Memo42.Height := AlturaLinha;'
+      '  Memo43.Height := AlturaLinha;'
+      '  Memo44.Height := AlturaLinha;'
+      '  Memo12.Height := AlturaLinha;'
+      'end;'
+      'procedure ReportOnStartReport(Sender: TfrxComponent);'
+      'begin'
+      '  ZebraFlag := 0;'
+      'end;'
+      'begin'
       'end.')
     OnGetValue = fR_RELATORIOGetValue
+    OnStartReport = 'ReportOnStartReport'
     OnReportPrint = 'frxReportOnReportPrint'
     Left = 352
     Top = 160
@@ -10144,18 +10544,10 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       BottomMargin = 10.000000000000000000
       Frame.Typ = []
       MirrorMode = []
-      object ReportTitle1: TfrxReportTitle
-        FillType = ftBrush
-        Frame.Typ = []
-        Height = 7.559060000000000000
-        Top = 18.897650000000000000
-        Width = 718.110700000000000000
-      end
       object MasterData1: TfrxMasterData
         FillType = ftBrush
         Frame.Typ = []
-        Height = 22.677180000000000000
-        Top = 211.653680000000000000
+        Top = 117.165430000000000000
         Width = 718.110700000000000000
         DataSet = Dm.dst_palm_pedidos
         DataSetName = 'dst_palm_pedidos'
@@ -10165,7 +10557,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         FillType = ftBrush
         Frame.Typ = []
         Height = 22.677180000000000000
-        Top = 665.197280000000000000
+        Top = 551.811380000000000000
         Width = 718.110700000000000000
         object Memo1: TfrxMemoView
           AllowVectorExport = True
@@ -10181,8 +10573,8 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       object PageHeader1: TfrxPageHeader
         FillType = ftBrush
         Frame.Typ = []
-        Height = 102.047310000000000000
-        Top = 49.133890000000000000
+        Height = 38.795300000000000000
+        Top = 18.897650000000000000
         Width = 718.110700000000000000
         object SysMemo1: TfrxSysMemoView
           AllowVectorExport = True
@@ -10220,8 +10612,8 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         end
         object Memo24: TfrxMemoView
           AllowVectorExport = True
-          Left = 7.559060000000000000
-          Top = 67.354359999999990000
+          Left = 3.779530000000000000
+          Top = 18.220470000000000000
           Width = 710.551640000000000000
           Height = 18.897650000000000000
           DisplayFormat.DecimalSeparator = ','
@@ -10236,26 +10628,12 @@ object Fr_vendas_industria2: TFr_vendas_industria2
             'Listagem de  Pedido')
           ParentFont = False
         end
-        object Picture1: TfrxPictureView
-          AllowVectorExport = True
-          Left = 3.779530000000000000
-          Width = 99.180580000000000000
-          Height = 101.149040000000000000
-          Center = True
-          DataField = 'LOGO'
-          DataSet = Dm.dst_configuracao
-          DataSetName = 'dst_configuracao'
-          Frame.Typ = []
-          HightQuality = False
-          Transparent = False
-          TransparentColor = clWhite
-        end
       end
       object GroupHeader1: TfrxGroupHeader
         FillType = ftBrush
         Frame.Typ = []
         Height = 22.677180000000000000
-        Top = 257.008040000000000000
+        Top = 139.842610000000000000
         Width = 718.110700000000000000
         Condition = 'dst_palm_pedidos."COD_REPRESENTANTE"'
         KeepTogether = True
@@ -10263,7 +10641,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         object Memo9: TfrxMemoView
           AllowVectorExport = True
           Left = 3.779530000000000000
-          Top = 3.779529999999990000
+          Top = 3.779530000000000000
           Width = 86.929190000000000000
           Height = 15.118120000000000000
           DataSet = Dm.dst_vendas1
@@ -10282,7 +10660,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         object Memo10: TfrxMemoView
           AllowVectorExport = True
           Left = 94.488250000000000000
-          Top = 3.779529999999990000
+          Top = 3.779530000000000000
           Width = 608.504330000000000000
           Height = 15.118120000000000000
           DataField = 'REPRESENTANTE'
@@ -10303,19 +10681,19 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       object DetailData1: TfrxDetailData
         FillType = ftBrush
         Frame.Typ = []
-        Height = 13.228346456692900000
-        Top = 464.882190000000000000
+        Height = 17.007876460000000000
+        Top = 347.716760000000000000
         Width = 718.110700000000000000
+        OnBeforePrint = 'DetailData1OnBeforePrint'
         DataSet = Dm.dst_palm_pedidos
         DataSetName = 'dst_palm_pedidos'
         KeepChild = True
         RowCount = 0
         object Memo42: TfrxMemoView
           AllowVectorExport = True
-          Left = 597.251997800000000000
-          Top = 0.779530000000023000
-          Width = 52.913420000000000000
-          Height = 11.338590000000000000
+          Left = 534.456697800000000000
+          Width = 75.590600000000000000
+          Height = 16.049102130000000000
           DataField = 'PRECO'
           DataSet = Dm.dst_palm_pedidos
           DataSetName = 'dst_palm_pedidos'
@@ -10324,21 +10702,21 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -12
+          Font.Name = 'Courier New'
           Font.Style = [fsBold]
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
             '[dst_palm_pedidos."PRECO"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object Memo43: TfrxMemoView
           AllowVectorExport = True
-          Left = 447.889685670000000000
-          Top = 0.779530000000023000
-          Width = 49.133890000000000000
-          Height = 11.338590000000000000
+          Left = 403.992035670000000000
+          Width = 56.692950000000000000
+          Height = 16.049102130000000000
           DataField = 'QTD'
           DataSet = Dm.dst_palm_pedidos
           DataSetName = 'dst_palm_pedidos'
@@ -10347,21 +10725,21 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -12
+          Font.Name = 'Courier New'
           Font.Style = [fsBold]
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
             '[dst_palm_pedidos."QTD"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object Memo44: TfrxMemoView
           AllowVectorExport = True
-          Left = 652.740570000000000000
-          Top = 0.779530000000023000
-          Width = 60.472480000000000000
-          Height = 11.338590000000000000
+          Left = 612.181510000000000000
+          Width = 102.047310000000000000
+          Height = 16.049102130000000000
           DataField = 'SUB_TOTAL'
           DataSet = Dm.dst_palm_pedidos
           DataSetName = 'dst_palm_pedidos'
@@ -10370,21 +10748,21 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -12
+          Font.Name = 'Courier New'
           Font.Style = [fsBold]
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
             '[dst_palm_pedidos."SUB_TOTAL"]')
           ParentFont = False
+          VAlign = vaCenter
         end
         object Memo12: TfrxMemoView
           AllowVectorExport = True
-          Left = 499.692942680000000000
-          Top = 0.779530000000023000
-          Width = 52.913420000000000000
-          Height = 11.338590000000000000
+          Left = 464.015762680000000000
+          Width = 68.031540000000000000
+          Height = 16.049102130000000000
           DataSet = Dm.dst_palm_pedidos
           DataSetName = 'dst_palm_pedidos'
           DisplayFormat.DecimalSeparator = ','
@@ -10392,83 +10770,44 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -12
+          Font.Name = 'Courier New'
           Font.Style = [fsBold]
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
             '[dst_palm_pedidos."UNIDADE"]/[dst_palm_pedidos."VOLUME"]')
           ParentFont = False
+          VAlign = vaCenter
         end
-        object Memo27: TfrxMemoView
-          AllowVectorExport = True
-          Left = 391.645950000000000000
-          Width = 52.913420000000000000
-          Height = 11.338590000000000000
-          DataField = 'NCM'
-          DataSet = Dm.dst_palm_pedidos
-          DataSetName = 'dst_palm_pedidos'
-          DisplayFormat.DecimalSeparator = ','
-          DisplayFormat.FormatStr = '%2.2n'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
-          Font.Style = [fsBold]
-          Frame.Typ = []
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[dst_palm_pedidos."NCM"]')
-          ParentFont = False
-        end
-        object Memo29: TfrxMemoView
-          AllowVectorExport = True
-          Left = 555.929500000000000000
-          Width = 37.795278030000000000
-          Height = 11.338590000000000000
-          DataField = 'PERC_DESC'
-          DataSet = Dm.dst_palm_pedidos
-          DataSetName = 'dst_palm_pedidos'
-          DisplayFormat.DecimalSeparator = ','
-          DisplayFormat.FormatStr = '%2.2n'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
-          Font.Style = [fsBold]
-          Frame.Typ = []
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[dst_palm_pedidos."PERC_DESC"]')
-          ParentFont = False
-        end
-        object Memo36: TfrxMemoView
+        object mmProduto: TfrxMemoView
           AllowVectorExport = True
           Left = 3.779527560000000000
-          Width = 385.511699300000000000
-          Height = 12.269572130000000000
+          Width = 396.850650000000000000
+          Height = 16.049102130000000000
           DataField = 'PRODUTO'
           DataSet = Dm.dst_palm_pedidos
           DataSetName = 'dst_palm_pedidos'
           DisplayFormat.DecimalSeparator = ','
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
+          Font.Height = -12
+          Font.Name = 'Courier New'
           Font.Style = [fsBold]
           Frame.Typ = []
+          HAlign = haBlock
           Memo.UTF8W = (
             '[dst_palm_pedidos."PRODUTO"]')
           ParentFont = False
+          WordWrap = False
+          VAlign = vaCenter
         end
       end
       object GroupHeader2: TfrxGroupHeader
         FillType = ftBrush
         Frame.Typ = []
         Height = 141.401670000000000000
-        Top = 302.362400000000000000
+        Top = 185.196970000000000000
         Width = 718.110700000000000000
         OnAfterPrint = 'GroupHeader2OnAfterPrint'
         OnBeforePrint = 'GroupHeader2OnBeforePrint'
@@ -10570,7 +10909,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           AllowVectorExport = True
           Left = 3.779527560000000000
           Top = 127.606370000000000000
-          Width = 385.512060000000000000
+          Width = 396.850650000000000000
           Height = 12.269572130000000000
           DisplayFormat.DecimalSeparator = ','
           Font.Charset = DEFAULT_CHARSET
@@ -10585,9 +10924,9 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         end
         object Memo37: TfrxMemoView
           AllowVectorExport = True
-          Left = 597.251997800000000000
+          Left = 534.456697800000000000
           Top = 128.385900000000000000
-          Width = 52.913420000000000000
+          Width = 75.590600000000000000
           Height = 11.338590000000000000
           DisplayFormat.DecimalSeparator = ','
           Font.Charset = DEFAULT_CHARSET
@@ -10603,9 +10942,9 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         end
         object Memo38: TfrxMemoView
           AllowVectorExport = True
-          Left = 447.889685670000000000
+          Left = 403.992035670000000000
           Top = 128.385900000000000000
-          Width = 49.133890000000000000
+          Width = 56.692950000000000000
           Height = 11.338590000000000000
           DisplayFormat.DecimalSeparator = ','
           Font.Charset = DEFAULT_CHARSET
@@ -10621,9 +10960,9 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         end
         object Memo39: TfrxMemoView
           AllowVectorExport = True
-          Left = 652.638220000000000000
+          Left = 612.181510000000000000
           Top = 128.385900000000000000
-          Width = 60.472480000000000000
+          Width = 102.047310000000000000
           Height = 11.338590000000000000
           DisplayFormat.DecimalSeparator = ','
           Font.Charset = DEFAULT_CHARSET
@@ -10639,9 +10978,9 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         end
         object Memo6: TfrxMemoView
           AllowVectorExport = True
-          Left = 499.692942680000000000
+          Left = 464.015762680000000000
           Top = 128.385900000000000000
-          Width = 52.913420000000000000
+          Width = 68.031540000000000000
           Height = 11.338590000000000000
           DisplayFormat.DecimalSeparator = ','
           Font.Charset = DEFAULT_CHARSET
@@ -10964,62 +11303,26 @@ object Fr_vendas_industria2: TFr_vendas_industria2
             '[dst_palm_pedidos."NUMDOC_DESTINO"]')
           ParentFont = False
         end
-        object Memo26: TfrxMemoView
-          AllowVectorExport = True
-          Left = 391.645950000000000000
-          Top = 128.504020000000000000
-          Width = 52.913420000000000000
-          Height = 11.338590000000000000
-          DisplayFormat.DecimalSeparator = ','
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
-          Font.Style = [fsBold]
-          Frame.Typ = [ftBottom]
-          HAlign = haCenter
-          Memo.UTF8W = (
-            'NCM')
-          ParentFont = False
-        end
-        object Memo28: TfrxMemoView
-          AllowVectorExport = True
-          Left = 555.929500000000000000
-          Top = 128.944960000000000000
-          Width = 37.795300000000000000
-          Height = 11.338590000000000000
-          DisplayFormat.DecimalSeparator = ','
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
-          Font.Style = [fsBold]
-          Frame.Typ = [ftBottom]
-          HAlign = haRight
-          Memo.UTF8W = (
-            '% Desc')
-          ParentFont = False
-        end
       end
       object GroupFooter2: TfrxGroupFooter
         FillType = ftBrush
         Frame.Typ = []
         Height = 102.047310000000000000
-        Top = 502.677490000000000000
+        Top = 389.291590000000000000
         Width = 718.110700000000000000
         object Memo15: TfrxMemoView
           AllowVectorExport = True
-          Left = 619.842920000000000000
+          Left = 595.945270000000000000
           Top = 3.779530000000020000
-          Width = 94.488250000000000000
+          Width = 117.165430000000000000
           Height = 15.118120000000000000
           DisplayFormat.DecimalSeparator = '.'
           DisplayFormat.FormatStr = '%2.2m'
           DisplayFormat.Kind = fkNumeric
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Arial'
+          Font.Height = -13
+          Font.Name = 'Courier New'
           Font.Style = [fsBold]
           Frame.Typ = [ftTop]
           HAlign = haRight
@@ -11029,8 +11332,8 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         end
         object Memo5: TfrxMemoView
           AllowVectorExport = True
-          Left = 7.559060000000000000
-          Top = 22.677180000000100000
+          Left = 11.338590000000000000
+          Top = 22.677180000000000000
           Width = 702.992580000000000000
           Height = 71.811070000000000000
           DataSet = Dm.dst_palm_pedidos
@@ -11068,15 +11371,15 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         end
         object Memo23: TfrxMemoView
           AllowVectorExport = True
-          Left = 517.795610000000000000
+          Left = 460.173470000000000000
           Top = 3.779530000000020000
-          Width = 94.488250000000000000
+          Width = 132.283550000000000000
           Height = 15.118120000000000000
           DisplayFormat.DecimalSeparator = ','
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Arial'
+          Font.Height = -13
+          Font.Name = 'Courier New'
           Font.Style = [fsBold, fsItalic]
           Frame.Typ = []
           HAlign = haRight
@@ -11172,6 +11475,10 @@ object Fr_vendas_industria2: TFr_vendas_industria2
     object q_cr1boleto_remessa_ordem: TIntegerField
       FieldName = 'boleto_remessa_ordem'
       Origin = 'boleto_remessa_ordem'
+    end
+    object q_cr1boleto_registrado: TBooleanField
+      FieldName = 'boleto_registrado'
+      Origin = 'registrado_banco'
     end
     object q_cr1conta_padrao: TIntegerField
       AutoGenerateValue = arDefault

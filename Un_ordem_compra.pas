@@ -819,7 +819,9 @@ begin
           '  o.QTD_ENTRADA, '+#13+
           '  o.SUB_TOTAL, '+#13+
           '  A.OBS, '+#13+
-          '  p.peso '+#13+
+          '  p.peso, '+#13+
+          '  p.qtd_multipla, '+#13+
+          '  p.M3 '+#13+
           'FROM OC1 a '+#13+
           'INNER JOIN OC2 O on (a.NR_OC = o.NR_OC) '+#13+
           'inner join FORNECEDOR f on (f.COD_FORNECEDOR = a.COD_FORNECEDOR) '+#13+

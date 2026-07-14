@@ -1007,10 +1007,9 @@ begin
   //  CN.params.values['DriverID'] := 'PG';
     CN.params.values['password'] := 'Plasfan!@#';
     CN.params.values['user_name'] := 'postgres';
-    CN.params.values['server'] := Ini.ReadString(inttostr(servidor_selecionado), 'servidor', '');
-    CN.params.values['database'] := Ini.ReadString(inttostr(servidor_selecionado), 'path', '');
+    CN.params.values['server'] := Trim(Ini.ReadString(inttostr(servidor_selecionado), 'servidor', ''));
+    CN.params.values['database'] := Trim(Ini.ReadString(inttostr(servidor_selecionado), 'path', ''));
     CN.params.values['port'] := '5432';
-    CN.connected := true;
     (*
     minaPath := Ini.ReadString(inttostr(servidor_selecionado), 'PathMina', '');
    // CN_Export.params.clear;
@@ -2019,10 +2018,23 @@ begin
 end;
 
 procedure Tdao.FormCreate(Sender: TObject);
+var
+  Ini: TIniFile;
+  Path, ServidorPadrao: string;
 begin
   tentativa_conexao := 0;
   ConfigurarExecucaoDireta;
   ResetPreparedQueries;
+
+  Path := ExtractFilePath(Application.ExeName);
+  Ini := TIniFile.Create(Path + 'servidor.ini');
+  try
+    ServidorPadrao := Trim(Ini.ReadString('config', 'servidor_padrao', ''));
+    servidor_selecionado := StrToIntDef(ServidorPadrao, 0);
+    conf_CN;
+  finally
+    Ini.Free;
+  end;
 end;
 
 procedure Tdao.CN_ExportError(Sender: TObject; const ERRCODE: Integer;

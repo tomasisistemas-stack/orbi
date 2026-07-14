@@ -557,13 +557,18 @@ begin
   try
     if not dao.cn.InTransaction then
       dao.cn.StartTransaction;
+
+    dao.Exec_sql.SQL.Clear;
+    dao.Exec_sql.SQL.Add('UPDATE PRODUTO SET PROMOCAO = ''N''');
+    dao.Exec_sql.ExecSQL;
+
     while not mmMala.eof do
     begin
       try
         dao.Exec_sql.SQL.Clear;
         dao.Exec_sql.SQL.Add('UPDATE PRODUTO SET PROMOCAO = ''S'', DESCONTO_MAXIMO = '+ StringReplace(formatfloat('#0.00', mmMalaDESCONTO.Value), ',', '.', [rfReplaceAll]) +', PRECO_PROMOCAO = ' + StringReplace(formatfloat('#0.00', mmMalaVALOR_PROMOCAO.Value), ',', '.', [rfReplaceAll]) + ' WHERE COD_PRODUTO = ' + mmMalaIDPRODUTO.AsString);
         dao.Exec_sql.ExecSQL;
-        AtualizaProdutoWeb;
+        //AtualizaProdutoWeb;
       except
         exit;
       end;

@@ -469,6 +469,8 @@ type
     q_mov_enttipo: TStringField;
     q_mov_entcusto: TBCDField;
     q_mov_entcusto_final: TBCDField;
+    PrM3: TsCurrencyEdit;
+    sLabel3: TsLabel;
     procedure btaltClick(Sender: TObject);
     procedure btcanClick(Sender: TObject);
     procedure btgraClick(Sender: TObject);

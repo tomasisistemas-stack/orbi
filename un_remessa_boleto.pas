@@ -63,6 +63,7 @@ type
     lbtotal: TsLabel;
     sLabel1: TsLabel;
     SaveDialog1: TSaveDialog;
+    mmItensBOLETO_REGISTRADO: TBooleanField;
     procedure MontaArquivoCobrancaEnvio;
     procedure relatorio_cobranca;
     procedure PrCONTAExit(Sender: TObject);
@@ -91,6 +92,7 @@ type
     procedure SetarBoletos(listaboletos: string);
     procedure SetaBoletosDescontados(listaboletos: string; descontar: boolean);
     procedure ChecarDataVencida;
+    procedure RegistrarBoletosApi(const ListaBoletos: string);
 
     { Private declarations }
   public
@@ -109,10 +111,424 @@ var
   mensagem_padrao : string;
 implementation
 
-uses Un_dao, Un_localizar, unpri, UnFun, Un_dm;
+uses Un_dao, Un_localizar, unpri, UnFun, Un_dm, FireDAC.Comp.Client, un_splash,
+  Un_BB_Cobrancas, Un_BB_Cobrancas_Api, Un_CEF_Cobrancas, Un_CEF_Cobrancas_Api, System.JSON;
 
 {$R *.dfm}
 
+const
+  BB_COBRANCA_SCOPE = 'cobrancas.boletos-info cobrancas.boletos-requisicao';
+
+function BBFieldStr(Q: TFDQuery; const Name, Default: string): string;
+begin
+  if (Q.FindField(Name) <> nil) and (not Q.FieldByName(Name).IsNull) then
+    Result := Q.FieldByName(Name).AsString
+  else
+    Result := Default;
+end;
+
+function BBFieldInt(Q: TFDQuery; const Name: string; Default: Integer = 0): Integer;
+begin
+  if (Q.FindField(Name) <> nil) and (not Q.FieldByName(Name).IsNull) then
+    Result := Q.FieldByName(Name).AsInteger
+  else
+    Result := Default;
+end;
+
+function BBFieldFloat(Q: TFDQuery; const Name: string; Default: Double = 0): Double;
+begin
+  if (Q.FindField(Name) <> nil) and (not Q.FieldByName(Name).IsNull) then
+    Result := Q.FieldByName(Name).AsFloat
+  else
+    Result := Default;
+end;
+
+function BBFieldDate(Q: TFDQuery; const Name: string): TDateTime;
+begin
+  if (Q.FindField(Name) <> nil) and (not Q.FieldByName(Name).IsNull) then
+    Result := Q.FieldByName(Name).AsDateTime
+  else
+    Result := 0;
+end;
+
+function BBOnlyNumbers(const Value: string): string;
+var
+  I: Integer;
+begin
+  Result := '';
+  for I := 1 to Length(Value) do
+    if CharInSet(Value[I], ['0'..'9']) then
+      Result := Result + Value[I];
+end;
+
+function BBDate(const Value: TDateTime): string;
+begin
+  if Value = 0 then
+    Result := ''
+  else
+    Result := FormatDateTime('dd.mm.yyyy', Value);
+end;
+
+function BBLeftPadDigits(const Value: string; Len: Integer): string;
+var
+  Digits, Padded: string;
+begin
+  Digits := BBOnlyNumbers(Value);
+  if Digits = '' then
+  begin
+    Result := '';
+    Exit;
+  end;
+
+  Padded := StringOfChar('0', Len) + Digits;
+  Result := Copy(Padded, Length(Padded) - Len + 1, Len);
+end;
+
+function BBNumeroTituloCliente(Q: TFDQuery): string;
+var
+  Convenio, Controle, Titulo, Sequencia: string;
+begin
+  Convenio := BBLeftPadDigits(BBFieldStr(Q, 'convenio', ''), 7);
+  Titulo := BBOnlyNumbers(BBFieldStr(Q, 'titulo', ''));
+  Sequencia := BBOnlyNumbers(BBFieldStr(Q, 'sequencia', ''));
+  Controle := BBLeftPadDigits(Titulo, 8) + BBLeftPadDigits(Sequencia, 2);
+
+  if (Convenio = '') or (Controle = '') then
+    Result := ''
+  else
+    Result := '000' + Convenio + Controle;
+end;
+
+function BBRightStr(const Value: string; Len: Integer): string;
+begin
+  if Length(Value) <= Len then
+    Result := Value
+  else
+    Result := Copy(Value, Length(Value) - Len + 1, Len);
+end;
+
+function BBTituloNossoNumero(Q: TFDQuery): string;
+var
+  Titulo, Sequencia: string;
+begin
+  Titulo := BBFieldStr(Q, 'titulo', '');
+  Sequencia := BBFieldStr(Q, 'sequencia', '');
+  Result := BBRightStr(Titulo, 10) + BBLeftPadDigits(Sequencia, 1);
+  Result := FMFUN.MontaNossoNumero(Result);
+end;
+
+function BBFormataNossoNumero(Q: TFDQuery): string;
+var
+  Convenio, NossoNumero: string;
+begin
+  Convenio := BBOnlyNumbers(BBFieldStr(Q, 'convenio', ''));
+  NossoNumero := BBTituloNossoNumero(Q);
+
+  if Length(Convenio) = 7 then
+    Result := BBLeftPadDigits(Convenio, 7) + NossoNumero.padleft(10, '0')
+  else
+    Result := NossoNumero;
+end;
+
+function BBCalcularDigitoVerificador(const Documento: string): string;
+var
+  I, Peso, Soma, ModuloFinal: Integer;
+begin
+  Result := '0';
+  Soma := 0;
+  Peso := 9;
+
+  for I := Length(Documento) downto 1 do
+  begin
+    if CharInSet(Documento[I], ['0'..'9']) then
+      Soma := Soma + StrToInt(Documento[I]) * Peso;
+    Dec(Peso);
+    if Peso < 2 then
+      Peso := 9;
+  end;
+
+  ModuloFinal := Soma mod 11;
+  if ModuloFinal >= 10 then
+    Result := 'X'
+  else
+    Result := IntToStr(ModuloFinal);
+end;
+
+function BBMontarCampoNossoNumero(Q: TFDQuery): string;
+begin
+  Result := '000' + BBFormataNossoNumero(Q);
+end;
+function BBNumeroTituloBeneficiario(Q: TFDQuery): string;
+var
+  I: Integer;
+  Value: string;
+begin
+  Result := '';
+  Value := UpperCase(Trim(BBFieldStr(Q, 'titulo', '') + '-' + BBFieldStr(Q, 'sequencia', '')));
+
+  for I := 1 to Length(Value) do
+  begin
+    if CharInSet(Value[I], ['A'..'Z', '0'..'9']) then
+      Result := Result + Value[I]
+    else if (Value[I] = '-') and (Result <> '') and (Result[Length(Result)] <> '-') then
+      Result := Result + Value[I];
+  end;
+
+  while (Result <> '') and (Result[Length(Result)] = '-') do
+    Delete(Result, Length(Result), 1);
+
+  Result := Copy(Result, 1, 15);
+end;
+
+function BBJsonString(AObj: TJSONObject; const AName: string): string;
+var
+  V: TJSONValue;
+begin
+  Result := '';
+  if not Assigned(AObj) then
+    Exit;
+
+  V := AObj.GetValue(AName);
+  if Assigned(V) then
+    Result := V.Value;
+end;
+
+function BBJsonStringAny(AObj: TJSONObject; const ANames: array of string): string;
+var
+  I: Integer;
+  V: TJSONValue;
+  Pair: TJSONPair;
+begin
+  Result := '';
+  if AObj = nil then
+    Exit;
+
+  for I := Low(ANames) to High(ANames) do
+  begin
+    V := AObj.GetValue(ANames[I]);
+    if V <> nil then
+    begin
+      Result := Trim(V.Value);
+      if Result <> '' then
+        Exit;
+    end;
+  end;
+
+  for I := 0 to AObj.Count - 1 do
+  begin
+    Pair := AObj.Pairs[I];
+    if Pair.JsonValue is TJSONObject then
+    begin
+      Result := BBJsonStringAny(TJSONObject(Pair.JsonValue), ANames);
+      if Result <> '' then
+        Exit;
+    end
+    else if Pair.JsonValue is TJSONArray then
+    begin
+      if (TJSONArray(Pair.JsonValue).Count > 0) and
+         (TJSONArray(Pair.JsonValue).Items[0] is TJSONObject) then
+      begin
+        Result := BBJsonStringAny(TJSONObject(TJSONArray(Pair.JsonValue).Items[0]), ANames);
+        if Result <> '' then
+          Exit;
+      end;
+    end;
+  end;
+end;
+
+function BBTryDate(const Value: string; out ADate: TDateTime): Boolean;
+var
+  S: string;
+  FS: TFormatSettings;
+begin
+  S := Trim(Value);
+  Result := False;
+  ADate := 0;
+  if S = '' then
+    Exit;
+
+  if Length(S) >= 10 then
+    S := Copy(S, 1, 10);
+
+  GetLocaleFormatSettings(LOCALE_SYSTEM_DEFAULT, FS);
+  FS.DateSeparator := '/';
+  FS.ShortDateFormat := 'dd/mm/yyyy';
+
+  Result := TryStrToDate(StringReplace(S, '.', '/', [rfReplaceAll]), ADate, FS);
+  if Result then
+    Exit;
+
+  FS.DateSeparator := '-';
+  FS.ShortDateFormat := 'yyyy-mm-dd';
+  Result := TryStrToDate(S, ADate, FS);
+end;
+
+function BBTryFloat(const Value: string; out AValue: Double): Boolean;
+var
+  S: string;
+  FS: TFormatSettings;
+begin
+  S := Trim(Value);
+  GetLocaleFormatSettings(LOCALE_SYSTEM_DEFAULT, FS);
+  FS.DecimalSeparator := '.';
+  FS.ThousandSeparator := ',';
+  Result := TryStrToFloat(S, AValue, FS);
+  if Result then
+    Exit;
+
+  FS.DecimalSeparator := ',';
+  FS.ThousandSeparator := '.';
+  Result := TryStrToFloat(S, AValue, FS);
+end;
+function BBJsonArrayMessage(AObj: TJSONObject; const AArrayName, AMessageName: string): string;
+var
+  V: TJSONValue;
+  Arr: TJSONArray;
+  Item: TJSONObject;
+begin
+  Result := '';
+  if not Assigned(AObj) then
+    Exit;
+
+  V := AObj.GetValue(AArrayName);
+  if not (V is TJSONArray) then
+    Exit;
+
+  Arr := TJSONArray(V);
+  if Arr.Count = 0 then
+    Exit;
+  if not (Arr.Items[0] is TJSONObject) then
+    Exit;
+
+  Item := TJSONObject(Arr.Items[0]);
+  Result := BBJsonString(Item, AMessageName);
+end;
+
+function BBMensagemErroApi(E: Exception): string;
+var
+  ApiError: TBBApiException;
+  V: TJSONValue;
+  Obj: TJSONObject;
+begin
+  Result := E.Message;
+  if not (E is TBBApiException) then
+    Exit;
+
+  ApiError := TBBApiException(E);
+  V := TJSONObject.ParseJSONValue(ApiError.ResponseText);
+  try
+    if not (V is TJSONObject) then
+      Exit;
+
+    Obj := TJSONObject(V);
+    Result := BBJsonArrayMessage(Obj, 'errors', 'message');
+    if Result = '' then
+      Result := BBJsonArrayMessage(Obj, 'erros', 'message');
+    if Result = '' then
+      Result := BBJsonArrayMessage(Obj, 'erros', 'mensagem');
+    if Result = '' then
+      Result := BBJsonString(Obj, 'message');
+    if Result = '' then
+      Result := BBJsonString(Obj, 'mensagem');
+    if Result = '' then
+      Result := BBJsonString(Obj, 'detail');
+    if Result = '' then
+      Result := E.Message;
+  finally
+    V.Free;
+  end;
+end;
+
+function BBAmbienteApi: TBBApiAmbiente;
+begin
+  Result := bbProducao;
+  dao.Geral5('select NFE_HOMOLOGACAO from configuracao');
+  if (not dao.Q5.IsEmpty) and (UpperCase(Trim(dao.Q5.fieldbyname('NFE_HOMOLOGACAO').AsString)) = 'S') then
+    Result := bbHomologacao;
+end;
+
+function BBAmbienteNome(AAmbiente: TBBApiAmbiente): string;
+begin
+  case AAmbiente of
+    bbSandbox: Result := 'Sandbox';
+    bbHomologacao: Result := 'Homologacao';
+    bbProducao: Result := 'Producao';
+  else
+    Result := 'Desconhecido';
+  end;
+end;
+
+procedure BBLogApi(const AMensagem: string);
+begin
+  try
+    dao.grava_log('API BB COBRANCAS - ' + AMensagem, '');
+  except
+  end;
+end;
+
+function CEFAmbienteApi: TCEFApiAmbiente;
+begin
+  Result := cefProducao;
+  dao.Geral5('select NFE_HOMOLOGACAO from configuracao');
+  if (not dao.Q5.IsEmpty) and (UpperCase(Trim(dao.Q5.fieldbyname('NFE_HOMOLOGACAO').AsString)) = 'S') then
+    Result := cefHomologacao;
+end;
+
+procedure CEFLogApi(const AMensagem: string);
+begin
+  try
+    dao.grava_log('API CEF COBRANCAS - ' + AMensagem, '');
+  except
+  end;
+end;
+
+function BBBoletoRegistradoNaApi(Q: TFDQuery; out ADataPagamento: TDateTime; out AValorPago: Double): Boolean;
+begin
+  Result := Un_BB_Cobrancas_Api.BBBoletoRegistradoNaApi(Q, BBAmbienteApi,
+    BB_COBRANCA_SCOPE, BBLogApi, ADataPagamento, AValorPago);
+end;
+
+function BoletoRegistradoNaApi(Q: TFDQuery; out ADataPagamento: TDateTime; out AValorPago: Double): Boolean;
+var
+  Banco: string;
+begin
+  Banco := BBOnlyNumbers(BBFieldStr(Q, 'nr_banco', ''));
+  if (Banco = '1') or (Banco = '001') then
+    Result := BBBoletoRegistradoNaApi(Q, ADataPagamento, AValorPago)
+  else if Banco = '104' then
+    Result := Un_CEF_Cobrancas_Api.CEFBoletoRegistradoNaApi(Q, CEFAmbienteApi,
+      CEFLogApi, ADataPagamento, AValorPago)
+  else
+  begin
+    ADataPagamento := 0;
+    AValorPago := 0;
+    Result := False;
+  end;
+end;
+procedure BBMarcarBoletoRegistrado(AIdCR1: Integer; ADataPagamento: TDateTime; AValorPago: Double);
+var
+  SQL: string;
+begin
+  SQL := 'update cr1 set boleto_registrado = true';
+  if (ADataPagamento > 0) and (AValorPago > 0) then
+    SQL := SQL + ', dtarec = ' + QuotedStr(FormatDateTime('yyyy-mm-dd', ADataPagamento)) +
+      ', valor_recebido = ' + StringReplace(FormatFloat('0.00', AValorPago), ',', '.', [rfReplaceAll]) +
+      ', vlr_corrigido = ' + StringReplace(FormatFloat('0.00', AValorPago), ',', '.', [rfReplaceAll]);
+  SQL := SQL + ' where id = ' + IntToStr(AIdCR1);
+
+  dao.Execsql(SQL);
+  BBLogApi('Update CR1 boleto registrado - id=' + IntToStr(AIdCR1) +
+    ', pagamento=' + BoolToStr((ADataPagamento > 0) and (AValorPago > 0), True));
+end;
+procedure BBMessageDlgErroApi(const APrefixo: string; E: Exception);
+var
+  Msg: string;
+begin
+  Msg := BBMensagemErroApi(E);
+  if Trim(APrefixo) <> '' then
+    Msg := APrefixo + #13 + Msg;
+  MessageDlg(Msg, mtError, [mbOK], 0);
+end;
 procedure Tfrm_remessa_boleto.CarregaRemessa;
 var
   cmd: string;
@@ -133,6 +549,8 @@ procedure Tfrm_remessa_boleto.CarregaItens(ordem: string);
 var
   cmd, cmd_conta, cmd_remessa: string;
   total: real;
+  LDataPagamento: TDateTime;
+  LValorPago: Double;
 begin
   Screen.Cursor := crSQLWait;
 
@@ -149,7 +567,8 @@ begin
       PrCONTA.text;
 
   if PrID.text = '' then
-    cmd_conta := cmd_conta + ' and A.DTAVEN > CURRENT_DATE ';
+    //cmd_conta := cmd_conta {+ ' and A.DTAVEN >= CURRENT_DATE '/};
+    cmd_conta := cmd_conta + ' and 1 = 1 ';
 
   cmd := '';
   cmd := ' select * ' + ' from ' + ' ( ' +
@@ -159,12 +578,16 @@ begin
     '   a.VLR_CORRIGIDO, a.DESCONTO, a.NR_CUPOM, a.CONFERIDO, a.ID_REPRESENTANTE, '
     + '   a.VLR_COMISSAO, a.ID_PLANO_CONTAS, a.SINCRONIZAR_PALM, a.EXTRATO, ' +
     '   a.VALOR_CORRIGIDO, a.BOLETO_REMESSA_ORDEM, a.BOLETO_RETORNO_CODIGO, a.CONTA_BOLETO, '
-    + '   a.BOLETO_RETORNO_DESCRICAO, c.nom_cliente, C.TIP_PESSOA, C.CNPJ, C.CPF, C.ENDERECO, A.DESCONTADA, '
+    + '   a.BOLETO_RETORNO_DESCRICAO, c.nom_cliente, C.TIP_PESSOA, C.CNPJ, C.CPF, C.ENDERECO, A.DESCONTADA, coalesce(A.BOLETO_REGISTRADO, false) as BOLETO_REGISTRADO, ' +
+    '   cc.api_key_cobranca, cc.client_id_cobranca, cc.client_secret_cobranca, cc.convenio, cc.codigo_cedente, cc.nr_agencia, emp.cnpj as cnpj_beneficiario, bb.nr_banco, '
     + '   C.NR_ENDERECO, C.BAIRRO, CD.NOM_CIDADE, CD.UF, C.CEP, CASE WHEN C.IE IS NULL THEN 1 ELSE 0 END AS ISENTO  '
     + '   from cr1 a ' +
     '   left join cliente c on c.cod_cliente = a.cod_cliente ' +
     '   inner join cidades cd on (cd.COD_CIDADE = C.COD_CIDADE) ' +
     '   left outer join vendas1 v1 on (v1.NUMDOC = a.NR_DOCUMENTO) ' +
+    '   left outer join conta_corrente cc on cc.id = coalesce(a.conta_boleto, v1.conta_boleto) ' +
+    '   left outer join banco bb on bb.id = cc.id_banco ' +
+    '   left outer join empresa emp on emp.cod_empresa = cc.id_empresa ' +
     '   where ' + cmd_conta + ' and ' + '   a.DTAREC is null and ' +
     '   a.BOLETO_REMESSA_ORDEM is null ' + '   union ' +
     '   select a.ID, a.COD_CLIENTE, a.NR_DOCUMENTO, a.TITULO, ' +
@@ -173,13 +596,19 @@ begin
     '   a.VLR_CORRIGIDO, a.DESCONTO, a.NR_CUPOM, a.CONFERIDO, a.ID_REPRESENTANTE, '
     + '   a.VLR_COMISSAO, a.ID_PLANO_CONTAS, a.SINCRONIZAR_PALM, a.EXTRATO, ' +
     '   a.VALOR_CORRIGIDO, a.BOLETO_REMESSA_ORDEM, a.BOLETO_RETORNO_CODIGO, a.CONTA_BOLETO, '
-    + '   a.BOLETO_RETORNO_DESCRICAO, c.nom_cliente, C.TIP_PESSOA, C.CNPJ, C.CPF, C.ENDERECO, A.DESCONTADA, '
+    + '   a.BOLETO_RETORNO_DESCRICAO, c.nom_cliente, C.TIP_PESSOA, C.CNPJ, C.CPF, C.ENDERECO, A.DESCONTADA, coalesce(A.BOLETO_REGISTRADO, false) as BOLETO_REGISTRADO, ' +
+    '   cc.api_key_cobranca, cc.client_id_cobranca, cc.client_secret_cobranca, cc.convenio, cc.codigo_cedente, cc.nr_agencia, emp.cnpj as cnpj_beneficiario, bb.nr_banco, '
     + '   C.NR_ENDERECO, C.BAIRRO, CD.NOM_CIDADE, CD.UF, C.CEP, CASE WHEN C.IE IS NULL THEN 1 ELSE 0 END AS ISENTO  '
     + '   from cr1 a ' +
     '   left join cliente c on c.cod_cliente = a.cod_cliente ' +
     '   inner join cidades cd on (cd.COD_CIDADE = C.COD_CIDADE) ' +
     '   left outer join vendas1 v1 on (v1.NUMDOC = a.NR_DOCUMENTO) ' +
-    '   where ' + ' A.DTAVEN > CURRENT_DATE and a.DTAREC is null ' + cmd_remessa
+    '   left outer join conta_corrente cc on cc.id = coalesce(a.conta_boleto, v1.conta_boleto) ' +
+    '   left outer join banco bb on bb.id = cc.id_banco ' +
+    '   left outer join empresa emp on emp.cod_empresa = cc.id_empresa ' +
+    '   where 1 = 1 ' +
+    //' A.DTAVEN >= CURRENT_DATE and a.DTAREC is null ' +
+    cmd_remessa
     + '   ) q1 ' + ordem;
 
   dao.Geral1(cmd);
@@ -191,6 +620,8 @@ begin
   mmItens.Open;
   totalselecionados := 0;
   total := 0;
+  fm_splash.ggProgress.Progress := 0;
+  fm_splash.ggProgress.MaxValue := dao.Q1.RecordCount;
   while not dao.Q1.Eof do
   begin
     mmItens.Append;
@@ -214,6 +645,7 @@ begin
     mmItensVALOR.AsString := dao.Q1.fieldbyname('valor').AsString;
     mmItensISENTO.AsInteger := dao.Q1.fieldbyname('ISENTO').AsInteger;
     mmItensDESCONTADA.Value := dao.Q1.fieldbyname('DESCONTADA').AsString = '1';
+    mmItensBOLETO_REGISTRADO.Value := (not dao.Q1.fieldbyname('BOLETO_REGISTRADO').IsNull) and dao.Q1.fieldbyname('BOLETO_REGISTRADO').AsBoolean;
 
     if impressao_boleto then
       mmItensINSTRUCAO_BOLETO.AsString := dao.Q1.fieldbyname('INSTRUCAO_BOLETO').AsString+#13+mensagem_padrao
@@ -229,18 +661,31 @@ begin
       mmItensCheck.Value := false;
 
     total := total + dao.Q1.fieldbyname('valor').Asfloat;
-
+    if not mmItensBOLETO_REGISTRADO.AsBoolean then
+    begin
+      try
+        if BoletoRegistradoNaApi(dao.Q1, LDataPagamento, LValorPago) then
+        begin
+          BBMarcarBoletoRegistrado(dao.Q1.fieldbyname('id').AsInteger, LDataPagamento, LValorPago);
+          mmItensBOLETO_REGISTRADO.AsBoolean := true;
+        end;
+      except
+        on E: Exception do
+          BBLogApi('CarregaItens verificar boleto registrado ERRO - cr1_id=' + dao.Q1.fieldbyname('id').AsString + ', erro=' + E.Message);
+      end;
+    end;
     mmItens.Post;
-
+    fm_splash.ggProgress.AddProgress(1);
+    fm_splash.Update;
     dao.Q1.Next;
   end;
   mmItens.First;
   mmItens.EnableControls;
-  lbTotalNFs.Caption := 'Boletos Relacionados: ' + inttostr(totalselecionados);
-  lbtotal.Caption := formatfloat('R$ #,###,##0.00', total);
-
+  lbTotalNFs.Caption := 'Boletos Relacionados: ' + IntToStr(totalselecionados);
+  lbtotal.Caption := FormatFloat('R$ #,###,##0.00', total);
+  Screen.Cursor := crDefault;
+  fm_splash.Hide;
 end;
-
 procedure Tfrm_remessa_boleto.PrCONTAExit(Sender: TObject);
 begin
   if trim(PrCONTA.text) = '' then
@@ -534,6 +979,21 @@ var
   DrawState: Integer;
   DrawRect: TRect;
 begin
+  if Column.Field.FieldName = 'BOLETO_REGISTRADO' then
+  begin
+    dgItens.Canvas.FillRect(Rect);
+    if Column.Field.AsBoolean then
+    begin
+      DrawRect := Rect;
+      DrawRect.Left := Rect.Left + ((Rect.Right - Rect.Left - 16) div 2);
+      DrawRect.Top := Rect.Top + ((Rect.Bottom - Rect.Top - 16) div 2);
+      DrawRect.Right := DrawRect.Left + 16;
+      DrawRect.Bottom := DrawRect.Top + 16;
+      DrawFrameControl(dgItens.Canvas.Handle, DrawRect, DFC_MENU, DFCS_MENUCHECK);
+    end;
+    Exit;
+  end;
+
   dgItens.DefaultDrawDataCell(Rect, Column.Field, State);
 
   if (gdFocused in State) then
@@ -651,6 +1111,228 @@ begin
   showmessage('Remessa gerada com sucesso.')
 end;
 
+procedure Tfrm_remessa_boleto.RegistrarBoletosApi(const ListaBoletos: string);
+var
+  Q: TFDQuery;
+  Api: TBBApiCobrancas;
+  ApiCEF: TCEFApiCobrancas;
+  Boleto: TBBRegistroBoleto;
+  BoletoCEF: TCEFOperacaoBoleto;
+  HeaderCEF: TCEFHeader;
+  Resposta: TBBRespostaRegistroBoleto;
+  RespostaCEF: TCEFRespostaServico;
+  Banco, ApiKey, ClientId, ClientSecret, DocPagador, TituloCliente, CodigoBeneficiarioCEF, NossoNumeroCEF: string;
+  VariacaoCarteira: Integer;
+  Ambiente: TBBApiAmbiente;
+  AmbienteCEF: TCEFApiAmbiente;
+  LDataPagamento: TDateTime;
+  LValorPago: Double;
+begin
+  if Trim(ListaBoletos) = '' then
+    Exit;
+
+  Q := TFDQuery.Create(nil);
+  try
+    Q.Connection := dao.cn;
+    Q.SQL.Text :=
+      'select cr.id, cr.titulo, cr.sequencia, cr.dtaven, cr.valor, ' +
+      '       c.api_key_cobranca, c.client_id_cobranca, c.client_secret_cobranca, ' +
+      '       c.convenio, c.codigo_cedente, c.nr_agencia, emp.cnpj as cnpj_beneficiario, c.carteira, c.modalidade, c.tipo_cobranca, b.nr_banco, ' +
+      '       cl.tip_pessoa, cl.nom_cliente, cl.cnpj, cl.cpf, cl.endereco, cl.nr_endereco, ' +
+      '       cl.bairro, cl.cep, cl.telefone, cl.email, cd.nom_cidade, cd.uf ' +
+      'from cr1 cr ' +
+      'inner join conta_corrente c on c.id = cr.conta_boleto ' +
+      'inner join banco b on b.id = c.id_banco ' +
+      'inner join empresa emp on emp.cod_empresa = c.id_empresa ' +
+      'inner join cliente cl on cl.cod_cliente = cr.cod_cliente ' +
+      'left join cidades cd on cd.cod_cidade = cl.cod_cidade ' +
+      'where cr.id in (' + ListaBoletos + ') ' +
+      'order by cr.titulo, cr.sequencia';
+    Q.Open;
+
+    while not Q.Eof do
+    begin
+      Banco := BBOnlyNumbers(BBFieldStr(Q, 'nr_banco', ''));
+      ApiKey := Trim(BBFieldStr(Q, 'api_key_cobranca', ''));
+      ClientId := Trim(BBFieldStr(Q, 'client_id_cobranca', ''));
+      ClientSecret := Trim(BBFieldStr(Q, 'client_secret_cobranca', ''));
+
+      if ((Banco = '1') or (Banco = '001')) and (ApiKey <> '') and
+         (ClientId <> '') and (ClientSecret <> '') then
+      begin
+        Boleto := TBBRegistroBoleto.Create;
+        Api := TBBApiCobrancas.Create;
+        try
+          Ambiente := BBAmbienteApi;
+          Api.Ambiente := Ambiente;
+          Api.AppKey := ApiKey;
+          Api.ObterTokenClientCredentials(ClientId, ClientSecret, BB_COBRANCA_SCOPE).Free;
+
+          if UpperCase(Trim(BBFieldStr(Q, 'tip_pessoa', ''))) = 'J' then
+          begin
+            if Api.Ambiente = bbProducao then
+              DocPagador := BBOnlyNumbers(BBFieldStr(Q, 'cnpj', ''))
+            else
+              DocPagador := '00000000000191';
+
+            Boleto.Pagador.TipoInscricao := 2;
+          end
+          else
+          begin
+            if Api.Ambiente = bbProducao then
+              DocPagador := BBOnlyNumbers(BBFieldStr(Q, 'cpf', ''))
+            else
+              DocPagador := '00000000191';
+
+            Boleto.Pagador.TipoInscricao := 1;
+          end;
+
+          Boleto.Pagador.Nome := Copy(BBFieldStr(Q, 'nom_cliente', ''), 1, 60);
+
+          TituloCliente := BBNumeroTituloCliente(Q);
+          if Length(TituloCliente) <> 20 then
+            raise Exception.Create('Numero titulo cliente do Banco do Brasil invalido. Verifique o convenio e o titulo do boleto.');
+
+          Boleto.NumeroConvenio := StrToInt64Def(BBOnlyNumbers(BBFieldStr(Q, 'convenio', '')), 0);
+          Boleto.NumeroCarteira := StrToIntDef(BBOnlyNumbers(BBFieldStr(Q, 'carteira', '')), 0);
+          VariacaoCarteira := StrToIntDef(BBOnlyNumbers(BBFieldStr(Q, 'modalidade', '')), 19);
+          Boleto.NumeroVariacaoCarteira := VariacaoCarteira;
+          Boleto.CodigoModalidade := 1;
+          Boleto.DataEmissao := BBDate(Date);
+          Boleto.DataVencimento := BBDate(BBFieldDate(Q, 'dtaven'));
+          Boleto.ValorOriginal := BBFieldFloat(Q, 'valor');
+          Boleto.CodigoAceite := 'N';
+          Boleto.CodigoTipoTitulo := 2;
+          Boleto.DescricaoTipoTitulo := 'DM';
+          Boleto.IndicadorPermissaoRecebimentoParcial := 'N';
+          Boleto.NumeroTituloBeneficiario := BBNumeroTituloBeneficiario(Q);
+          Boleto.NumeroTituloCliente := BBMontarCampoNossoNumero(Q);
+
+          Boleto.Pagador.NumeroInscricao := StrToInt64Def(DocPagador, 0);
+          Boleto.Pagador.Endereco := Copy(Trim(BBFieldStr(Q, 'endereco', '') + ', ' + BBFieldStr(Q, 'nr_endereco', '')), 1, 60);
+          Boleto.Pagador.Cep := StrToIntDef(BBOnlyNumbers(BBFieldStr(Q, 'cep', '')), 0);
+          Boleto.Pagador.Cidade := Copy(BBFieldStr(Q, 'nom_cidade', ''), 1, 30);
+          Boleto.Pagador.Bairro := Copy(BBFieldStr(Q, 'bairro', ''), 1, 30);
+          Boleto.Pagador.Uf := Copy(BBFieldStr(Q, 'uf', ''), 1, 2);
+          Boleto.Pagador.Telefone := Copy(BBOnlyNumbers(BBFieldStr(Q, 'telefone', '')), 1, 15);
+          Boleto.Pagador.Email := Copy(BBFieldStr(Q, 'email', ''), 1, 60);
+
+          BBLogApi('Registrar boleto - ambiente=' + BBAmbienteNome(Ambiente) +
+            ', cr1_id=' + Q.FieldByName('id').AsString + ', titulo=' + TituloCliente +
+            ', convenio=' + IntToStr(Boleto.NumeroConvenio));
+          try
+            if BoletoRegistradoNaApi(Q, LDataPagamento, LValorPago) then
+            begin
+              BBMarcarBoletoRegistrado(Q.FieldByName('id').AsInteger, LDataPagamento, LValorPago);
+              BBLogApi('Registrar boleto ignorado, ja registrado - ambiente=' + BBAmbienteNome(Ambiente) +
+                ', cr1_id=' + Q.FieldByName('id').AsString + ', titulo=' + TituloCliente);
+            end;
+          except
+            try
+              Resposta := Api.RegistrarBoleto(Boleto);
+              Resposta.Free;
+              BBMarcarBoletoRegistrado(Q.FieldByName('id').AsInteger, 0, 0);
+              BBLogApi('Registrar boleto OK - ambiente=' + BBAmbienteNome(Ambiente) +
+                ', cr1_id=' + Q.FieldByName('id').AsString + ', titulo=' + TituloCliente);
+            except
+              on E: Exception do
+              begin
+                BBLogApi('Registrar boleto ERRO - ambiente=' + BBAmbienteNome(Ambiente) +
+                  ', cr1_id=' + Q.FieldByName('id').AsString + ', titulo=' + TituloCliente + ', erro=' + E.Message);
+                raise;
+              end;
+            end;
+          end;
+        finally
+          Api.Free;
+          Boleto.Free;
+        end;
+      end
+      else if Banco = '104' then
+      begin
+        CodigoBeneficiarioCEF := CEFCodigoBeneficiarioApi(Q);
+        NossoNumeroCEF := CEFMontarNossoNumeroApi(Q);
+        if (CodigoBeneficiarioCEF <> '') and (NossoNumeroCEF <> '') and
+           (CEFCNPJBeneficiarioApi(Q) <> '') then
+        begin
+          AmbienteCEF := CEFAmbienteApi;
+          CEFLogApi('Registrar boleto - ambiente=' + CEFAmbienteNome(AmbienteCEF) +
+            ', cr1_id=' + Q.FieldByName('id').AsString + ', nosso_numero=' + NossoNumeroCEF +
+            ', codigo_beneficiario=' + CodigoBeneficiarioCEF);
+          try
+            if BoletoRegistradoNaApi(Q, LDataPagamento, LValorPago) then
+            begin
+              BBMarcarBoletoRegistrado(Q.FieldByName('id').AsInteger, LDataPagamento, LValorPago);
+              CEFLogApi('Registrar boleto ignorado, ja registrado - ambiente=' + CEFAmbienteNome(AmbienteCEF) +
+                ', cr1_id=' + Q.FieldByName('id').AsString + ', nosso_numero=' + NossoNumeroCEF);
+            end
+            else
+            begin
+              BoletoCEF := TCEFOperacaoBoleto.Create;
+              HeaderCEF := nil;
+              ApiCEF := TCEFApiCobrancas.Create;
+              try
+                ApiCEF.Ambiente := AmbienteCEF;
+                BoletoCEF.CodigoBeneficiario := CodigoBeneficiarioCEF;
+                BoletoCEF.Titulo.NossoNumero := NossoNumeroCEF;
+                BoletoCEF.Titulo.NumeroDocumento := BBNumeroTituloBeneficiario(Q);
+                BoletoCEF.Titulo.DataVencimento := CEFDataApi(BBFieldDate(Q, 'dtaven'));
+                BoletoCEF.Titulo.Valor := BBFieldFloat(Q, 'valor');
+                BoletoCEF.Titulo.TipoEspecie := '99';
+                BoletoCEF.Titulo.FlagAceite := 'N';
+                BoletoCEF.Titulo.DataEmissao := CEFDataApi(Date);
+                BoletoCEF.Titulo.CodigoMoeda := '9';
+                if UpperCase(Trim(BBFieldStr(Q, 'tip_pessoa', ''))) = 'J' then
+                begin
+                  BoletoCEF.Titulo.Pagador.CNPJ := BBOnlyNumbers(BBFieldStr(Q, 'cnpj', ''));
+                  BoletoCEF.Titulo.Pagador.RazaoSocial := Copy(BBFieldStr(Q, 'nom_cliente', ''), 1, 40);
+                end
+                else
+                begin
+                  BoletoCEF.Titulo.Pagador.CPF := BBOnlyNumbers(BBFieldStr(Q, 'cpf', ''));
+                  BoletoCEF.Titulo.Pagador.Nome := Copy(BBFieldStr(Q, 'nom_cliente', ''), 1, 40);
+                end;
+                BoletoCEF.Titulo.Pagador.Endereco.Logradouro := Copy(Trim(BBFieldStr(Q, 'endereco', '') + ', ' + BBFieldStr(Q, 'nr_endereco', '')), 1, 40);
+                BoletoCEF.Titulo.Pagador.Endereco.Bairro := Copy(BBFieldStr(Q, 'bairro', ''), 1, 15);
+                BoletoCEF.Titulo.Pagador.Endereco.Cidade := Copy(BBFieldStr(Q, 'nom_cidade', ''), 1, 15);
+                BoletoCEF.Titulo.Pagador.Endereco.UF := Copy(BBFieldStr(Q, 'uf', ''), 1, 2);
+                BoletoCEF.Titulo.Pagador.Endereco.CEP := BBOnlyNumbers(BBFieldStr(Q, 'cep', ''));
+                HeaderCEF := CEFNovoHeaderApi(Q, CodigoBeneficiarioCEF, NossoNumeroCEF,
+                  BBFieldDate(Q, 'dtaven'), BBFieldFloat(Q, 'valor'), True);
+                RespostaCEF := ApiCEF.IncluirBoleto(BoletoCEF, HeaderCEF);
+                try
+                  if not RespostaCEF.Sucesso then
+                    raise Exception.Create('Erro API CEF: ' + RespostaCEF.ControleMensagem);
+                finally
+                  RespostaCEF.Free;
+                end;
+                BBMarcarBoletoRegistrado(Q.FieldByName('id').AsInteger, 0, 0);
+                CEFLogApi('Registrar boleto OK - ambiente=' + CEFAmbienteNome(AmbienteCEF) +
+                  ', cr1_id=' + Q.FieldByName('id').AsString + ', nosso_numero=' + NossoNumeroCEF);
+              finally
+                ApiCEF.Free;
+                HeaderCEF.Free;
+                BoletoCEF.Free;
+              end;
+            end;
+          except
+            on E: Exception do
+            begin
+              CEFLogApi('Registrar boleto ERRO - ambiente=' + CEFAmbienteNome(AmbienteCEF) +
+                ', cr1_id=' + Q.FieldByName('id').AsString + ', nosso_numero=' + NossoNumeroCEF + ', erro=' + E.Message);
+              raise;
+            end;
+          end;
+        end;
+      end;
+
+      Q.Next;
+    end;
+  finally
+    Q.Free;
+  end;
+end;
+
 procedure Tfrm_remessa_boleto.BtSalvarClick(Sender: TObject);
 var
   cmd, dia, mes, ano, data_str, boletos, boletos_descontados,
@@ -696,7 +1378,6 @@ begin
   boletos := copy(boletos, 1, length(boletos) - 1);
   boletos_descontados := copy(boletos, 1, length(boletos_descontados) - 1);
   boletos_n_descontados := copy(boletos, 1, length(boletos_n_descontados) - 1);
-
   if boletos <> '' then
     SetarBoletos(boletos);
 
@@ -705,6 +1386,19 @@ begin
 
   if boletos_n_descontados <> '' then
     SetaBoletosDescontados(boletos_n_descontados, false);
+
+  if boletos <> '' then
+  begin
+    try
+      RegistrarBoletosApi(boletos);
+    except
+      on E: Exception do
+      begin
+        BBMessageDlgErroApi('Houve um erro ao registrar boletos na API do Banco do Brasil!', E);
+        Exit;
+      end;
+    end;
+  end;
 
   PrCONTA.enabled := false;
   btInserir.enabled := true;
@@ -1017,6 +1711,20 @@ begin
 end;
 
 end.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

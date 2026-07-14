@@ -19,7 +19,8 @@ uses
   frxExportBaseDialog, RxToolEdit, RxDBCtrl, FireDAC.Stan.Intf,
   FireDAC.Stan.Option, FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS,
   FireDAC.Phys.Intf, FireDAC.DApt.Intf, FireDAC.Stan.Async, FireDAC.DApt,
-  FireDAC.Comp.DataSet, FireDAC.Comp.Client;
+  FireDAC.Comp.DataSet, FireDAC.Comp.Client, System.JSON, uCEFApplication,
+  uCEFChromium, uCEFWindowParent, uCEFChromiumCore, uCEFWinControl;
 
 type
   TFr_representante = class(TForm)
@@ -163,6 +164,9 @@ type
     mmDescEspecialDESCONTO_MAXIMO: TFloatField;
     dsDescEspecial: TDataSource;
     Prsomente_consumidor_final: TsCheckBox;
+    tabLocalizacao: TsTabSheet;
+    cefLocalizacao: TCEFWindowParent;
+    chrLocalizacao: TChromium;
     procedure btaltClick(Sender: TObject);
     procedure btcanClick(Sender: TObject);
     procedure btexcClick(Sender: TObject);
@@ -216,6 +220,9 @@ type
     procedure BuscaDescEspecial(CodRep : string);
     procedure AtualizarTodos;
     procedure GravarDescGrupo;
+    function JsEscape(const S: string): string;
+    procedure CarregarMapaLocalizacao(const APontosJson, ATitulo, AData: string);
+    procedure AtualizarTabLocalizacao;
     { Private declarations }
   public
     modo_insert: Boolean;
@@ -252,6 +259,133 @@ implementation
 uses Un_dao, UnPri, Un_localizar, UnFun, Un_dm, Un_splash, un_conexao_vendor;
 
 {$R *.dfm}
+
+function TFr_representante.JsEscape(const S: string): string;
+begin
+  Result := StringReplace(S, '\', '\\', [rfReplaceAll]);
+  Result := StringReplace(Result, '"', '\"', [rfReplaceAll]);
+  Result := StringReplace(Result, #13, ' ', [rfReplaceAll]);
+  Result := StringReplace(Result, #10, ' ', [rfReplaceAll]);
+end;
+
+procedure TFr_representante.CarregarMapaLocalizacao(const APontosJson, ATitulo, AData: string);
+var
+  SLHTML: TStringList;
+  HTMLFile: string;
+begin
+  if Trim(APontosJson) = '' then
+    Exit;
+
+  HTMLFile := IncludeTrailingPathDelimiter(GetEnvironmentVariable('TEMP')) +
+    'orbi_representante_mapa_' + Trim(Prid.Text) + '.html';
+
+  SLHTML := TStringList.Create;
+  try
+    SLHTML.Add('<!doctype html>');
+    SLHTML.Add('<html lang="pt-BR">');
+    SLHTML.Add('<head>');
+    SLHTML.Add('  <meta charset="utf-8" />');
+    SLHTML.Add('  <meta name="viewport" content="width=device-width, initial-scale=1.0">');
+    SLHTML.Add('  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />');
+    SLHTML.Add('  <style>html, body { height:100%; margin:0; overflow:hidden; } #map { width:100%; height:100%; }</style>');
+    SLHTML.Add('  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>');
+    SLHTML.Add('</head>');
+    SLHTML.Add('<body>');
+    SLHTML.Add('  <div id="map"></div>');
+    SLHTML.Add('  <script>');
+    SLHTML.Add('    const pontos = ' + APontosJson + ';');
+    SLHTML.Add('    const map = L.map("map");');
+    SLHTML.Add('    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap contributors" }).addTo(map);');
+    SLHTML.Add('    if (pontos.length > 0) {');
+    SLHTML.Add('      const bounds = [];');
+    SLHTML.Add('      pontos.forEach(function(p){');
+    SLHTML.Add('        bounds.push([p.lat, p.lng]);');
+    SLHTML.Add('        L.circleMarker([p.lat, p.lng], { radius: 5, color: "#0b72d9", fillColor: "#0b72d9", fillOpacity: 0.65, weight: 1 }).addTo(map).bindPopup("Data/Hora:<br>" + p.datahora);');
+    SLHTML.Add('      });');
+    SLHTML.Add('      const fim = pontos[pontos.length - 1];');
+    SLHTML.Add('      L.marker([fim.lat, fim.lng]).addTo(map).bindPopup("Último registro<br>" + fim.datahora).openPopup();');
+    SLHTML.Add('      if (bounds.length === 1)');
+    SLHTML.Add('        map.setView(bounds[0], 16);');
+    SLHTML.Add('      else');
+    SLHTML.Add('        map.fitBounds(bounds, { padding: [30, 30] });');
+    SLHTML.Add('    }');
+    SLHTML.Add('    setTimeout(function(){ map.invalidateSize(true); }, 200);');
+    SLHTML.Add('  </script>');
+    SLHTML.Add('</body>');
+    SLHTML.Add('</html>');
+    SLHTML.SaveToFile(HTMLFile, TEncoding.UTF8);
+  finally
+    SLHTML.Free;
+  end;
+
+  if chrLocalizacao.Initialized then
+    chrLocalizacao.LoadURL('file:///' + StringReplace(HTMLFile, '\', '/', [rfReplaceAll]))
+  else
+  begin
+    chrLocalizacao.DefaultUrl := 'file:///' + StringReplace(HTMLFile, '\', '/', [rfReplaceAll]);
+    chrLocalizacao.CreateBrowser(cefLocalizacao, '');
+  end;
+end;
+procedure TFr_representante.AtualizarTabLocalizacao;
+var
+  Lat, Lng, DtaHora, DtaRota, PontosJson: string;
+  QtdPontos: Integer;
+begin
+  if pcrep.ActivePage = tabLocalizacao then
+    pcrep.ActivePage := tab_dados;
+  tabLocalizacao.TabVisible := false;
+
+  if Trim(Prid.Text) = '' then
+    Exit;
+
+  if GlobalCEFApp = nil then
+    Exit;
+
+  try
+    dao.Geral1('select latitude, longitude, datahora ' +
+      ' from representante_localizacao r ' +
+      ' where r.cod_representante = ' + QuotedStr(Prid.Text) +
+      ' and r.latitude is not null and r.longitude is not null ' +
+      ' and cast(r.datahora as date) = (select max(cast(r2.datahora as date)) from representante_localizacao r2 where r2.cod_representante = ' + QuotedStr(Prid.Text) + ') ' +
+      ' order by r.datahora');
+
+    if dao.q1.IsEmpty then
+      Exit;
+
+    PontosJson := '[';
+    QtdPontos := 0;
+    DtaRota := '';
+    dao.q1.First;
+    while not dao.q1.Eof do
+    begin
+      Lat := StringReplace(Trim(dao.q1.FieldByName('latitude').AsString), ',', '.', [rfReplaceAll]);
+      Lng := StringReplace(Trim(dao.q1.FieldByName('longitude').AsString), ',', '.', [rfReplaceAll]);
+      DtaHora := dao.q1.FieldByName('datahora').AsString;
+
+      if (Lat <> '') and (Lng <> '') then
+      begin
+        if QtdPontos > 0 then
+          PontosJson := PontosJson + ',';
+        PontosJson := PontosJson + '{"lat":' + Lat + ',"lng":' + Lng + ',"datahora":"' + JsEscape(DtaHora) + '"}';
+        Inc(QtdPontos);
+        if DtaRota = '' then
+          DtaRota := Copy(DtaHora, 1, 10);
+      end;
+      dao.q1.Next;
+    end;
+    PontosJson := PontosJson + ']';
+
+    if QtdPontos <= 0 then
+      Exit;
+
+    tabLocalizacao.TabVisible := true;
+    CarregarMapaLocalizacao(PontosJson, Prnom_representante.Text, DtaRota);
+  except
+    tabLocalizacao.TabVisible := false;
+    if pcrep.ActivePage = tabLocalizacao then
+      pcrep.ActivePage := tab_dados;
+  end;
+end;
 
 procedure TFr_representante.ativa_comissao(id_representante: string);
 begin
@@ -472,12 +606,14 @@ begin
         'gen_representante');
       Prid.Text := id;
       ativa_representante(id);
+      AtualizarTabLocalizacao;
       Btnov.SetFocus;
     end
     else
       dao.update('representante', 'id', Prid.Text, 'Pr', Fr_representante);
     grava_comissao;
     dao.cn.Commit;
+    AtualizarTabLocalizacao;
   except
     dao.cn.Rollback;
   end;
@@ -718,6 +854,7 @@ begin
     // CarregarMapaAtuacao;
   end;
   BuscaDescEspecial(Prid.Text);
+  AtualizarTabLocalizacao;
 end;
 
 procedure TFr_representante.readonly_false(prefixo: string);
@@ -764,6 +901,7 @@ end;
 procedure TFr_representante.FormShow(Sender: TObject);
 begin
   readonly_true('Pr');
+  tabLocalizacao.TabVisible := false;
   monta_sg_comissao;
   if frpri.TipUsu = '0' then
   begin

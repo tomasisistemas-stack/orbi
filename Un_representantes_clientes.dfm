@@ -196,6 +196,7 @@ object Fr_representantes_clientes: TFr_representantes_clientes
         TitleFont.Style = []
         OnDrawColumnCell = dgMicroDrawColumnCell
         OnDblClick = dgMicroDblClick
+        OnKeyPress = dgMicroKeyPress
         Columns = <
           item
             Expanded = False
@@ -370,7 +371,7 @@ object Fr_representantes_clientes: TFr_representantes_clientes
       Height = 369
       Align = alClient
       DataSource = dsClientes
-      Options = [dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgRowSelect, dgConfirmDelete, dgCancelOnExit]
+      Options = [dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgRowSelect, dgConfirmDelete, dgCancelOnExit, dgTitleClick, dgTitleHotTrack]
       TabOrder = 0
       TitleFont.Charset = DEFAULT_CHARSET
       TitleFont.Color = clWindowText
@@ -379,6 +380,8 @@ object Fr_representantes_clientes: TFr_representantes_clientes
       TitleFont.Style = []
       OnDrawColumnCell = dgCargaDrawColumnCell
       OnDblClick = dgCargaDblClick
+      OnKeyPress = dgCargaKeyPress
+      OnTitleClick = dgCargaTitleClick
       Columns = <
         item
           Expanded = False

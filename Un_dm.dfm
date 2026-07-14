@@ -6352,7 +6352,9 @@ object Dm: TDm
       '       o.QTD_ENTRADA,'
       '       o.SUB_TOTAL,'
       '       A.OBS,'
-      '       p.peso'
+      '       p.peso,'
+      '       p.qtd_multipla,'
+      '       p.m3'
       'FROM OC1 a'
       '     INNER JOIN OC2 O on (a.NR_OC = o.NR_OC)'
       
@@ -6510,6 +6512,20 @@ object Dm: TDm
       Precision = 15
       Size = 3
     end
+    object q_ordem_compraqtd_multipla: TBCDField
+      AutoGenerateValue = arDefault
+      FieldName = 'qtd_multipla'
+      Origin = 'qtd_multipla'
+      Precision = 15
+      Size = 2
+    end
+    object q_ordem_compram3: TBCDField
+      AutoGenerateValue = arDefault
+      FieldName = 'm3'
+      Origin = 'm3'
+      Precision = 15
+      Size = 2
+    end
   end
   object ds_ordem_compra: TDataSource
     DataSet = q_ordem_compra
@@ -6539,7 +6555,9 @@ object Dm: TDm
       'qtd_entrada=QTD_ENTRADA'
       'sub_total=SUB_TOTAL'
       'obs=OBS'
-      'peso=PESO')
+      'peso=PESO'
+      'qtd_multipla=qtd_multipla'
+      'm3=m3')
     DataSet = q_ordem_compra
     BCDToCurrency = False
     Left = 864
@@ -9774,7 +9792,6 @@ object Dm: TDm
     Top = 248
   end
   object q_configuracao: TFDQuery
-    Active = True
     Connection = dao.CN
     SQL.Strings = (
       
@@ -11172,7 +11189,6 @@ object Dm: TDm
     Top = 608
   end
   object q_ranking_vendas: TFDQuery
-    Active = True
     Connection = dao.CN
     SQL.Strings = (
       'SELECT TIPO,'
@@ -12130,6 +12146,10 @@ object Dm: TDm
       '  g.nom_grupo,'
       '  p.cod_produto,'
       '  p.nom_produto,'
+      '  coalesce(p.qtd_estoque, 0) as qtd_estoque,'
+      '  p.qtd_estoque_min,'
+      '  p.qtd_estoque_max,'
+      '  cast(0 as numeric(15,2)) as media_mensal,'
       '  sum(v2.qtd) as qtd,'
       '  max(v2.preco) as preco,'
       '  sum(v2.sub_total) as valor_total'
@@ -12146,7 +12166,10 @@ object Dm: TDm
       '  g.cod_grupo, '
       '  g.nom_grupo,'
       '  p.cod_produto,'
-      '  p.nom_produto'
+      '  p.nom_produto,'
+      '  p.qtd_estoque,'
+      '  p.qtd_estoque_min,'
+      '  p.qtd_estoque_max'
       'order by g.nom_grupo, p.nom_produto  ')
     Left = 1152
     Top = 392
@@ -12195,6 +12218,36 @@ object Dm: TDm
       Precision = 64
       Size = 0
     end
+    object q_ranking_produtosqtd_estoque: TFMTBCDField
+      AutoGenerateValue = arDefault
+      FieldName = 'qtd_estoque'
+      Origin = 'qtd_estoque'
+      ReadOnly = True
+      Precision = 64
+      Size = 0
+    end
+    object q_ranking_produtosqtd_estoque_min: TBCDField
+      AutoGenerateValue = arDefault
+      FieldName = 'qtd_estoque_min'
+      Origin = 'qtd_estoque_min'
+      Precision = 15
+      Size = 2
+    end
+    object q_ranking_produtosqtd_estoque_max: TBCDField
+      AutoGenerateValue = arDefault
+      FieldName = 'qtd_estoque_max'
+      Origin = 'qtd_estoque_max'
+      Precision = 15
+      Size = 2
+    end
+    object q_ranking_produtosmedia_mensal: TFMTBCDField
+      AutoGenerateValue = arDefault
+      FieldName = 'media_mensal'
+      Origin = 'media_mensal'
+      ReadOnly = True
+      Precision = 64
+      Size = 0
+    end
   end
   object ds_ranking_produtos: TDataSource
     DataSet = q_ranking_produtos
@@ -12211,7 +12264,11 @@ object Dm: TDm
       'nom_produto=nom_produto'
       'qtd=qtd'
       'preco=preco'
-      'valor_total=valor_total')
+      'valor_total=valor_total'
+      'qtd_estoque=qtd_estoque'
+      'qtd_estoque_min=qtd_estoque_min'
+      'qtd_estoque_max=qtd_estoque_max'
+      'media_mensal=media_mensal')
     DataSet = q_ranking_produtos
     BCDToCurrency = False
     Left = 1232

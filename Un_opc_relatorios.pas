@@ -8,7 +8,7 @@ uses
   Comobj, frxCross, frxClass, RdPrint, sPageControl, sSpeedButton, sPanel,
   sBitBtn, sLabel, sCheckBox, sGroupBox, sRadioButton, sMaskEdit,
   sCustomComboEdit, sEdit, sComboEdit, frxExportCSV, frxExportBaseDialog,
-  sCurrEdit, sCurrencyEdit, StrUtils;
+  sCurrEdit, sCurrencyEdit, StrUtils, DateUtils, frxExportImage;
 
 type
   TFr_opc_relatorios = class(TForm)
@@ -364,15 +364,17 @@ type
     procedure relatorio_produto_vendas;
     procedure TeleVendasCidade;
     procedure relatorio_teto_fixo;
-    procedure ranking_vendas;
+    procedure ranking_vendas(AGerarJpgDiario: Boolean = False);
     procedure relatorio_cliente_produto;
     procedure monta_rel_produtos_capa;
-    procedure relatorio_comissao_desconto(c_fornecedor, c_loja, c_grupo, c_vendedor, c_marca: string);
+    procedure relatorio_comissao_desconto(c_fornecedor, c_loja, c_grupo, c_vendedor, c_marca: string; AGerarJpgDiario: Boolean = False; const AArquivoJpg: string = '');
     procedure relatorio_ranking_produtos;
     procedure ranking_vendas_completo;
     { Private declarations }
   public
     { Public declarations }
+    procedure GerarRankingVendasDiario;
+    procedure GerarComissaoDescontoDiario;
     procedure busca_produto_unitario(leitor: boolean; cod_barras: string);
 
     { *******RELATORIOS DE LISTAGEM******** }
@@ -463,12 +465,13 @@ var
   Fr_opc_relatorios: TFr_opc_relatorios;
   tipo_fonte: TTipoFonte;
   path: string;
+  filtros_ranking_produtos: string;
 
 implementation
 
 uses
   Un_dao, Un_rel_cliente, UnPri, Un_localizar, UnFun, Un_dm,
-  DB, Un_splash;
+  DB, Un_splash, Un_Cliente, FireDAC.Comp.Client;
 
 {$R *.dfm}
 { TFr_opc_relatorios }
@@ -516,7 +519,7 @@ begin
     cmd := cmd + fmfun.cmdAux('ms.mesocod', edMesoRegiao.Text);
 
   if PrUltimaCompra.date <> 0 then
-    cmd := cmd + ' and c.COD_CLIENTE in (select distinct v.cod_cliente from vendas1 v where V.NFEENTRADASAIDA = ''0'' AND AND V.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') AND v.COD_FISCAL not in (''6152'', ''6409'') '+
+    cmd := cmd + ' and c.COD_CLIENTE in (select distinct v.cod_cliente from vendas1 v where V.NFEENTRADASAIDA = ''0'' AND AND V.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' '+ 'AND NUMDOC_REF_ENT IS NOT NULL) AND v.COD_FISCAL not in (''6152'', ''6409'') '+
                  ' and v.nfe_dev is null and  v.faturado in (0, 1, 3) and v.DTADOC > ''' + formatdatetime('yyyy/mm/dd', PrUltimaCompra.date) + ''') ';
 
   cmd_prod := '(SELECT v1.COD_CLIENTE FROM  vendas1 v1 inner join VENDAS2 v2 on v2.NUMDOC = v1.NUMDOC ' + 'inner join produto p on  p.COD_PRODUTO = v2.COD_PRODUTO ' + 'left outer join grupo g on p.cod_grupo = g.cod_grupo ' + 'left outer join SUBCATEGORIA s on s.id = p.SUBCATEGORIA ' + 'left outer join CATEGORIA ct on ct.ID = s.CATEGORIA ';
@@ -535,7 +538,7 @@ begin
 
   if PrNaoCompraDesde.date <> 0 then
     cmd := cmd + ' and c.COD_CLIENTE not in (select distinct v.cod_cliente from vendas1 v where v.cod_cliente is not null and v.COD_FISCAL not in (''6152'', ''6409'') V.NFEENTRADASAIDA = ''0'' '+
-                 ' AND V.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') and  v.nfe_dev is null and v.faturado in (0, 1, 3) and v.DTADOC > ''' + formatdatetime('yyyy/mm/dd', PrNaoCompraDesde.date) + ''') ';
+                 ' AND V.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) and  v.nfe_dev is null and v.faturado in (0, 1, 3) and v.DTADOC > ''' + formatdatetime('yyyy/mm/dd', PrNaoCompraDesde.date) + ''') ';
 
   if edcodsupervisor.Text <> '' then
     cmd := cmd + fmfun.cmdAux('cd.cod_supervisor', edcodsupervisor.Text);
@@ -1115,7 +1118,7 @@ begin
          'inner join cidades cd on (cl.cod_cidade = cd.cod_cidade) ' +
          ' WHERE v1.faturado in (1,3) '+
          '   AND (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) AND V1.NFEENTRADASAIDA = ''0'' '+
-         '   AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') and (v1.NFE_DEV is null OR v1.STATUS_NFE_DEV = 135)  ' +
+         '   AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) and (v1.NFE_DEV is null OR v1.STATUS_NFE_DEV = 135)  ' +
          '   AND v1.consignacao <> 1 ' +
          '   AND v1.cod_fop not in (7, 9, 22, 23, 24, 26, 32, 46, 47, 51, 52, 53, 54, 57, 58)  ';
 
@@ -1211,7 +1214,7 @@ begin
          ' INNER JOIN CIDADES CD ON CD.COD_CIDADE = CL.COD_CIDADE ' +
          ' INNER JOIN CADMICRO MI ON MI.MICROCOD = CD.MICROCOD ' +
          ' INNER JOIN CADMESO  ME ON ME.MESOCOD  = MI.MESOCOD ' +
-         ' WHERE v1.faturado in (1,3) and V1.NFEENTRADASAIDA = ''0'' AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') '+
+         ' WHERE v1.faturado in (1,3) and V1.NFEENTRADASAIDA = ''0'' AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) '+
          '   AND v1.nfe_dev is null and v1.cod_fop not in (7, 9, 22, 23, 24, 26, 32, 46, 47, 51, 52, 53, 54, 57, 58)  ';
 
   if edProduto.Text <> '' then
@@ -1639,12 +1642,13 @@ begin
     pn_microregiao.Visible := true;
     cliente.Visible := true;
     grupo.Visible := true;
-    marca.Visible := true;
+    marca.Visible := false;
     p2.Visible := true;
     gbSupervisao.Visible := true;
-    pn_pedido.Visible := true;
-    fop.Visible := true;
+    pn_pedido.Visible := false;
+    fop.Visible := false;
     uf.Visible := true;
+    rgAtivo.Visible := true;
     rgOrdemQtdeValor.Visible := True;
     if telemarketing then
     begin
@@ -1670,7 +1674,7 @@ begin
       rbNaoConsumidorFinal.Checked := True;
     end;
 
-    Fr_opc_relatorios.Height := 750;
+    Fr_opc_relatorios.Height := 700;
   end
   else if tipo_relatorio = 'contas_receber' then
   begin
@@ -2321,7 +2325,7 @@ begin
     mes := strtoint(FormatDateTime('m', now));
     ano := strtoint(FormatDateTime('yyyy', now));
 
-    for x := 0 to 2 do
+    for x := -6 to 6 do
     begin
       if (mes - x) <= 0 then
         cbMes.Items.Add(FMFUN.enchezero(inttostr(12 + (mes - x)), 2) + '/' + inttostr(ano - 1))
@@ -5952,6 +5956,8 @@ begin
       Value := formatdatetime('dd/mm/yyyy', Prdta_inicial.date)
     else if VarName = 'dtafin' then
       Value := formatdatetime('dd/mm/yyyy', Prdta_final.date)
+    else if VarName = 'filtros' then
+      Value := filtros_ranking_produtos
   end
   else if tipo_relatorio = 'pedidos_vendedor' then
   begin
@@ -6600,8 +6606,25 @@ procedure TFr_opc_relatorios.relatorio_vendas_cliente_ind(dta_inicial, dta_final
 var
   cmd: string;
 begin
-  cmd := 'SELECT V2.COD_PRODUTO, v2.COD_CLIENTE, ID_COR, ID_TAMANHO, QTD, PRECO, SUB_TOTAL, p.nom_produto, p.preco_venda, c.cor, ' + 'cl.telefone ,cl.email, p.fornecedor_principal, f.fantasia ' + ',t.tamanho,cl.nom_cliente, v2.numdoc, v1.cod_fop, fp.nom_fop, v1.dtadoc, v1.desconto, v1.qtd_parcelas, v1.prazo_pgto, ' + 'v2.preco_bruto, v2.desconto as desconto_item, e.nom_empresa, ' + 'v1.tot_bruto, v1.tot_liquido,r.nom_representante, V1.credito_usado, m.nom_marca FROM VENDAS2 v2 ' +
-    'left join vendas1 v1 on v1.numdoc = v2.numdoc ' + 'left join fop fp on fp.cod_fop = v1.cod_fop ' + 'LEFT JOIN PRODUTO P ON P.COD_PRODUTO = V2.COD_PRODUTO ' + 'left join cores c on c.id = v2.id_cor ' + 'left join tamanho t on t.id = v2.id_tamanho ' + 'left join cliente cl on cl.cod_cliente=v2.cod_cliente ' + 'left join representante r on r.id= coalesce(v1.cod_supervisor, v1.cod_representante) ' + 'left join marcas m on m.id=p.id_marca ' + 'left join fornecedor f on f.cod_fornecedor=p.fornecedor_principal ' + 'left join empresa e on e.cod_empresa = v1.empresa_faturar ' + 'where  (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) and V1.NFEENTRADASAIDA = ''0'' AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') AND v1.NFE_DEV is null and v1.consignacao<>' + quotedstr('1') + ' and v1.cod_fop<>' + quotedstr('9');
+  cmd := 'SELECT V2.COD_PRODUTO, v2.COD_CLIENTE, ID_COR, ID_TAMANHO, QTD, PRECO, SUB_TOTAL, p.nom_produto, p.preco_venda, c.cor, ' +
+    'cl.telefone ,cl.email, p.fornecedor_principal, f.fantasia ' +
+    ',t.tamanho,cl.nom_cliente, v2.numdoc, v1.cod_fop, fp.nom_fop, v1.dtadoc, v1.desconto, v1.qtd_parcelas, v1.prazo_pgto, ' +
+    'v2.preco_bruto, v2.desconto as desconto_item, e.nom_empresa, ' +
+    'v1.tot_bruto, v1.tot_liquido,r.nom_representante, V1.credito_usado, m.nom_marca FROM VENDAS2 v2 ' +
+    'left join vendas1 v1 on v1.numdoc = v2.numdoc ' +
+    'left join fop fp on fp.cod_fop = v1.cod_fop ' +
+    'LEFT JOIN PRODUTO P ON P.COD_PRODUTO = V2.COD_PRODUTO ' +
+    'left join cores c on c.id = v2.id_cor ' +
+    'left join tamanho t on t.id = v2.id_tamanho ' +
+    'left join cliente cl on cl.cod_cliente=v2.cod_cliente ' +
+    'left join representante r on r.id= coalesce(v1.cod_supervisor, v1.cod_representante) ' +
+    'left join marcas m on m.id=p.id_marca ' +
+    'left join fornecedor f on f.cod_fornecedor=p.fornecedor_principal ' +
+    'left join empresa e on e.cod_empresa = v1.empresa_faturar ' +
+    'where  (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) and V1.NFEENTRADASAIDA = ''0'' '+
+    ' AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) '+
+    ' AND v1.NFE_DEV is null and v1.consignacao<>' + quotedstr('1') +
+    ' and v1.cod_fop<>' + quotedstr('9');
 
   if rbSemSupervisao.Checked then
     cmd := cmd + 'and v1.cod_supervisor is null';
@@ -6685,7 +6708,10 @@ end;
 
 procedure TFr_opc_relatorios.monta_rel_cliente_completo(cod_cidade, uf, empresa: string);
 var
-  cmd2: string;
+  cmd2, cmdGeo: string;
+  CriouFormCliente: Boolean;
+  ClienteAtual: Integer;
+  qGeo: TFDQuery;
 begin
   cmd2 := 'select c.cod_cidade, c.cod_empresa, c.nom_cliente, c.nom_fantasia, c.cod_cliente,c.endereco, c.NR_ENDERECO, c.contato, c.cod_cidade, c.bairro, c.cep, c.telefone, ' + 'c.email, c.dta_aniversario, case when c.TIP_PESSOA = ''J'' THEN c.CNPJ ELSE c.CPF END AS CNPJ, ' +
           'case when c.TIP_PESSOA = ''J'' THEN c.IE ELSE c.RG END AS IE, ' +
@@ -6734,11 +6760,11 @@ begin
 
   if PrUltimaCompra.date <> 0 then
     cmd2 := cmd2 + 'and c.COD_CLIENTE in (select distinct v.cod_cliente from vendas1 v where v.COD_FISCAL not in (''6152'', ''6409'') AND V.NFEENTRADASAIDA = ''0'' '+
-                   ' AND V.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') AND v.nfe_dev is null and v.faturado in (0, 1, 3) and  v.DTA_EMISSAO > ''' + formatdatetime('yyyy/mm/dd', PrUltimaCompra.date) + ''')';
+                   ' AND V.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) AND v.nfe_dev is null and v.faturado in (0, 1, 3) and  v.DTA_EMISSAO > ''' + formatdatetime('yyyy/mm/dd', PrUltimaCompra.date) + ''')';
 
   if PrNaoCompraDesde.date <> 0 then
     cmd2 := cmd2 + ' and c.COD_CLIENTE not in (select distinct v.cod_cliente from vendas1 v where v.cod_cliente is not null and v.COD_FISCAL not in (''6152'', ''6409'') and V.NFEENTRADASAIDA = ''0'' '+
-                   ' AND V.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') AND v.nfe_dev is null and v.faturado in (0, 1, 3) and v.DTADOC > ''' + formatdatetime('yyyy/mm/dd', PrNaoCompraDesde.date) + ''') ';
+                   ' AND V.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) AND v.nfe_dev is null and v.faturado in (0, 1, 3) and v.DTADOC > ''' + formatdatetime('yyyy/mm/dd', PrNaoCompraDesde.date) + ''') ';
 
   if uf <> '' then
     cmd2 := cmd2 + ' and cd.uf=' + quotedstr(uf);
@@ -6762,7 +6788,65 @@ begin
     sql.add(cmd2);
     open;
   end;
+  CriouFormCliente := False;
+{  if not dm.q_cliente.IsEmpty then
+  begin
+    qGeo := TFDQuery.Create(nil);
+    dm.q_cliente.DisableControls;
+    try
+      qGeo.Connection := dm.q_cliente.Connection;
+      cmdGeo := StringReplace(cmd2, 'c.NR_ENDERECO, c.contato,', 'c.NR_ENDERECO, c.latitude, c.longitude, c.contato,', []);
+      qGeo.SQL.Text := cmdGeo;
+      qGeo.Open;
+      qGeo.FetchAll;
 
+      fm_splash.pgArquivos.Visible := False;
+      fm_splash.lbArquivos.Visible := False;
+      fm_splash.ggProgress.Visible := True;
+      fm_splash.lbStatus.Visible := True;
+      fm_splash.ggProgress.MaxValue := qGeo.RecordCount;
+      fm_splash.ggProgress.Progress := 0;
+      fm_splash.lbStatus.Caption := 'Verificando geolocalização dos clientes...';
+      fm_splash.Show;
+      fm_splash.Update;
+
+      CriouFormCliente := not Assigned(Fr_Cliente);
+      if CriouFormCliente then
+        Application.CreateForm(TFr_Cliente, Fr_Cliente);
+
+      ClienteAtual := 0;
+      qGeo.First;
+      while not qGeo.Eof do
+      begin
+        Inc(ClienteAtual);
+        fm_splash.lbStatus.Caption := 'Verificando geolocalização do cliente ' +
+          qGeo.FieldByName('cod_cliente').AsString + ' (' + IntToStr(ClienteAtual) + '/' + IntToStr(qGeo.RecordCount) + ')...';
+        fm_splash.ggProgress.Progress := ClienteAtual;
+        fm_splash.Update;
+        Application.ProcessMessages;
+
+        if (Trim(qGeo.FieldByName('latitude').AsString) = '') or
+           (Trim(qGeo.FieldByName('longitude').AsString) = '') then
+        begin
+          Fr_Cliente.PrCod_Cliente.Text := qGeo.FieldByName('cod_cliente').AsString;
+          Fr_Cliente.PrEndereco.Text := qGeo.FieldByName('endereco').AsString;
+          Fr_Cliente.Prnr_endereco.Text := qGeo.FieldByName('nr_endereco').AsString;
+          Un_Cliente.CIDADE := qGeo.FieldByName('nom_cidade').AsString;
+          Un_Cliente.UF := qGeo.FieldByName('uf').AsString;
+          Fr_Cliente.PreencherLatitudeLongitudeSeNecessario(qGeo.FieldByName('cod_cliente').AsString);
+        end;
+        qGeo.Next;
+      end;
+      dm.q_cliente.First;
+    finally
+      fm_splash.Hide;
+      dm.q_cliente.EnableControls;
+      qGeo.Free;
+      if CriouFormCliente then
+        FreeAndNil(Fr_Cliente);
+    end;
+  end;
+ }
   if ckCSV.Checked then
   begin
     if not (fR_RELATORIO.LoadFromFile(path + 'Relatorios\cliente_completo_csv.fr3')) then
@@ -7658,7 +7742,7 @@ begin
     inc(rept);
     until (rept = 1);
   }
-  if not (fR_RELATORIO.LoadFromFile(path + 'Relatorios\catalogo.fr3')) then
+  if not (fR_RELATORIO.LoadFromFile(path + 'Relatorios\catalogo_plasfan_2026.fr3')) then
   begin
     dao.msg('Relatório não encontrado nas configurações do Sistema' + #13 + 'Avise o Suporte');
     exit;
@@ -8324,7 +8408,8 @@ begin
   cmd2 := ' UNION SELECT  V1.COD_SUPERVISOR, V2.COD_PRODUTO, v2.COD_CLIENTE, ID_COR, ID_TAMANHO, QTD, PRECO, SUB_TOTAL, p.nom_produto,p.preco_venda, c.cor, cl.telefone, cl.email,p.fornecedor_principal, ' + 't.tamanho,cl.nom_cliente, v2.numdoc, v1.cod_fop, fp.nom_fop, v1.dtadoc, v1.desconto, v1.qtd_parcelas, v1.prazo_pgto, v1.tot_bruto, v2.preco_bruto, f.fantasia, e.nom_empresa, ' + 'v2.desconto as desconto_item, v1.tot_liquido, r.nom_representante, v1.credito_usado, m.nom_marca from vendas2 v2 ' +
     'left join vendas1 v1 on v1.numdoc = v2.numdoc ' + 'left join fop fp on fp.cod_fop = v1.cod_fop ' + 'LEFT JOIN PRODUTO P ON P.COD_PRODUTO = V2.COD_PRODUTO ' + 'left join cores c on c.id = v2.id_cor ' + 'left join tamanho t on t.id = v2.id_tamanho ' + 'left join cliente cl on cl.cod_cliente=v2.cod_cliente ' + 'left join representante r on r.id=v1.cod_supervisor ' + 'left join marcas m on m.id=p.id_marca ' + 'left join fornecedor f on f.cod_fornecedor=p.fornecedor_principal ' +
     'left join empresa e on e.cod_empresa = v1.empresa_faturar ' +
-    'where  (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) and  V1.NFEENTRADASAIDA = ''0'' AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') AND v1.NFE_DEV is null '+
+    'where  (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) and  V1.NFEENTRADASAIDA = ''0'' AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) '+
+    ' AND v1.NFE_DEV is null '+
     ' and case when v1.FATURADO = ''1'' then v1.DTA_EMISSAO else v1.dtadoc END between ' + quotedstr(formatdatetime('dd.mm.yyyy', Prdta_inicial.date)) + ' and ' + quotedstr(formatdatetime('dd.mm.yyyy', Prdta_final.date)) +
     '  and v1.consignacao <> ' + quotedstr('1') + ' and v1.cod_fop <> ' + quotedstr('9');
   // +' and tipo_venda<>'+QuotedStr('D');
@@ -8413,10 +8498,46 @@ begin
     cmd_faturado := ' and vt.faturado = v1.faturado ';
 
   cmd := 'select distinct v1.cod_representante, v1.cod_supervisor, v1.numdoc, v1.COD_EMPRESA, v1.nfe, v1.DTA_EMISSAO, v1.dtadoc, v1.tot_liquido, ' + ' coalesce((select sum(valor) from cr1 as cr where cr.nr_documento = v1.NUMDOC),0) - case when cd.UF <> ''SC'' and v1.nfe is not null then v1.VLR_ST else 0 end as valor_cr, ' +
-    ' c.cod_cliente||''-''||c.nom_cliente as nom_cliente, c.TELEFONE as fone_cliente, cd.NOM_CIDADE||''-''||cd.uf as cidade_cliente, r.id as CODREP, r.NOM_REPRESENTANTE, b.NOM_BANCO, r.NR_BANCO,r.NR_AGENCIA,r.NR_CONTA_CORRENTE, r.email, r.fone,r.celular, ' + ' case when r.ID in (select cm.ID_REPRESENTANTE from COMISSAO cm) then (select cm.PERC_COMISSAO from comissao cm where cm.ID_REPRESENTANTE = r.ID and v1.DESCONTO between cm.PERC_MINIMO and cm.PERC_MAXIMO) else r.PERC_COMISSAO_FIXA end as comissao, ' +
-    ' case when v1.cod_fop in (26, 22, 7, 9) then ''Não'' else ''Sim'' end venda_comissionada, f.NOM_FOP, ' + ' coalesce(vc.margem,0) as margem, ' + ' (select sum(vt.tot_liquido) ' + '  from vendas1 vt ' + '  where ' + '    vt.NUMDOC <= v1.numdoc and ' + cmd_data + ' AND vt.COD_FISCAL not in (''6152'', ''6409'') and VT.NFEENTRADASAIDA = ''0'' AND VT.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') AND (vt.NFE_DEV is null or vt.STATUS_NFE_DEV = 135) ' + '    and vt.consignacao <> 1 ' + '    and vt.orcamento= 0 ' + '    and vt.faturado not in (2,4,5) ' + cmd_faturado +
-    '    and (vt.COD_supervisor = V1.COD_SUPERVISOR) ' + ' ) as acum_tot_liquido, ' + ' (select avg(vc1.MARGEM) ' + '  from vendas1 vt ' + '  left outer join V_COMISSAO vc1 on vc1.numdoc = vt.numdoc ' + '  where ' + '    vt.NUMDOC <= v1.numdoc and ' + cmd_data + '    and  vt.COD_FISCAL not in (''6152'', ''6409'') AND VT.NFEENTRADASAIDA = ''0'' AND VT.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') AND  (vt.NFE_DEV is null or vt.STATUS_NFE_DEV = 135) ' + '    and vt.consignacao <> 1 ' + '    and vt.orcamento= 0 ' + '    and vt.faturado not in (2,4,5) ' + cmd_faturado +
-    '    and (vt.COD_supervisor = V1.COD_SUPERVISOR) ' + ' ) as media_margem ' + 'from vendas1 v1 ' + 'inner join FOP f on (f.COD_FOP = v1.COD_FOP) ' + 'left outer join V_COMISSAO vc on vc.numdoc = v1.numdoc ' + 'left join cliente c on c.cod_cliente=v1.cod_cliente ' + 'inner join cidades cd on (c.cod_cidade = cd.cod_cidade) ' + 'inner join cadmicro mc on (mc.microcod = cd.microcod) ' + 'inner join cadmeso ms on (ms.mesocod = mc.mesocod) ' + 'left join REPRESENTANTE r on r.ID = v1.COD_SUPERVISOR ' + 'left join BANCO b on b.ID = CAST(r.NR_BANCO AS INTEGER) ' + 'where V1.NUMDOC_GRUPO IS NULL ' + '  AND (v1.NFE_DEV is null or v1.STATUS_NFE_DEV = 135) ' + ' and (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) ' + ' and v1.consignacao <> 1 ';
+    ' c.cod_cliente||''-''||c.nom_cliente as nom_cliente, c.TELEFONE as fone_cliente, cd.NOM_CIDADE||''-''||cd.uf as cidade_cliente, r.id as CODREP, r.NOM_REPRESENTANTE, b.NOM_BANCO, r.NR_BANCO,r.NR_AGENCIA,r.NR_CONTA_CORRENTE, r.email, r.fone,r.celular, ' +
+    ' case when r.ID in (select cm.ID_REPRESENTANTE from COMISSAO cm) then (select cm.PERC_COMISSAO from comissao cm where cm.ID_REPRESENTANTE = r.ID and v1.DESCONTO between cm.PERC_MINIMO and cm.PERC_MAXIMO) else r.PERC_COMISSAO_FIXA end as comissao, ' +
+    ' case when v1.cod_fop in (26, 22, 7, 9) then ''Não'' else ''Sim'' end venda_comissionada, f.NOM_FOP, ' +
+    ' coalesce(vc.margem,0) as margem, ' +
+    ' (select sum(vt.tot_liquido) ' +
+    '  from vendas1 vt ' +
+    '  where ' +
+    '    vt.NUMDOC <= v1.numdoc and ' + cmd_data +
+    ' AND vt.COD_FISCAL not in (''6152'', ''6409'') and VT.NFEENTRADASAIDA = ''0'' AND VT.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) '+
+    ' AND (vt.NFE_DEV is null or vt.STATUS_NFE_DEV = 135) ' +
+    '    and vt.consignacao <> 1 ' +
+    '    and vt.orcamento= 0 ' +
+    '    and vt.faturado not in (2,4,5) ' + cmd_faturado +
+    '    and (vt.COD_supervisor = V1.COD_SUPERVISOR) ' +
+    ' ) as acum_tot_liquido, ' +
+    ' (select avg(vc1.MARGEM) ' +
+    '  from vendas1 vt ' +
+    '  left outer join V_COMISSAO vc1 on vc1.numdoc = vt.numdoc ' +
+    '  where ' +
+    '    vt.NUMDOC <= v1.numdoc and ' + cmd_data +
+    '    and  vt.COD_FISCAL not in (''6152'', ''6409'') AND VT.NFEENTRADASAIDA = ''0'' AND VT.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) '+
+    '    AND  (vt.NFE_DEV is null or vt.STATUS_NFE_DEV = 135) ' +
+    '    and vt.consignacao <> 1 ' +
+    '    and vt.orcamento= 0 ' +
+    '    and vt.faturado not in (2,4,5) ' + cmd_faturado +
+    '    and (vt.COD_supervisor = V1.COD_SUPERVISOR) ' +
+    ' ) as media_margem ' +
+    'from vendas1 v1 ' +
+    'inner join FOP f on (f.COD_FOP = v1.COD_FOP) ' +
+    'left outer join V_COMISSAO vc on vc.numdoc = v1.numdoc ' +
+    'left join cliente c on c.cod_cliente=v1.cod_cliente ' +
+    'inner join cidades cd on (c.cod_cidade = cd.cod_cidade) ' +
+    'inner join cadmicro mc on (mc.microcod = cd.microcod) ' +
+    'inner join cadmeso ms on (ms.mesocod = mc.mesocod) ' +
+    'left join REPRESENTANTE r on r.ID = v1.COD_SUPERVISOR ' +
+    'left join BANCO b on b.ID = CAST(r.NR_BANCO AS INTEGER) ' +
+    'where V1.NUMDOC_GRUPO IS NULL ' +
+    '  AND (v1.NFE_DEV is null or v1.STATUS_NFE_DEV = 135) ' +
+    ' and (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) ' +
+    ' and v1.consignacao <> 1 ';
 
   if Rb_filtro_faturamento.Checked then
     cmd := cmd + ' and v1.dta_emissao between ' + quotedstr(formatdatetime('dd.mm.yyyy', Prdta_inicial.date)) + ' and ' + quotedstr(formatdatetime('dd.mm.yyyy', Prdta_final.date));
@@ -8639,7 +8760,7 @@ begin
           '         left join REPRESENTANTE r on r.ID = v1.COD_REPRESENTANTE '+
           '         left join BANCO b on b.ID = CAST (r.NR_BANCO AS INTEGER) '+
           'where V1.NUMDOC_GRUPO IS NULL AND (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) '+
-          '  and V1.NFEENTRADASAIDA = ''0'' AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') AND  (v1.NFE_DEV is null or v1.STATUS_NFE_DEV = 135) and v1.consignacao <> ' + quotedstr('1');
+          '  and V1.NFEENTRADASAIDA = ''0'' AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) AND  (v1.NFE_DEV is null or v1.STATUS_NFE_DEV = 135) and v1.consignacao <> ' + quotedstr('1');
 
   cmd1 := '';
 
@@ -8675,6 +8796,7 @@ begin
 
   if edGrupo.Text <> '' then
     cmd := cmd + ' and v1.NUMDOC in (select distinct v23.numdoc from vendas2 v23 inner join produto p23 on p23.cod_produto = v23.COD_PRODUTO where p23.COD_GRUPO in (' + StringReplace(edGrupo.Text, ';', ',', [rfReplaceAll]) + ')) ';
+
 
   if edCodRepresentante.Text <> '' then
     cmd1 := cmd1 + fmfun.cmdAux('v1.cod_representante', edCodRepresentante.Text);
@@ -8730,6 +8852,8 @@ begin
     open;
   end;
 
+  dm.q_vendas1.SQL.SaveToFile('teste.sql');
+
   if dm.q_vendas1.RecordCount < 0 then
   begin
     dao.msg('Não foi encontrado registro neste periodo!');
@@ -8747,20 +8871,77 @@ end;
 
 procedure TFr_opc_relatorios.relatorio_ranking_produtos;
 var
-  cmd, cmd1, cmd2: string;
+  cmd, cmd1, cmd2, cmd_vendas, cmd_produto: string;
+  data_media_ini, data_media_fim, data_primeira_entrada, data_media_base, cmd_media: string;
+
+  function DescricaoFiltro(const ATabela, ACampoCodigo, ACampoNome, AValores: string): string;
+  var
+    sql: string;
+  begin
+    Result := Trim(AValores);
+    if Result = '' then
+      exit;
+
+    sql := 'select string_agg(cast(' + ACampoCodigo + ' as varchar(30)) || ''-'' || ' + ACampoNome + ', '', '' order by ' + ACampoCodigo + ') as descricao ' +
+      'from ' + ATabela + ' where ' + ACampoCodigo + ' in (' + StringReplace(AValores, ';', ',', [rfReplaceAll]) + ')';
+    dao.Geral3(sql);
+    if (dao.q3.RecordCount > 0) and (Trim(dao.q3.FieldByName('descricao').AsString) <> '') then
+      Result := dao.q3.FieldByName('descricao').AsString;
+  end;
+
+  procedure AdicionaFiltro(var AFiltros: string; const ATitulo, ADescricao: string);
+  begin
+    if Trim(ADescricao) = '' then
+      exit;
+
+    if AFiltros <> '' then
+      AFiltros := AFiltros + ' | ';
+    AFiltros := AFiltros + ATitulo + ': ' + ADescricao;
+  end;
+
 begin
+  data_media_fim := 'cast(' + QuotedStr(FormatDateTime('yyyy-mm-dd 23:59:59', Prdta_final.Date)) + ' as timestamp)';
+  data_media_ini := 'cast(' + QuotedStr(FormatDateTime('yyyy-mm-dd 00:00:00', IncMonth(Prdta_final.Date, -12))) + ' as timestamp)';
+  data_primeira_entrada := '(select cast(e1.dta_documento as timestamp) from entrada1 e1 '+
+                           'inner join entrada2 e2 on e1.nr_documento = e2.nr_documento where e2.cod_produto = p.cod_produto and cast(e1.dta_documento as date) <> cast(''1899-12-30'' as date) order by e1.dta_documento limit 1)';
+  data_media_base := 'greatest(coalesce(' + data_primeira_entrada + ', ' + data_media_ini + '), ' + data_media_ini + ')';
+
+  cmd_media :=
+    '  cast(coalesce((select sum(v2m.qtd) from vendas2 v2m ' +
+    'inner join vendas1 v1m on v1m.numdoc = v2m.numdoc ' +
+    'where v2m.cod_produto = p.cod_produto ' +
+    'and v1m.NUMDOC_GRUPO IS NULL ' +
+    'and (v1m.COD_FISCAL not in (''6152'', ''6409'') or v1m.COD_FISCAL IS NULL) ' +
+    'and (v1m.NFE_DEV is null or v1m.STATUS_NFE_DEV = 135) ' +
+    'and v1m.NFEENTRADASAIDA = ''0'' AND v1m.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) ' +
+    'and v1m.consignacao <> ''1'' ' +
+    'and v1m.faturado <> ''2'' ' +
+    'and v1m.dta_emissao between ' + data_media_base + ' and ' + data_media_fim +
+    '), 0) / greatest(1, (select count(*) from (select distinct c.mes from calendario c where c.data between ' + data_media_base + ' and ' + data_media_fim +
+    ') q1)) as numeric(15,2)) as media_mensal, ';
+
   cmd :=
     'select ' +
     '  g.cod_grupo, ' +
     '  g.nom_grupo, ' +
     '  p.cod_produto, ' +
     '  p.nom_produto, ' +
-    '  sum(v2.qtd) as qtd, ' +
-    '  max(v2.preco) as preco, ' +
-    '  sum(v2.sub_total) as valor_total ' +
+    '  p.ord_pauta, ' +
+    '  coalesce(p.qtd_estoque, 0) as qtd_estoque, ' +
+    '  p.qtd_estoque_min, ' +
+    '  p.qtd_estoque_max, ' +
+    '  cast(' + data_primeira_entrada + ' as date) as dta_primeira_entrada, ' +
+    cmd_media +
+    '  sum(coalesce(v2.qtd, 0)) as qtd, ' +
+    '  max(coalesce(v2.preco, 0)) as preco, ' +
+    '  sum(coalesce(v2.sub_total, 0)) as valor_total ' +
     'from produto p ' +
-    'inner join grupo g on g.cod_grupo = p.cod_grupo ' +
-    'inner join vendas2 v2 on v2.cod_produto = p.cod_produto ' +
+    'inner join grupo g on g.cod_grupo = p.cod_grupo ';
+
+  cmd_vendas :=
+    'left outer join ( ' +
+    'select v2.cod_produto, v2.qtd, v2.preco, v2.sub_total ' +
+    'from vendas2 v2 ' +
     'inner join vendas1 v1 on v1.numdoc = v2.numdoc ' +
     'inner join FOP f on f.COD_FOP = v1.COD_FOP ' +
     'inner join cliente c on c.cod_cliente = v1.cod_cliente ' +
@@ -8771,10 +8952,11 @@ begin
     'where V1.NUMDOC_GRUPO IS NULL ' +
     '  and (v1.COD_FISCAL not in (''6152'', ''6409'') or V1.COD_FISCAL IS NULL) ' +
     '  and (v1.NFE_DEV is null or v1.STATUS_NFE_DEV = 135) ' +
-    '  and V1.NFEENTRADASAIDA = ''0'' AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') '+
+    '  and V1.NFEENTRADASAIDA = ''0'' AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) '+
     '  and v1.consignacao <> ' + QuotedStr('1');
 
   cmd1 := '';
+  cmd_produto := '';
 
   // === FILTROS DE DATA ===
   if Rb_filtro_faturamento.Checked then
@@ -8794,7 +8976,7 @@ begin
     cmd1 := cmd1 + fmfun.cmdAux('v1.cod_fop', edfop.Text);
 
   if edFornecedor.Text <> '' then
-    cmd := cmd +' and p.FORNECEDOR_PRINCIPAL in (' +
+    cmd_produto := cmd_produto +' and p.FORNECEDOR_PRINCIPAL in (' +
       StringReplace(edFornecedor.Text, ';', ',', [rfReplaceAll]) + ') ';
 
   if edCliente.Text <> '' then
@@ -8818,10 +9000,25 @@ begin
     cmd1 := cmd1 + ' and v1.empresa_faturar = ' + QuotedStr(Prempresa.Text);
 
   if edGrupo.Text <> '' then
-    cmd := cmd +
+    cmd_produto := cmd_produto +
       ' and p.COD_GRUPO in (' +
       StringReplace(edGrupo.Text, ';', ',', [rfReplaceAll]) +
       ') ';
+
+  if rbAtivo.Checked then
+    cmd_produto := cmd_produto + ' and p.status <> ' + QuotedStr('S');
+
+  if rbInativo.Checked then
+    cmd_produto := cmd_produto + ' and p.status = ' + QuotedStr('S');
+
+  if rbPromocao.Checked then
+    cmd_produto := cmd_produto + ' and p.promocao = ' + QuotedStr('S');
+
+  if rbDisponivel.Checked then
+    cmd_produto := cmd_produto + ' and coalesce(p.indisponivel, ''N'') <> ' + QuotedStr('S');
+
+  if rbIndisponivel.Checked then
+    cmd_produto := cmd_produto + ' and p.indisponivel = ' + QuotedStr('S');
 
   if edCodRepresentante.Text <> '' then
     cmd1 := cmd1 + fmfun.cmdAux('v1.cod_representante', edCodRepresentante.Text);
@@ -8859,32 +9056,83 @@ begin
     cmd1 := cmd1 + ' and v1.cod_supervisor is not null';
 
   if rbNaoConsumidorFinal.Checked then
-    cmd := cmd + 'and coalesce(v1.consumidor_final, ''N'') = ''N'' ';
+    cmd1 := cmd1 + 'and coalesce(v1.consumidor_final, ''N'') = ''N'' ';
 
   if rbApenasConsumidorFinal.Checked then
-    cmd := cmd + 'and coalesce(v1.consumidor_final, ''N'') = ''S'' ';
+    cmd1 := cmd1 + 'and coalesce(v1.consumidor_final, ''N'') = ''S'' ';
 
 
   // === FINALIZA QUERY ===
-  cmd := cmd + cmd1 +
+  cmd := cmd + cmd_vendas + cmd1 + ') v2 on v2.cod_produto = p.cod_produto where 1 = 1 ' + cmd_produto +
     ' group by ' +
     '  g.cod_grupo, ' +
     '  g.nom_grupo, ' +
     '  p.cod_produto, ' +
-    '  p.nom_produto ';
+    '  p.nom_produto, ' +
+    '  p.ord_pauta, ' +
+    '  p.qtd_estoque, ' +
+    '  p.qtd_estoque_min, ' +
+    '  p.qtd_estoque_max ';
 
-  if rgOrdemQtdeValor.ItemIndex = 0 then
-    cmd := cmd + ' order by qtd desc, p.nom_produto'
+  case rgOrdemQtdeValor.ItemIndex of
+    0: cmd := cmd + ' order by qtd desc, p.nom_produto';
+    1: cmd := cmd + ' order by valor_total desc, p.nom_produto';
+    2: cmd := cmd + ' order by p.cod_produto';
+    3: cmd := cmd + ' order by p.nom_produto';
+    4: cmd := cmd + ' order by p.ord_pauta, p.cod_produto';
   else
-    cmd := cmd + ' order by valor_total desc, p.nom_produto';
+    cmd := cmd + ' order by qtd desc, p.nom_produto';
+  end;
 
+  filtros_ranking_produtos := '';
+  AdicionaFiltro(filtros_ranking_produtos, 'Grupo', DescricaoFiltro('grupo', 'cod_grupo', 'nom_grupo', edGrupo.Text));
+  AdicionaFiltro(filtros_ranking_produtos, 'Fornecedor', DescricaoFiltro('fornecedor', 'cod_fornecedor', 'razao_social', edFornecedor.Text));
+  AdicionaFiltro(filtros_ranking_produtos, 'Cliente', DescricaoFiltro('cliente', 'cod_cliente', 'nom_cliente', edCliente.Text));
+  AdicionaFiltro(filtros_ranking_produtos, 'Cidade', DescricaoFiltro('cidades', 'cod_cidade', 'nom_cidade', edCidade.Text));
+  AdicionaFiltro(filtros_ranking_produtos, 'Representante', DescricaoFiltro('representante', 'id', 'nom_representante', edCodRepresentante.Text));
+  AdicionaFiltro(filtros_ranking_produtos, 'Supervisor', DescricaoFiltro('representante', 'id', 'nom_representante', edcodsupervisor.Text));
+  AdicionaFiltro(filtros_ranking_produtos, 'Empresa', DescricaoFiltro('empresa', 'cod_empresa', 'nom_empresa', Prempresa.Text));
+  AdicionaFiltro(filtros_ranking_produtos, 'F. Pgto', DescricaoFiltro('fop', 'cod_fop', 'nom_fop', edfop.Text));
+  AdicionaFiltro(filtros_ranking_produtos, 'Produto', DescricaoFiltro('produto', 'cod_produto', 'nom_produto', edProduto.Text));
+  AdicionaFiltro(filtros_ranking_produtos, 'Marca', DescricaoFiltro('marcas', 'id', 'nom_marca', Prcod_marca.Text));
+  if Pruf.Text <> '' then
+    AdicionaFiltro(filtros_ranking_produtos, 'UF', Pruf.Text);
+  if Trim(edBairro.Text) <> '' then
+    AdicionaFiltro(filtros_ranking_produtos, 'Bairro', edBairro.Text);
+  if rbAtivo.Checked then
+    AdicionaFiltro(filtros_ranking_produtos, 'Situação', 'Ativo')
+  else if rbInativo.Checked then
+    AdicionaFiltro(filtros_ranking_produtos, 'Situação', 'Inativo')
+  else if rbPromocao.Checked then
+    AdicionaFiltro(filtros_ranking_produtos, 'Situação', 'Apenas em Promoção')
+  else if rbDisponivel.Checked then
+    AdicionaFiltro(filtros_ranking_produtos, 'Situação', 'Disponível')
+  else if rbIndisponivel.Checked then
+    AdicionaFiltro(filtros_ranking_produtos, 'Situação', 'Indisponível')
+  else if rbAtivoTodos.Checked then
+    AdicionaFiltro(filtros_ranking_produtos, 'Situação', 'Todos');
   with dm.q_ranking_produtos do
   begin
     close;
+    Fields.Clear;
     sql.clear;
     sql.add(cmd);
     open;
   end;
+
+  dm.frxDBDataset1.FieldAliases.Clear;
+  dm.frxDBDataset1.FieldAliases.Add('cod_grupo=cod_grupo');
+  dm.frxDBDataset1.FieldAliases.Add('nom_grupo=nom_grupo');
+  dm.frxDBDataset1.FieldAliases.Add('cod_produto=cod_produto');
+  dm.frxDBDataset1.FieldAliases.Add('nom_produto=nom_produto');
+  dm.frxDBDataset1.FieldAliases.Add('qtd_estoque=qtd_estoque');
+  dm.frxDBDataset1.FieldAliases.Add('qtd_estoque_min=qtd_estoque_min');
+  dm.frxDBDataset1.FieldAliases.Add('qtd_estoque_max=qtd_estoque_max');
+  dm.frxDBDataset1.FieldAliases.Add('dta_primeira_entrada=dta_primeira_entrada');
+  dm.frxDBDataset1.FieldAliases.Add('media_mensal=media_mensal');
+  dm.frxDBDataset1.FieldAliases.Add('qtd=qtd');
+  dm.frxDBDataset1.FieldAliases.Add('preco=preco');
+  dm.frxDBDataset1.FieldAliases.Add('valor_total=valor_total');
 
   if dm.q_ranking_produtos.RecordCount < 0 then
   begin
@@ -9003,7 +9251,7 @@ begin
     ' LEFT OUTER JOIN fop f on (f.COD_FOP = v1.COD_FOP) ' +
     ' inner join produto pr on (pr.COD_PRODUTO = v2.COD_PRODUTO) '+
     ' WHERE (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) and V1.NFEENTRADASAIDA = ''0'' '+
-    '   AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') AND v1.NFE_DEV is null and v1.pedido_vendedor in (''1'', ''2'') ';
+    '   AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) AND v1.NFE_DEV is null and v1.pedido_vendedor in (''1'', ''2'') ';
 
   if Rb_filtro_faturamento.Checked then
     cmd := cmd + ' and v1.dta_emissao between ' + quotedstr(formatdatetime('dd.mm.yyyy', Prdta_inicial.date)) + ' and ' + quotedstr(formatdatetime('dd.mm.yyyy', Prdta_final.date));
@@ -9076,7 +9324,7 @@ procedure TFr_opc_relatorios.monta_rel_prateleira;
 var
   cmd: string;
 begin
-  cmd := 'SELECT v.NUMDOC, V.DTADOC, V.DTA_EMISSAO, V.TOT_LIQUIDO, c.COD_CLIENTE, ' + '  c.NOM_CLIENTE, p.COD_PRODUTO, p.NOM_PRODUTO, p.cod_prateleira, v2.QTD, ' + '  V.FATURADO, v2.volume, g.cod_grupo, g.nom_grupo from vendas1 v ' + '  inner join cliente c on (c.COD_CLIENTE = v.cod_cliente)' + '  inner join vendas2 v2 on (v.NUMDOC = v2.NUMDOC)' + '  inner join produto p on (p.COD_PRODUTO = v2.COD_PRODUTO)' + '  left join grupo g on (g.COD_GRUPO = p.COD_GRUPO)' + '  where  v.COD_FISCAL not in (''6152'', ''6409'') and V.NFEENTRADASAIDA = ''0'' AND V.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') AND v.NFE_DEV is null and v.consignacao <> ''1''' + '  v.cod_fop <> ''9'' and p.custo is not null and p.custo > 0 ';
+  cmd := 'SELECT v.NUMDOC, V.DTADOC, V.DTA_EMISSAO, V.TOT_LIQUIDO, c.COD_CLIENTE, ' + '  c.NOM_CLIENTE, p.COD_PRODUTO, p.NOM_PRODUTO, p.cod_prateleira, v2.QTD, ' + '  V.FATURADO, v2.volume, g.cod_grupo, g.nom_grupo from vendas1 v ' + '  inner join cliente c on (c.COD_CLIENTE = v.cod_cliente)' + '  inner join vendas2 v2 on (v.NUMDOC = v2.NUMDOC)' + '  inner join produto p on (p.COD_PRODUTO = v2.COD_PRODUTO)' + '  left join grupo g on (g.COD_GRUPO = p.COD_GRUPO)' + '  where  v.COD_FISCAL not in (''6152'', ''6409'') and V.NFEENTRADASAIDA = ''0'' AND V.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) AND v.NFE_DEV is null and v.consignacao <> ''1''' + '  v.cod_fop <> ''9'' and p.custo is not null and p.custo > 0 ';
 
   if Rb_filtro_faturamento.Checked then
     cmd := cmd + ' and v.dta_emissao between ' + quotedstr(formatdatetime('dd.mm.yyyy', Prdta_inicial.date)) + ' and ' + quotedstr(formatdatetime('dd.mm.yyyy', Prdta_final.date));
@@ -9159,7 +9407,7 @@ var
 begin
 
   cmd1 := cmd1 + ' and  (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) and  v1.faturado not in (2,5) '+
-                 ' and V1.NFEENTRADASAIDA = ''0'' AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') '+
+                 ' and V1.NFEENTRADASAIDA = ''0'' AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) '+
                  ' AND v1.NFE_DEV is null and v1.consignacao <> 1 and v1.orcamento= 0 and v1.cod_fop <> 9';
   if zzfaturado.Checked then
     cmd1 := cmd1 + ' and v1.faturado=' + quotedstr('1') + ' and v1.orcamento=' + quotedstr('0')
@@ -9589,7 +9837,7 @@ begin
   '    (select case when sum(v2.PRECO_CUSTO*v2.QTD) = 0 then sum(p.CUSTO_TOTAL*v2.QTD) else sum(v2.PRECO_CUSTO*v2.QTD) end from vendas2 v2 INNER JOIN PRODUTO P ON P.COD_PRODUTO = v2.COD_PRODUTO  where v2.NUMDOC = v1.NUMDOC)) ' + '    / ' + '    (select case when sum(v2.PRECO_CUSTO*v2.QTD) = 0 then sum(p.CUSTO_TOTAL*v2.QTD) else sum(v2.PRECO_CUSTO*v2.QTD) end from vendas2 v2 INNER JOIN PRODUTO P ON P.COD_PRODUTO = v2.COD_PRODUTO  where v2.NUMDOC = v1.NUMDOC) ' + '  )*100 ' + '  end as margem, v1.desconto ' +
   ' from vendas1 v1 ' + ' left join cliente c on c.cod_cliente=v1.cod_cliente ' + ' left join CIDADES cd on cd.COD_CIDADE = c.COD_CIDADE ' + ' INNER join REPRESENTANTE r on r.ID = v1.COD_REPRESENTANTE ' + ' left join BANCO b on b.ID = CAST(r.NR_BANCO AS INTEGER) ' +
   ' where ' +
-  '   (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) and V1.NFEENTRADASAIDA = ''0'' AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') '+
+  '   (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) and V1.NFEENTRADASAIDA = ''0'' AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) '+
   '   AND (v1.NFE_DEV is null OR v1.STATUS_NFE_DEV = 135) and ' +
   '   v1.consignacao <> 1 and  ' +
   '   v1.cod_fop not in (7, 9, 22, 23, 24, 26, 32, 46, 47, 51, 52, 53, 54, 57, 58)  ';
@@ -9664,10 +9912,12 @@ begin
 
 end;
 
-procedure TFr_opc_relatorios.relatorio_comissao_desconto(c_fornecedor, c_loja, c_grupo, c_vendedor, c_marca: string);
+procedure TFr_opc_relatorios.relatorio_comissao_desconto(c_fornecedor, c_loja, c_grupo, c_vendedor, c_marca: string; AGerarJpgDiario: Boolean; const AArquivoJpg: string);
 var
   cmd: string;
+  JpegExport: TfrxJPEGExport;
 begin
+  path := ExtractFilePath(Application.ExeName);
   cmd := ' select ' +
          '   V1.numdoc, V1.numdoc_grupo, V1.dtadoc, v1.numdoc_destino, v1.entregue, ' +
          '   case when v1.NUMDOC_GRUPO is not null then (select V.DTA_EMISSAO from vendas1 v where v.NUMDOC = v1.NUMDOC_GRUPO) else V1.DTA_EMISSAO end AS DTA_EMISSAO, ' +
@@ -9703,7 +9953,7 @@ begin
          ' left join BANCO b on b.ID = CAST(r.NR_BANCO AS INTEGER) ' +
          ' where ' +
          '   (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) and V1.NFEENTRADASAIDA = ''0'' '+
-         '   AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') AND (v1.NFE_DEV is null OR v1.STATUS_NFE_DEV = 135) and ' +
+         '   AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) AND (v1.NFE_DEV is null OR v1.STATUS_NFE_DEV = 135) and ' +
          '   v1.consignacao <> 1 and  ' +
          '   v1.cod_fop not in (7, 9, 22, 23, 24, 26, 32, 46, 47, 51, 52, 53, 54, 57, 58)  ';
 
@@ -9762,41 +10012,152 @@ begin
     open;
   end;
 
-  fm_splash.ggProgress.MaxValue := dm.q_comissao_venda.RecordCount;
-  fm_splash.lbStatus.Caption := 'Atualizando Comissões...';
-  fm_splash.ggProgress.progress := 0;
-  fm_splash.Show;
+  if not AGerarJpgDiario then
+  begin
+    fm_splash.ggProgress.MaxValue := dm.q_comissao_venda.RecordCount;
+    fm_splash.lbStatus.Caption := 'Atualizando Comissões...';
+    fm_splash.ggProgress.progress := 0;
+    fm_splash.Show;
+  end;
 
   dm.q_comissao_venda.first;
 
   while not dm.q_comissao_venda.Eof do
   begin
     fmfun.AtualizaDadosComissaoDesconto(dm.q_comissao_vendaNUMDOC.AsString);
-    fm_splash.ggProgress.addprogress(1);
+    if not AGerarJpgDiario then
+      fm_splash.ggProgress.addprogress(1);
     dm.q_comissao_venda.Next;
   end;
-  fm_splash.close;
+  if not AGerarJpgDiario then
+    fm_splash.close;
   dm.q_comissao_venda.Refresh;
 
   if dm.q_comissao_venda.RecordCount = 0 then
   begin
-    dao.msg('Não foi encontrado registro neste periodo!');
+    if not AGerarJpgDiario then
+      dao.msg('Não foi encontrado registro neste periodo!');
     exit;
   end;
 
   if not (fR_RELATORIO.LoadFromFile(path + 'Relatorios\comissoes_desconto.fr3')) then
   begin
-    dao.msg('Relatório não encontrado nas configurações do Sistema' + #13 + 'Avise o Suporte');
+    if not AGerarJpgDiario then
+      dao.msg('Relatório não encontrado nas configurações do Sistema' + #13 + 'Avise o Suporte');
     exit;
   end;
-  fR_RELATORIO.ShowReport;
+
+  if AGerarJpgDiario then
+  begin
+    ForceDirectories(ExtractFilePath(AArquivoJpg));
+    fR_RELATORIO.PrepareReport(True);
+
+    JpegExport := TfrxJPEGExport.Create(nil);
+    try
+      JpegExport.ShowDialog := False;
+      JpegExport.SeparateFiles := False;
+      JpegExport.JPEGQuality := 95;
+      JpegExport.FileName := AArquivoJpg;
+      fR_RELATORIO.Export(JpegExport);
+    finally
+      JpegExport.Free;
+    end;
+  end
+  else
+    fR_RELATORIO.ShowReport;
 
 end;
 
-procedure TFr_opc_relatorios.ranking_vendas;
+procedure TFr_opc_relatorios.GerarComissaoDescontoDiario;
+const
+  REPRESENTANTES: array[0..6] of string =
+    ('1191', '836', '1258', '1228', '810', '1003', '10');
+var
+  I, J: Integer;
+  CodRepresentante, NomeRepresentante, Situacao, PastaDia, ArquivoJpg: string;
+  DataInicial: TDateTime;
+
+  function NomeArquivoSeguro(const AValor: string): string;
+  const
+    INVALIDOS = '\/:*?"<>|';
+  var
+    P: Integer;
+  begin
+    Result := Trim(AValor);
+    for P := 1 to Length(Result) do
+      if Pos(Result[P], INVALIDOS) > 0 then
+        Result[P] := '_';
+    if Result = '' then
+      Result := 'REPRESENTANTE';
+  end;
+
+begin
+  tipo_relatorio := 'comissoes_desconto';
+  path := ExtractFilePath(Application.ExeName);
+  DataInicial := EncodeDate(YearOf(Date), MonthOf(Date), 1);
+  PastaDia := IncludeTrailingPathDelimiter(path) + 'Relatorios\ComissaoDesconto\' +
+    FormatDateTime('yyyy_mm_dd', Date);
+  ForceDirectories(PastaDia);
+
+  Prdta_inicial.Date := DataInicial;
+  Prdta_final.Date := Date;
+  Pruf.Text := '';
+  edcodsupervisor.Text := '';
+  edPedido.Text := '';
+  rbApenasSupervisao.Checked := False;
+  rbSemSupervisao.Checked := False;
+  rbApenasConsumidorFinal.Checked := False;
+  rbNaoConsumidorFinal.Checked := False;
+
+  for I := Low(REPRESENTANTES) to High(REPRESENTANTES) do
+  begin
+    CodRepresentante := REPRESENTANTES[I];
+    dao.Geral3('select nom_representante from representante where id = ' + CodRepresentante);
+    if dao.q3.RecordCount > 0 then
+      NomeRepresentante := NomeArquivoSeguro(dao.q3.FieldByName('nom_representante').AsString)
+    else
+      NomeRepresentante := 'REP_' + CodRepresentante;
+
+    Prcod_representante.Text := CodRepresentante;
+
+    for J := 0 to 1 do
+    begin
+      zzfaturado.Checked := J = 0;
+      zznao_faturado.Checked := J = 1;
+      if J = 0 then
+        Situacao := 'FATURADO'
+      else
+        Situacao := 'NAO_FATURADO';
+
+      ArquivoJpg := IncludeTrailingPathDelimiter(PastaDia) +
+        NomeRepresentante + '_' + Situacao + '.jpg';
+      if not FileExists(ArquivoJpg) then
+        relatorio_comissao_desconto('', '', '', CodRepresentante, '', True, ArquivoJpg);
+    end;
+  end;
+end;
+
+procedure TFr_opc_relatorios.GerarRankingVendasDiario;
+begin
+  tipo_relatorio := 'ranking_vendas';
+  ranking_vendas(True);
+end;
+procedure TFr_opc_relatorios.ranking_vendas(AGerarJpgDiario: Boolean);
 var
   cmd, cmd_rep: string;
+  PastaDia: string;
+  JpegExport: TfrxJPEGExport;
 begin
+  path := ExtractFilePath(Application.ExeName);
+  if AGerarJpgDiario then
+  begin
+    Prdta_inicial.Date := EncodeDate(YearOf(Date), MonthOf(Date), 1);
+    Prdta_final.Date := Date;
+    Prcod_representante.Text := '';
+    prcod_supervisor.Text := '';
+    rbApenasConsumidorFinal.Checked := False;
+    rbNaoConsumidorFinal.Checked := False;
+  end;
   if Prdta_inicial.date = 0 then
   begin
     MessageDlg('Data Inicial deve ser preenchida!', mtError, [mbOK], 0);
@@ -9839,7 +10200,7 @@ begin
          '      and (V1.consignacao <> 1 and V1.orcamento= 0 ) ' +
          '      and V1.FATURADO in (0) ' +
          '      and (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) and  V1.NUMDOC_GRUPO IS NULL AND V1.NFEENTRADASAIDA = ''0'' '+
-         '      AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') AND (V1.NFE_DEV is null or V1.STATUS_NFE_DEV = 135) ' +
+         '      AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) AND (V1.NFE_DEV is null or V1.STATUS_NFE_DEV = 135) ' +
          '      AND V1.COD_REPRESENTANTE = R.ID ' +
          '      and v1.cod_fop not in (7, 9, 22, 23, 24, 26, 32, 46, 47, 51, 52, 53, 54, 57, 58)  ' +
          ifthen(rbApenasConsumidorFinal.Checked, '      and coalesce(v1.consumidor_final, ''N'') = ''S'' ',
@@ -9855,7 +10216,7 @@ begin
          '      and (V1.consignacao <> 1 and V1.orcamento= 0 ) ' +
          '      and V1.FATURADO in (1) ' +
          '      and (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) and  V1.NUMDOC_GRUPO IS NULL '+
-         '      AND V1.NFEENTRADASAIDA = ''0'' AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') AND (V1.NFE_DEV is null or V1.STATUS_NFE_DEV = 135) ' +
+         '      AND V1.NFEENTRADASAIDA = ''0'' AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) AND (V1.NFE_DEV is null or V1.STATUS_NFE_DEV = 135) ' +
          '      AND V1.COD_REPRESENTANTE = R.ID ' +
          '      and v1.cod_fop not in (7, 9, 22, 23, 24, 26, 32, 46, 47, 51, 52, 53, 54, 57, 58)  ' +
          ifthen(rbApenasConsumidorFinal.Checked, '      and coalesce(v1.consumidor_final, ''N'') = ''S'' ',
@@ -9871,7 +10232,7 @@ begin
          '       V1.DTA_EMISSAO between ' + quotedstr(formatdatetime('dd/mm/yyyy', Prdta_inicial.date)) + ' and ' + quotedstr(formatdatetime('dd/mm/yyyy', Prdta_final.date)) +
          '      and (V1.consignacao <> 1 and V1.orcamento= 0 ) ' +
          '      and (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) and  V1.NUMDOC_GRUPO IS NULL '+
-         '      AND V1.NFEENTRADASAIDA = ''0'' AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') AND (V1.NFE_DEV is null or V1.STATUS_NFE_DEV = 135) ' +
+         '      AND V1.NFEENTRADASAIDA = ''0'' AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) AND (V1.NFE_DEV is null or V1.STATUS_NFE_DEV = 135) ' +
          '      AND V1.COD_REPRESENTANTE = R.ID ' +
          '      and v1.cod_fop not in (7, 9, 22, 23, 24, 26, 32, 46, 47, 51, 52, 53, 54, 57, 58)  ' +
          ifthen(rbApenasConsumidorFinal.Checked, '      and coalesce(v1.consumidor_final, ''N'') = ''S'' ',
@@ -9887,7 +10248,7 @@ begin
          '       V1.DTA_EMISSAO between ' + quotedstr(formatdatetime('dd/mm/yyyy', Prdta_inicial.date)) + ' and ' + quotedstr(formatdatetime('dd/mm/yyyy', Prdta_final.date)) +
          '      and (V1.consignacao <> 1 and V1.orcamento= 0 ) ' +
          '      and (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) and  V1.NUMDOC_GRUPO IS NULL '+
-         '      AND V1.NFEENTRADASAIDA = ''0'' AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') AND (V1.NFE_DEV is null or V1.STATUS_NFE_DEV = 135) ' +
+         '      AND V1.NFEENTRADASAIDA = ''0'' AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) AND (V1.NFE_DEV is null or V1.STATUS_NFE_DEV = 135) ' +
          '      AND V1.COD_REPRESENTANTE = R.ID ' +
          '      and v1.cod_fop not in (7, 9, 22, 23, 24, 26, 32, 46, 47, 51, 52, 53, 54, 57, 58)  ' +
          ifthen(rbApenasConsumidorFinal.Checked, '      and coalesce(v1.consumidor_final, ''N'') = ''S'' ',
@@ -9897,7 +10258,7 @@ begin
          'from ' +
          '  REPRESENTANTE r ' +
          'where ' +
-         '      r.FUNCIONARIO IN (''0'',''1'') ' +
+         '      r.FUNCIONARIO IN (''0'',''1'', ''4'') ' +
          '  and COALESCE(( ' +
          '    SELECT ' +
          '      SUM(V1.TOT_LIQUIDO) ' +
@@ -9908,7 +10269,7 @@ begin
          '      and (V1.consignacao <> 1 and V1.orcamento= 0 ) ' +
          '      and (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) and V1.FATURADO in (1) ' +
          '      and V1.NUMDOC_GRUPO IS NULL AND (V1.NFE_DEV is null or V1.STATUS_NFE_DEV = 135) ' +
-         '      and V1.NFEENTRADASAIDA = ''0'' AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') '+
+         '      and V1.NFEENTRADASAIDA = ''0'' AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) '+
          '      AND V1.COD_REPRESENTANTE = R.ID ' +
          ifthen(rbApenasConsumidorFinal.Checked, '      and coalesce(v1.consumidor_final, ''N'') = ''S'' ',
          ifthen(rbNaoConsumidorFinal.Checked, '      and coalesce(v1.consumidor_final, ''N'') = ''N'' ', ''))+
@@ -9928,7 +10289,7 @@ begin
          '      and (V1.consignacao <> 1 and V1.orcamento= 0 ) ' +
          '      and V1.FATURADO in (0) ' +
          '      and (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) and V1.NUMDOC_GRUPO IS NULL '+
-         '      AND V1.NFEENTRADASAIDA = ''0'' AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') AND (V1.NFE_DEV is null or V1.STATUS_NFE_DEV = 135) ' +
+         '      AND V1.NFEENTRADASAIDA = ''0'' AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) AND (V1.NFE_DEV is null or V1.STATUS_NFE_DEV = 135) ' +
          '      AND V1.COD_SUPERVISOR = R.ID ' +
          '      AND v1.cod_fop not in (7, 9, 22, 23, 24, 26, 32, 46, 47, 51, 52, 53, 54, 57, 58)  ' +
          ifthen(rbApenasConsumidorFinal.Checked, '      and coalesce(v1.consumidor_final, ''N'') = ''S'' ',
@@ -9944,7 +10305,7 @@ begin
          '      and (V1.consignacao <> 1 and V1.orcamento= 0 ) ' +
          '      and V1.FATURADO in (1) ' +
          '      and (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) and V1.NUMDOC_GRUPO IS NULL '+
-         '      AND V1.NFEENTRADASAIDA = ''0'' AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') AND (V1.NFE_DEV is null or V1.STATUS_NFE_DEV = 135) ' +
+         '      AND V1.NFEENTRADASAIDA = ''0'' AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) AND (V1.NFE_DEV is null or V1.STATUS_NFE_DEV = 135) ' +
          '      AND V1.COD_SUPERVISOR = R.ID ' +
          '      AND v1.cod_fop not in (7, 9, 22, 23, 24, 26, 32, 46, 47, 51, 52, 53, 54, 57, 58)  ' +
          ifthen(rbApenasConsumidorFinal.Checked, '      and coalesce(v1.consumidor_final, ''N'') = ''S'' ',
@@ -9960,7 +10321,7 @@ begin
          '       V1.DTA_EMISSAO between ' + quotedstr(formatdatetime('dd/mm/yyyy', Prdta_inicial.date)) + ' and ' + quotedstr(formatdatetime('dd/mm/yyyy', Prdta_final.date)) +
          '      and (V1.consignacao <> 1 and V1.orcamento= 0 ) ' +
          '      and (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) and V1.NUMDOC_GRUPO IS NULL '+
-         '      AND V1.NFEENTRADASAIDA = ''0'' AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') AND (V1.NFE_DEV is null or V1.STATUS_NFE_DEV = 135) ' +
+         '      AND V1.NFEENTRADASAIDA = ''0'' AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) AND (V1.NFE_DEV is null or V1.STATUS_NFE_DEV = 135) ' +
          '      AND V1.COD_SUPERVISOR = R.ID ' +
          '      AND v1.cod_fop not in (7, 9, 22, 23, 24, 26, 32, 46, 47, 51, 52, 53, 54, 57, 58)  ' +
          ifthen(rbApenasConsumidorFinal.Checked, '      and coalesce(v1.consumidor_final, ''N'') = ''S'' ',
@@ -9976,7 +10337,7 @@ begin
          '       V1.DTA_EMISSAO between ' + quotedstr(formatdatetime('dd/mm/yyyy', Prdta_inicial.date)) + ' and ' + quotedstr(formatdatetime('dd/mm/yyyy', Prdta_final.date)) +
          '      and (V1.consignacao <> 1 and V1.orcamento= 0 ) ' +
          '      and (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) and V1.NUMDOC_GRUPO IS NULL '+
-         '      AND V1.NFEENTRADASAIDA = ''0'' AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') AND (V1.NFE_DEV is null or V1.STATUS_NFE_DEV = 135) ' +
+         '      AND V1.NFEENTRADASAIDA = ''0'' AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) AND (V1.NFE_DEV is null or V1.STATUS_NFE_DEV = 135) ' +
          '      AND V1.COD_SUPERVISOR = R.ID ' +
          '      AND v1.cod_fop not in (7, 9, 22, 23, 24, 26, 32, 46, 47, 51, 52, 53, 54, 57, 58)  ' +
          ifthen(rbApenasConsumidorFinal.Checked, '      and coalesce(v1.consumidor_final, ''N'') = ''S'' ',
@@ -9996,7 +10357,7 @@ begin
          '      and (V1.consignacao <> 1 and V1.orcamento= 0 ) ' +
          '      and  (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) ' +
          '      and V1.NUMDOC_GRUPO IS NULL AND (V1.NFE_DEV is null or V1.STATUS_NFE_DEV = 135) ' +
-         '      and V1.NFEENTRADASAIDA = ''0'' AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') '+
+         '      and V1.NFEENTRADASAIDA = ''0'' AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) '+
          '      AND V1.COD_SUPERVISOR = R.ID ' +
          ifthen(rbApenasConsumidorFinal.Checked, '      and coalesce(v1.consumidor_final, ''N'') = ''S'' ',
          ifthen(rbNaoConsumidorFinal.Checked, '      and coalesce(v1.consumidor_final, ''N'') = ''N'' ', ''))+
@@ -10014,16 +10375,38 @@ begin
 
   if dm.q_ranking_vendas.RecordCount = 0 then
   begin
-    dao.msg('Não foi encontrado registro neste periodo!');
+    if not AGerarJpgDiario then
+      dao.msg('Não foi encontrado registro neste periodo!');
     exit;
   end;
 
   if not (fR_RELATORIO.LoadFromFile(path + 'Relatorios\ranking_vendas.fr3')) then
   begin
-    dao.msg('Relatório não encontrado nas configurações do Sistema' + #13 + 'Avise o Suporte');
+    if not AGerarJpgDiario then
+      dao.msg('Relatório não encontrado nas configurações do Sistema' + #13 + 'Avise o Suporte');
     exit;
   end;
-  fR_RELATORIO.ShowReport;
+
+  if AGerarJpgDiario then
+  begin
+    PastaDia := IncludeTrailingPathDelimiter(path) + 'Relatorios\RankingVendas\' +
+      FormatDateTime('yyyy_mm_dd', Date);
+    ForceDirectories(PastaDia);
+    fR_RELATORIO.PrepareReport(True);
+
+    JpegExport := TfrxJPEGExport.Create(nil);
+    try
+      JpegExport.ShowDialog := False;
+      JpegExport.SeparateFiles := False;
+      JpegExport.JPEGQuality := 95;
+      JpegExport.FileName := IncludeTrailingPathDelimiter(PastaDia) + 'ranking_vendas.jpg';
+      fR_RELATORIO.Export(JpegExport);
+    finally
+      JpegExport.Free;
+    end;
+  end
+  else
+    fR_RELATORIO.ShowReport;
 
 end;
 
@@ -10057,9 +10440,9 @@ begin
          'from metas_representante mr '+
          'inner join representante r on r.id = mr.id_representante '+
          'where mes = '''+cbMes.Text+'''' +
-         ifthen(rbApenasConsumidorFinal.Checked, '  and coalesce(r.consumidor_final, ''N'') = ''S'' ',
-         ifthen(rbNaoConsumidorFinal.Checked, ' and coalesce(r.consumidor_final, ''N'') = ''N'' ', ''))+
-         ' order by 5 desc ';
+         ifthen(rbApenasConsumidorFinal.Checked, '  and coalesce(r.somente_consumidor_final, ''N'') = ''S'' ',
+         ifthen(rbNaoConsumidorFinal.Checked, ' and coalesce(r.somente_consumidor_final, ''N'') = ''N'' ', ''))+
+         ' order by 5 desc, 2 ';
 
   with dm.q_ranking_vendas_completo do
   begin
@@ -10100,7 +10483,7 @@ begin
   ' from vendas1 v1 ' + ' left join cliente c on c.cod_cliente=v1.cod_cliente ' +
   ' left join CIDADES cd on cd.COD_CIDADE = c.COD_CIDADE ' + ' INNER join REPRESENTANTE r on r.ID = v1.COD_REPRESENTANTE ' + ' left join BANCO b on b.ID = CAST(r.NR_BANCO AS INTEGER) ' +
   ' where ' +
-  '   (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) and V1.NFEENTRADASAIDA = ''0'' AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') '+
+  '   (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) and V1.NFEENTRADASAIDA = ''0'' AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) '+
   '   AND (v1.NFE_DEV is null OR v1.STATUS_NFE_DEV = 135) and ' +
   '   v1.consignacao <> 1 and  ' +
   '   v1.cod_fop not in (7, 9, 22, 23, 24, 26, 32, 46, 47, 51, 52, 53, 54, 57, 58)  ';
@@ -10202,7 +10585,17 @@ begin
     'c.nom_cliente, r.id as cod_representante, r.NOM_REPRESENTANTe, S.id as cod_supervisor, S.NOM_REPRESENTANTE as nom_supervisor, b.NOM_BANCO, ' +
     'S.NR_BANCO,S.NR_AGENCIA,S.NR_CONTA_CORRENTE, S.TITULAR_CONTA, S.email, S.fone,S.celular, ' +
     'S.PERC_COMISSAO_FIXA as comissao, ''Sim'' as supervisao, faturado, (tot_liquido*r.PERC_COMISSAO_FIXA)/100 as vlr_comissao, ' +
-    'v1.desconto, case when v1.cod_representante = 6 then coalesce((select e.perc_comissao_func from escala_comissao_televendas e where e.desconto >= v1.desconto order by e.desconto limit 1), 0) else 0 end as perc_comissao ' +
+    'v1.desconto, ' +
+    'case '+
+    '  when v1.cod_representante in (6, 196) then coalesce(( '+
+    '                                                select e.perc_comissao_func '+
+    '                                                from escala_comissao_televendas e '+
+    '                                                where e.desconto >= v1.desconto '+
+    '                                                order by e.desconto '+
+    '                                                limit 1  ), '+
+    '  0) '+
+    '  else 0 '+
+    'end as perc_comissao '+
     'from vendas1 v1 ' +
     'inner join cliente c on c.cod_cliente=v1.cod_cliente ' +
     'inner join cidades cd on cd.cod_cidade = c.cod_cidade ' +
@@ -10211,7 +10604,7 @@ begin
     'left join BANCO b on b.ID = CAST(r.NR_BANCO AS INTEGER) ' +
     'where ' +
     '  (v1.COD_FISCAL not in (''6152'', ''6409'') OR V1.COD_FISCAL IS NULL) and v1.NFE_DEV is null and ' +
-    '  V1.NFEENTRADASAIDA = ''0'' AND V1.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') AND (v1.NFE_DEV is null OR v1.STATUS_NFE_DEV = 135) and ' +
+    '  V1.NFEENTRADASAIDA = ''0'' AND V1.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) AND (v1.NFE_DEV is null OR v1.STATUS_NFE_DEV = 135) and ' +
     '  v1.consignacao<> ''1'' and ' +
     '  v1.orcamento=''0'' and ' +
     '  v1.cod_fop not in (7,9)';
@@ -10267,6 +10660,7 @@ begin
     close;
     sql.clear;
     sql.add(cmd);
+    sql.savetofile('teste.sql');
     open;
   end;
 
@@ -10961,7 +11355,8 @@ begin
     cmd := cmd + fmfun.cmdAux('ms.mesocod', edMesoRegiao.Text);
 
   if PrUltimaCompra.date <> 0 then
-    cmd := cmd + ' and c.COD_CLIENTE in (select distinct v.cod_cliente from vendas1 v where v.COD_FISCAL not in (''6152'', ''6409'') and V.NFEENTRADASAIDA = ''0'' AND V.PROCESSO_ID NOT IN (SELECT PROCESSO_ID FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'') '+
+    cmd := cmd + ' and c.COD_CLIENTE in (select distinct v.cod_cliente from vendas1 v where v.COD_FISCAL not in (''6152'', ''6409'') and V.NFEENTRADASAIDA = ''0'' '+
+                 ' AND V.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) '+
                  ' AND v.nfe_dev is null and  v.faturado in (0, 1, 3) and v.DTADOC > ''' + formatdatetime('yyyy/mm/dd', PrUltimaCompra.date) + ''') ';
 
   if edCodRepresentante.Text <> '' then

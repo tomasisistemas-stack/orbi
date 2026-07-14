@@ -14,7 +14,9 @@ uses
   Vcl.DBCtrls, sDBDateEdit, sDBEdit, RxCurrEdit,
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Param,
   FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf, FireDAC.DApt.Intf,
-  FireDAC.Stan.Async, FireDAC.DApt, FireDAC.Comp.DataSet, FireDAC.Comp.Client;
+  FireDAC.Stan.Async, FireDAC.DApt, FireDAC.Comp.DataSet, FireDAC.Comp.Client,
+  System.JSON, ComObj, uCEFApplication, uCEFChromium, uCEFWindowParent, uCEFChromiumCore,
+  uCEFWinControl;
 
 type
   TFr_Cliente = class(TForm)
@@ -264,6 +266,9 @@ type
     Shape1: TShape;
     Shape2: TShape;
     tabNCM: TsTabSheet;
+    tbLocalizacao: TsTabSheet;
+    cefLocalizacao: TCEFWindowParent;
+    chrLocalizacao: TChromium;
     mmNCM: TRxMemoryData;
     dsNCM: TDataSource;
     dbNCM: Tdbgrid;
@@ -371,6 +376,9 @@ type
     procedure BuscaVisitas;
     procedure ChecaVisitasEnviadas;
     procedure BuscaNCMs;
+    function JsEscape(const S: string): string;
+    procedure CarregarMapaLocalizacao(const ALat, ALng, ATitulo, AEndereco: string);
+    procedure AtualizarTabLocalizacao;
     { Private declarations }
   public
     { Public declarations }
@@ -390,6 +398,11 @@ type
     procedure ChecarDadosIncompletos;
     function VerificaCNPJCadastrados(cnpj, cliente: string): Boolean;
     function VerificaCPFCadastrados(cpf, cliente: string): Boolean;
+    function EncodeUrlParam(const AValue: string): string;
+    function ExpandSiglas(const AEndereco: string): string;
+    function MontarEnderecoGeocode: string;
+    function GeocodeAddress(const Address: string; out Lat, Lng: string): Boolean;
+    procedure PreencherLatitudeLongitudeSeNecessario(const ACodCliente: string);
   end;
 
 var
@@ -401,7 +414,231 @@ implementation
 uses Un_dao, UnPri, Un_localizar, Un_opc_relatorios, Un_opc_etiqueta,
   UnFun, un_rl_etiqueta_empresa, Un_dm, pcnRetConsCad, MaskUtils;
 
+const
+  LocationIQKey = 'pk.d5be03405b5244d1f56bf8bda2b1e798';
+
 {$R *.dfm}
+
+function TFr_Cliente.EncodeUrlParam(const AValue: string): string;
+var
+  I: Integer;
+  B: Byte;
+  Bytes: TBytes;
+begin
+  Result := '';
+  Bytes := TEncoding.UTF8.GetBytes(AValue);
+  for I := 0 to Length(Bytes) - 1 do
+  begin
+    B := Bytes[I];
+    if Char(B) in ['A'..'Z', 'a'..'z', '0'..'9', '-', '_', '.', '~'] then
+      Result := Result + Char(B)
+    else if B = Ord(' ') then
+      Result := Result + '%20'
+    else
+      Result := Result + '%' + IntToHex(B, 2);
+  end;
+end;
+
+function TFr_Cliente.ExpandSiglas(const AEndereco: string): string;
+begin
+  Result := ' ' + Trim(AEndereco) + ' ';
+  Result := StringReplace(Result, ' R ', ' Rua ', [rfReplaceAll, rfIgnoreCase]);
+  Result := StringReplace(Result, ' R. ', ' Rua ', [rfReplaceAll, rfIgnoreCase]);
+  Result := StringReplace(Result, ' AV ', ' Avenida ', [rfReplaceAll, rfIgnoreCase]);
+  Result := StringReplace(Result, ' AV. ', ' Avenida ', [rfReplaceAll, rfIgnoreCase]);
+  Result := StringReplace(Result, ' ROD ', ' Rodovia ', [rfReplaceAll, rfIgnoreCase]);
+  Result := StringReplace(Result, ' ROD. ', ' Rodovia ', [rfReplaceAll, rfIgnoreCase]);
+  Result := StringReplace(Result, ' EST ', ' Estrada ', [rfReplaceAll, rfIgnoreCase]);
+  Result := StringReplace(Result, ' EST. ', ' Estrada ', [rfReplaceAll, rfIgnoreCase]);
+  Result := StringReplace(Result, ' TV ', ' Travessa ', [rfReplaceAll, rfIgnoreCase]);
+  Result := StringReplace(Result, ' TV. ', ' Travessa ', [rfReplaceAll, rfIgnoreCase]);
+  Result := Trim(Result);
+end;
+
+function TFr_Cliente.MontarEnderecoGeocode: string;
+begin
+  Result := Trim(PrEndereco.Text) + ',' + Trim(Prnr_endereco.Text) + ', ' +
+    Trim(CIDADE) + ',' + Trim(UF);
+  Result := ExpandSiglas(Result);
+end;
+
+function TFr_Cliente.GeocodeAddress(const Address: string; out Lat, Lng: string): Boolean;
+var
+  Http: OleVariant;
+  RespStr: string;
+  JsonValue: TJSONValue;
+  Arr: TJSONArray;
+  Obj: TJSONObject;
+  Url: string;
+begin
+  Result := False;
+  Lat := '';
+  Lng := '';
+  if Trim(Address) = '' then
+    Exit;
+  if (Trim(LocationIQKey) = '') or (LocationIQKey = 'Your_API_Access_Token') then
+    Exit;
+
+  Url := 'https://us1.locationiq.com/v1/search?key=' + LocationIQKey + '&q=' +
+    EncodeUrlParam(Address) + '&format=json&limit=1&countrycodes=br';
+
+  Http := CreateOleObject('MSXML2.ServerXMLHTTP.6.0');
+  Http.open('GET', Url, False);
+  Http.setRequestHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
+  Http.setRequestHeader('Accept', 'application/json,text/plain,*/*');
+  Http.setRequestHeader('Accept-Language', 'pt-BR,pt;q=0.9,en;q=0.8');
+  Http.send;
+
+  if Http.status <> 200 then
+    Exit;
+
+  RespStr := Http.responseText;
+  JsonValue := TJSONObject.ParseJSONValue(RespStr);
+  try
+    if (JsonValue <> nil) and (JsonValue is TJSONArray) then
+    begin
+      Arr := TJSONArray(JsonValue);
+      if Arr.Count > 0 then
+      begin
+        Obj := Arr.Items[0] as TJSONObject;
+        if Obj <> nil then
+        begin
+          Lat := Obj.GetValue<string>('lat');
+          Lng := Obj.GetValue<string>('lon');
+          Result := (Lat <> '') and (Lng <> '');
+        end;
+      end;
+    end;
+  finally
+    JsonValue.Free;
+  end;
+end;
+
+function TFr_Cliente.JsEscape(const S: string): string;
+begin
+  Result := StringReplace(S, '\', '\\', [rfReplaceAll]);
+  Result := StringReplace(Result, '"', '\"', [rfReplaceAll]);
+  Result := StringReplace(Result, #13, ' ', [rfReplaceAll]);
+  Result := StringReplace(Result, #10, ' ', [rfReplaceAll]);
+end;
+
+procedure TFr_Cliente.CarregarMapaLocalizacao(const ALat, ALng, ATitulo, AEndereco: string);
+var
+  SLHTML: TStringList;
+  HTMLFile, LatVal, LngVal: string;
+begin
+  LatVal := StringReplace(Trim(ALat), ',', '.', [rfReplaceAll]);
+  LngVal := StringReplace(Trim(ALng), ',', '.', [rfReplaceAll]);
+
+  if (LatVal = '') or (LngVal = '') then
+    Exit;
+
+  HTMLFile := IncludeTrailingPathDelimiter(GetEnvironmentVariable('TEMP')) +
+    'orbi_cliente_mapa_' + Trim(PrCod_Cliente.Text) + '.html';
+
+  SLHTML := TStringList.Create;
+  try
+    SLHTML.Add('<!doctype html>');
+    SLHTML.Add('<html lang="pt-BR">');
+    SLHTML.Add('<head>');
+    SLHTML.Add('  <meta charset="utf-8" />');
+    SLHTML.Add('  <meta name="viewport" content="width=device-width, initial-scale=1.0">');
+    SLHTML.Add('  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />');
+    SLHTML.Add('  <style>');
+    SLHTML.Add('    html, body { height:100%; margin:0; overflow:hidden; }');
+    SLHTML.Add('    #map { width:100%; height:100%; }');
+    SLHTML.Add('  </style>');
+    SLHTML.Add('  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>');
+    SLHTML.Add('</head>');
+    SLHTML.Add('<body>');
+    SLHTML.Add('  <div id="map"></div>');
+    SLHTML.Add('  <script>');
+    SLHTML.Add('    const lat = ' + LatVal + ';');
+    SLHTML.Add('    const lng = ' + LngVal + ';');
+    SLHTML.Add('    const map = L.map("map").setView([lat, lng], 16);');
+    SLHTML.Add('    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap contributors" }).addTo(map);');
+    SLHTML.Add('    L.marker([lat, lng]).addTo(map).bindPopup("' + JsEscape(ATitulo) + '<br>' + JsEscape(AEndereco) + '").openPopup();');
+    SLHTML.Add('    setTimeout(function(){ map.invalidateSize(true); }, 200);');
+    SLHTML.Add('  </script>');
+    SLHTML.Add('</body>');
+    SLHTML.Add('</html>');
+    SLHTML.SaveToFile(HTMLFile, TEncoding.UTF8);
+  finally
+    SLHTML.Free;
+  end;
+
+  if chrLocalizacao.Initialized then
+    chrLocalizacao.LoadURL('file:///' + StringReplace(HTMLFile, '\', '/', [rfReplaceAll]))
+  else
+  begin
+    chrLocalizacao.DefaultUrl := 'file:///' + StringReplace(HTMLFile, '\', '/', [rfReplaceAll]);
+    chrLocalizacao.CreateBrowser(cefLocalizacao, '');
+  end;
+end;
+
+procedure TFr_Cliente.AtualizarTabLocalizacao;
+var
+  Lat, Lng, Endereco: string;
+begin
+  if Pgcliente.ActivePage = tbLocalizacao then
+    Pgcliente.ActivePage := tab_dados;
+  tbLocalizacao.TabVisible := false;
+
+  if Trim(PrCod_Cliente.Text) = '' then
+    Exit;
+
+  if GlobalCEFApp = nil then
+    Exit;
+
+  try
+    dao.Geral1('select latitude, longitude from cliente where cod_cliente = ' + QuotedStr(PrCod_Cliente.Text));
+    if dao.q1.RecordCount <= 0 then
+      Exit;
+
+    Lat := Trim(dao.q1.FieldByName('latitude').AsString);
+    Lng := Trim(dao.q1.FieldByName('longitude').AsString);
+
+    if (Lat = '') or (Lng = '') then
+    begin
+      if Pgcliente.ActivePage = tbLocalizacao then
+        Pgcliente.ActivePage := tab_dados;
+      Exit;
+    end;
+
+    Endereco := Trim(PrEndereco.Text) + ', ' + Trim(Prnr_endereco.Text) + ' - ' + Trim(CIDADE) + '/' + Trim(UF);
+    tbLocalizacao.TabVisible := true;
+    CarregarMapaLocalizacao(Lat, Lng, PrNom_Cliente.Text, Endereco);
+  except
+    tbLocalizacao.TabVisible := false;
+    if Pgcliente.ActivePage = tbLocalizacao then
+      Pgcliente.ActivePage := tab_dados;
+  end;
+end;
+
+procedure TFr_Cliente.PreencherLatitudeLongitudeSeNecessario(const ACodCliente: string);
+var
+  Lat, Lng: string;
+begin
+  if Trim(ACodCliente) = '' then
+    Exit;
+
+  try
+    dao.Geral1('select latitude, longitude from cliente where cod_cliente = ' + QuotedStr(ACodCliente));
+    if dao.q1.RecordCount <= 0 then
+      Exit;
+
+    if (Trim(dao.q1.FieldByName('latitude').AsString) <> '') and
+       (Trim(dao.q1.FieldByName('longitude').AsString) <> '') then
+      Exit;
+
+    if GeocodeAddress(MontarEnderecoGeocode, Lat, Lng) then
+      dao.Execsql('update cliente set latitude = ' + QuotedStr(Lat) + ', longitude = ' + QuotedStr(Lng) +
+        ' where cod_cliente = ' + QuotedStr(ACodCliente) +
+        ' and (latitude is null or longitude is null)');
+  except
+    // Nao impede a gravacao do cliente se a consulta de geolocalizacao falhar.
+  end;
+end;
 
 procedure TFr_Cliente.BtAltClick(Sender: TObject);
 begin
@@ -584,6 +821,8 @@ begin
         exit;}
 
       ativa_cliente(id);
+      PreencherLatitudeLongitudeSeNecessario(PrCod_Cliente.Text);
+      AtualizarTabLocalizacao;
     end
     else
     begin
@@ -595,6 +834,8 @@ begin
 
         // dao.Execsql2('update cliente set limite='+QuotedStr(FMFUN.prepara_valor(PrLimite.Text)) +' , desconto_maximo = '+QuotedStr(FMFUN.prepara_valor(Prdesconto_maximo.Text)));
         dao.cn.Commit;
+        PreencherLatitudeLongitudeSeNecessario(PrCod_Cliente.Text);
+        AtualizarTabLocalizacao;
       except
         dao.cn.rollback;
       end;
@@ -919,6 +1160,7 @@ begin
       Prid_representante.ReadOnly := true;
     end;
     mmLimiteBonificacao.EmptyTable;
+    tbLocalizacao.TabVisible := false;
   except
 
   end;
@@ -1019,6 +1261,7 @@ begin
   Prid_representanteExit(self);
   PrCod_CidadeExit(self);
   CarregarMapa;
+  AtualizarTabLocalizacao;
 
   Screen.Cursor := crDefault;
   BuscaBonificacao;
@@ -1630,9 +1873,11 @@ end;
 
 procedure TFr_Cliente.FormShow(Sender: TObject);
 begin
+
   readonly_true('Pr');
   limpa_campos('Pr');
   habilitaCamposAreaAtuacao(area_atuacao);
+  tbLocalizacao.TabVisible := false;
 
   if (frpri.TipUsu = '0') or (frpri.TipUsu = '1') then
     BtExc.Visible := false;

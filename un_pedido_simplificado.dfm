@@ -397,8 +397,8 @@ object Fr_pedido_simplificado: TFr_pedido_simplificado
       Font.Style = []
     end
     object MeCodProduto: TsComboEdit
-      Left = 17
-      Top = 29
+      Left = 19
+      Top = 28
       Width = 80
       Height = 21
       AutoSize = False
@@ -829,7 +829,9 @@ object Fr_pedido_simplificado: TFr_pedido_simplificado
     Connection = dao.CN
     SQL.Strings = (
       'select v2.cod_produto, p.nom_produto, '
-      '       coalesce(v2.preco_base, 0) as preco_base, '
+      
+        '       coalesce(v2.preco_bruto, v2.preco_base, 0) as preco_base,' +
+        ' '
       '       coalesce(v2.preco, 0) as preco, '
       '       coalesce(v2.qtd, 0) as qtd, '
       '       coalesce(v2.desconto, 0) as desconto, '
@@ -861,7 +863,7 @@ object Fr_pedido_simplificado: TFr_pedido_simplificado
     object qItenspreco_base: TFMTBCDField
       AutoGenerateValue = arDefault
       FieldName = 'preco_base'
-      Origin = 'preco_base'
+      Origin = 'preco_bruto'
       ReadOnly = True
       currency = True
       Precision = 64
