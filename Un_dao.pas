@@ -235,7 +235,7 @@ implementation
 
 uses unfun, Wininet, Un_splash{$IFDEF ORBI}, un_log, UnPri{$ENDIF}
 {$IFDEF ORBICOLLETOR}, un_principal{$ENDIF}
-{$IFDEF ORBIPALM}, un_menuprincipal{$ENDIF};
+{$IFDEF ORBIPALM}, un_menuprincipal{$ENDIF}, Un_Error_Logger;
 
 {$R *.dfm}
 
@@ -824,6 +824,7 @@ begin
       if (copy(e.message, 1, 24) <> 'ISC ERROR CODE:335544721') and
         (copy(e.message, 1, 24) <> 'ISC ERROR CODE:335544726') then
       begin
+        RegistrarErroAplicacao(E, 'Tdao.Execsql', cmd, '');
         //        msg('Houve um erro ao Executar o ExecSql!' + #13 + e.message);
         Exception.Create(E.Message);
         {envia_email_suporte(e.Message + #13 + cmd + #13 + 'Data: ' + DtaSerStr +
@@ -1770,7 +1771,20 @@ begin
 end;
 
 procedure Tdao.msg(texto: string);
+var
+  TextoUpper: string;
 begin
+  TextoUpper := AnsiUpperCase(texto);
+  if (Pos('ERRO', TextoUpper) > 0) or
+     (Pos('EXCEPTION', TextoUpper) > 0) or
+     (Pos('FIREDAC', TextoUpper) > 0) or
+     (Pos('HTTP ', TextoUpper) > 0) or
+     (Pos('FALHA', TextoUpper) > 0) or
+     (Pos('NOT A VALID', TextoUpper) > 0) or
+     (Pos('INVALID', TextoUpper) > 0) or
+     (Pos('INVÁLID', TextoUpper) > 0) then
+    RegistrarMensagemErroAplicacao(texto, 'Tdao.msg', '', '');
+
   messagedlg(texto, mtInformation, [mbOK], 0);
 end;
 
@@ -2048,9 +2062,3 @@ begin
 end;
 
 end.
-
-
-
-
-
-

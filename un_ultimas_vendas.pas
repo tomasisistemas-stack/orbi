@@ -365,6 +365,7 @@ begin
   begin
     showmessage('É necessario informar o Cliente!');
     PrCod_Cliente.SetFocus;
+    Exit;
   end;
 
   if trim(Prcod_produto.Text) <> '' then

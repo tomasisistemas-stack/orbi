@@ -651,7 +651,7 @@ implementation
 
 uses Un_dao, UnPri, Un_localizar, UnFun, Un_ncm,
   Un_amplia_foto, Math, un_aviso_representantes, Un_dm,
-  un_escolhe_impressora_termica;
+  un_escolhe_impressora_termica, Un_Error_Logger;
 
 {$R *.dfm}
 
@@ -1483,7 +1483,7 @@ begin
       'a.MARGEM_VALOR_AGREGADO_ST, a.COD_FISCAL_PRODUTO, a.NCM, a.ESTOQUE_MAXIMO, ' + 'a.MTS_ROLO, a.ORD_PAUTA, a.CONT_ESTOQUE_AGO_2010, a.PROMOCAO, a.PERC_MARGEM_MINIMA, ' +
       'a.SUBCATEGORIA, a.PRECO_PROMOCAO, a.QTD_MULTIPLA, a.SINCRONIZAR_PALM, ' + 'a.PROMOCAO_PACOTE, a.ID_PLANO_CONTAS, a.GRADE_COMISSAO, a.CUSTO_TOTAL, a.BONIFICACAO_APENAS, ' +
       'a.COMISSAO_INICIAL_INTERNO, a.COMISSAO_INICIAL_OUTROS, a.ESCALA_COMISSAO_INTERNO, a.ESCALA_COMISSAO_OUTROS, a.ESCALA_DESCONTO, a.CODIGO_BARRA, ' +
-      'g.nom_grupo, f.razao_social, ep.nom_empresa, ce.descricao, ma.nom_marca, a.NAO_VALIDAR_MARGEM, a.COMISSAO_FIXA, ' +
+      'g.nom_grupo, f.razao_social, ep.nom_empresa, ce.descricao, ma.nom_marca, a.NAO_VALIDAR_MARGEM, a.COMISSAO_FIXA, a.m3, ' +
       'cl.descricao as nom_colecao, a.MOSTRAR_EMB_ETIQUETA, a.LOC_PADRAO, a.LOC_A_FILA, a.LOC_A_LADO, A.LOC_A_ANDAR, A.LOC_A_BOX, A.LOC_B_ANDAR, A.LOC_B_BOX from produto a ' +
       'left join grupo g on g.cod_grupo=a.cod_grupo ' + 'left join fornecedor f on f.cod_fornecedor=a.fornecedor_principal ' + 'left join empresa ep on ep.cod_empresa=a.cod_empresa ' +
       'left join categoria_estoque ce on ce.id=a.cod_estoque ' + 'left join marcas ma on ma.id=a.id_marca ' + 'left join colecao cl on cl.id=a.cod_colecao ' + 'where a.cod_produto=' + QuotedStr(id));
@@ -1567,7 +1567,10 @@ var
   i: Integer;
   campo, campo1: string;
 begin
-  Pc_produto.TabIndex := 0;
+  campo := '';
+  campo1 := '';
+  try
+    Pc_produto.TabIndex := 0;
   Screen.Cursor := crSQLWait;
   for i := 0 to ComponentCount - 1 do
   begin
@@ -1615,7 +1618,7 @@ begin
         campo := TsRadioGroup(Components[i]).Name;
         campo1 := campo;
         campo1 := Copy(campo, 3, 50);
-        TsRadioGroup(FindComponent(campo)).ItemIndex := q_produtos.fieldbyname(campo1).AsInteger;
+        TsRadioGroup(FindComponent(campo)).ItemIndex := StrToIntDef(Trim(q_produtos.fieldbyname(campo1).AsString), -1);
       end
       else if Components[i] is tscheckbox then
       begin
@@ -1685,6 +1688,15 @@ begin
   Screen.Cursor := crDefault;
   dao.q_nav.open;
   dao.q_nav.Locate('cod_produto', q_produtos.fieldbyname('cod_produto').AsInteger, [loCaseInsensitive]);
+  except
+    on E: Exception do
+    begin
+      Screen.Cursor := crDefault;
+      RegistrarErroAplicacao(E, 'TFr_produtos.mostra_campos', '',
+        'produto=' + Prcod_produto.Text + '; componente=' + campo + '; campo=' + campo1);
+      Application.ShowException(E);
+    end;
+  end;
 end;
 
 procedure TFr_produtos.BuscaHist(produto: string; dataini, datafim: TDate);

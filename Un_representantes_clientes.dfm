@@ -1525,7 +1525,7 @@ object Fr_representantes_clientes: TFr_representantes_clientes
     Top = 360
     object mmClientesCLIENTE: TStringField
       FieldName = 'CLIENTE'
-      Size = 100
+      Size = 250
     end
     object mmClientesCheck: TBooleanField
       DisplayLabel = ' '
@@ -1533,18 +1533,18 @@ object Fr_representantes_clientes: TFr_representantes_clientes
     end
     object mmClientesREPRESENTANTE: TStringField
       FieldName = 'REPRESENTANTE'
-      Size = 100
+      Size = 250
     end
     object mmClientescod_cliente: TIntegerField
       FieldName = 'cod_cliente'
     end
     object mmClientescidade: TStringField
       FieldName = 'cidade'
-      Size = 100
+      Size = 250
     end
     object mmClientesbairro: TStringField
       FieldName = 'bairro'
-      Size = 100
+      Size = 250
     end
   end
   object dsClientes: TDataSource

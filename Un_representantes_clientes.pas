@@ -1155,6 +1155,17 @@ procedure TFr_representantes_clientes.CarregarClientes;
 var
   cmd: string;
   clientes_marcados: TStringList;
+
+  procedure SetStringSeguro(AField: TStringField; const AValue: string);
+  var
+    Tam: Integer;
+  begin
+    Tam := AField.Size;
+    if Tam <= 0 then
+      Tam := 255;
+    AField.AsString := Copy(AValue, 1, Tam);
+  end;
+
 begin
   cmd := 'SELECT distinct c.cod_cliente, c.cod_cliente||''-''||c.NOM_CLIENTE as CLIENTE, R.ID||''-''||r.NOM_REPRESENTANTE as representante, cd.nom_cidade||''-''||cd.uf as cidade, c.bairro ' +
     'FROM cliente c ' +
@@ -1217,11 +1228,11 @@ begin
     while not dao.Q1.Eof do
     begin
       mmClientes.Append;
-      mmClientesCLIENTE.AsString := dao.Q1.fieldbyname('CLIENTE').AsString;
-      mmClientesREPRESENTANTE.AsString := dao.Q1.fieldbyname('REPRESENTANTE').AsString;
+      SetStringSeguro(mmClientesCLIENTE, dao.Q1.fieldbyname('CLIENTE').AsString);
+      SetStringSeguro(mmClientesREPRESENTANTE, dao.Q1.fieldbyname('REPRESENTANTE').AsString);
       mmClientescod_cliente.AsString := dao.Q1.fieldbyname('COD_CLIENTE').AsString;
-      mmClientescidade.AsString := dao.Q1.fieldbyname('cidade').AsString;
-      mmClientesbairro.AsString := dao.Q1.fieldbyname('bairro').AsString;
+      SetStringSeguro(mmClientescidade, dao.Q1.fieldbyname('cidade').AsString);
+      SetStringSeguro(mmClientesbairro, dao.Q1.fieldbyname('bairro').AsString);
       mmClientesCheck.Value := clientes_marcados.IndexOf(mmClientescod_cliente.AsString) >= 0;
 
       mmClientes.post;

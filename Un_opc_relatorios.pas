@@ -246,7 +246,8 @@ type
     CodigoProduto: TsRadioButton;
     gbMesAno: TsGroupBox;
     cbMes: TComboBox;
-    sLabel15: TsLabel;
+    gbMovimentacao: TsGroupBox;
+    ckSomenteMovimetacao: TCheckBox;
     procedure bt_imprimirClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -1421,7 +1422,7 @@ begin
       prcod_supervisorExit(Self);
       supervisor.Enabled := false;
     end;
-    if Tipo_usuario = '0' then
+    if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
       edCodRepresentante.Text := Representante_usuario;
@@ -1657,7 +1658,7 @@ begin
       prcod_supervisorExit(Self);
       supervisor.Enabled := false;
     end;
-    if Tipo_usuario = '0' then
+    if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
       edCodRepresentante.Text := Representante_usuario;
@@ -1673,8 +1674,9 @@ begin
       gbConsumidorFinal.Visible:= False;
       rbNaoConsumidorFinal.Checked := True;
     end;
+    gbMovimentacao.Visible:= true;
 
-    Fr_opc_relatorios.Height := 700;
+    Fr_opc_relatorios.Height := 750;
   end
   else if tipo_relatorio = 'contas_receber' then
   begin
@@ -1839,7 +1841,7 @@ begin
       prcod_supervisorExit(Self);
       supervisor.Enabled := false;
     end;
-    if Tipo_usuario = '0' then
+    if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
       edCodRepresentante.Text := Representante_usuario;
@@ -1972,7 +1974,7 @@ begin
       prcod_supervisorExit(Self);
       supervisor.Enabled := false;
     end;
-    if Tipo_usuario = '0' then
+    if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
       edCodRepresentante.Text := Representante_usuario;
@@ -2046,7 +2048,7 @@ begin
     // loja.visible:=true;
     vendedor.Visible := true;
     supervisor.Visible := true;
-    if Tipo_usuario = '0' then
+    if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
       edCodRepresentante.Text := Representante_usuario;
@@ -2076,7 +2078,7 @@ begin
   else if tipo_relatorio = 'metas_mensais' then
   begin
     vendedor.Visible := true;
-    if Tipo_usuario = '0' then
+    if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
       edCodRepresentante.Text := Representante_usuario;
@@ -2093,7 +2095,7 @@ begin
     supervisor.Visible := true;
     cliente.Visible := true;
     pn_pedido.Visible := true;
-    if Tipo_usuario = '0' then
+    if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
       edCodRepresentante.Text := Representante_usuario;
@@ -2137,7 +2139,7 @@ begin
     gbContasTipo.Visible := false;
     gbTipoProduto.Visible := false;
     p2.Visible := false;
-    if Tipo_usuario = '0' then
+    if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
       edCodRepresentante.Text := Representante_usuario;
@@ -2169,7 +2171,7 @@ begin
     supervisor.Visible := true;
     cliente.Visible := true;
     pn_pedido.Visible := true;
-    if Tipo_usuario = '0' then
+    if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
       edCodRepresentante.Text := Representante_usuario;
@@ -2212,7 +2214,7 @@ begin
     supervisor.Visible := true;
     cliente.Visible := true;
     pn_pedido.Visible := true;
-    if Tipo_usuario = '0' then
+    if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
       edCodRepresentante.Text := Representante_usuario;
@@ -2254,7 +2256,7 @@ begin
     supervisor.Visible := true;
     cliente.Visible := true;
     pn_pedido.Visible := true;
-    if Tipo_usuario = '0' then
+    if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
       edCodRepresentante.Text := Representante_usuario;
@@ -2290,7 +2292,7 @@ begin
     sbLimpaRep.Visible := false;
 
     supervisor.Visible := true;
-    if Tipo_usuario = '0' then
+    if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
       edCodRepresentante.Text := Representante_usuario;
@@ -2341,7 +2343,7 @@ begin
     sbLimpaRep.Visible := false;
 
     supervisor.Visible := true;
-    if Tipo_usuario = '0' then
+    if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
       edCodRepresentante.Text := Representante_usuario;
@@ -2453,7 +2455,7 @@ begin
     supervisor.Visible := true;
     cliente.Visible := true;
     pn_pedido.Visible := true;
-    if Tipo_usuario = '0' then
+    if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
       edCodRepresentante.Text := Representante_usuario;
@@ -2492,7 +2494,7 @@ begin
     cliente.Visible := true;
     pn_pedido.Visible := true;
     pn_tablet.Visible := true;
-    if Tipo_usuario = '0' then
+    if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
       edCodRepresentante.Text := Representante_usuario;
@@ -2529,7 +2531,7 @@ begin
     supervisor.Visible := true;
     cliente.Visible := true;
     pn_pedido.Visible := true;
-    if Tipo_usuario = '0' then
+    if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
       edCodRepresentante.Text := Representante_usuario;
@@ -2566,7 +2568,7 @@ begin
     supervisor.Visible := true;
     pn_pedido.Visible := true;
     cliente.Visible := true;
-    if Tipo_usuario = '0' then
+    if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
       edCodRepresentante.Text := Representante_usuario;
@@ -2613,7 +2615,7 @@ begin
       prcod_supervisorExit(Self);
       supervisor.Enabled := false;
     end;
-    if Tipo_usuario = '0' then
+    if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
       edCodRepresentante.Text := Representante_usuario;
@@ -2882,7 +2884,7 @@ begin
       rbNaoConsumidorFinal.Checked := True;
     end;
 
-    if Tipo_usuario = '0' then
+    if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
       edCodRepresentante.Text := Representante_usuario;
@@ -9061,9 +9063,9 @@ begin
   if rbApenasConsumidorFinal.Checked then
     cmd1 := cmd1 + 'and coalesce(v1.consumidor_final, ''N'') = ''S'' ';
 
-
   // === FINALIZA QUERY ===
-  cmd := cmd + cmd_vendas + cmd1 + ') v2 on v2.cod_produto = p.cod_produto where 1 = 1 ' + cmd_produto +
+  cmd := cmd + cmd_vendas + cmd1 + ') v2 on v2.cod_produto = p.cod_produto where 1 = 1 '+
+     ifthen(ckSomenteMovimetacao.Checked, 'and v2.qtd > 0 ', '') + cmd_produto +
     ' group by ' +
     '  g.cod_grupo, ' +
     '  g.nom_grupo, ' +
@@ -10070,8 +10072,8 @@ end;
 
 procedure TFr_opc_relatorios.GerarComissaoDescontoDiario;
 const
-  REPRESENTANTES: array[0..6] of string =
-    ('1191', '836', '1258', '1228', '810', '1003', '10');
+  REPRESENTANTES: array[0..11] of string =
+    ('810', '1191', '196', '589', '1258', '836', '1228', '10', '1003', '948', '1289', '1264');
 var
   I, J: Integer;
   CodRepresentante, NomeRepresentante, Situacao, PastaDia, ArquivoJpg: string;
@@ -12523,4 +12525,5 @@ begin
 end;
 
 end.
+
 

@@ -3,7 +3,7 @@ object Fr_forma_pagamento: TFr_forma_pagamento
   Top = 219
   BorderIcons = [biSystemMenu]
   Caption = 'Forma de Pagamento'
-  ClientHeight = 275
+  ClientHeight = 430
   ClientWidth = 498
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -20,7 +20,7 @@ object Fr_forma_pagamento: TFr_forma_pagamento
   TextHeight = 13
   object Panel1: TsPanel
     Left = 0
-    Top = 236
+    Top = 391
     Width = 498
     Height = 39
     Align = alBottom
@@ -413,7 +413,7 @@ object Fr_forma_pagamento: TFr_forma_pagamento
     Left = 0
     Top = 0
     Width = 498
-    Height = 236
+    Height = 391
     Align = alClient
     BevelInner = bvLowered
     TabOrder = 1
@@ -422,7 +422,7 @@ object Fr_forma_pagamento: TFr_forma_pagamento
       Left = 2
       Top = 2
       Width = 494
-      Height = 232
+      Height = 387
       Align = alClient
       TabOrder = 0
       SkinData.SkinSection = 'GROUPBOX'
@@ -716,6 +716,89 @@ object Fr_forma_pagamento: TFr_forma_pagamento
         GlyphMode.Blend = 0
         GlyphMode.Grayed = False
       end
+      object GroupBox2: TsGroupBox
+        Left = 4
+        Top = 220
+        Width = 485
+        Height = 160
+        Caption = 'Prazos relacionados'
+        TabOrder = 9
+        SkinData.SkinSection = 'GROUPBOX'
+        object LbPrazoRelacionado: TsLabel
+          Left = 82
+          Top = 23
+          Width = 9
+          Height = 13
+          Caption = '...'
+          ParentFont = False
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          Font.Style = []
+        end
+        object EdPrazoRelacionado: TComboEdit
+          Left = 8
+          Top = 18
+          Width = 66
+          Height = 21
+          NumGlyphs = 1
+          TabOrder = 0
+          Text = ''
+          OnButtonClick = EdPrazoRelacionadoButtonClick
+          OnExit = EdPrazoRelacionadoExit
+        end
+        object dgPrazos: TDBGrid
+          Left = 8
+          Top = 48
+          Width = 365
+          Height = 104
+          DataSource = dsPrazos
+          Options = [dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgRowSelect, dgConfirmDelete, dgCancelOnExit]
+          ReadOnly = True
+          TabOrder = 1
+          TitleFont.Charset = DEFAULT_CHARSET
+          TitleFont.Color = clWindowText
+          TitleFont.Height = -11
+          TitleFont.Name = 'MS Sans Serif'
+          TitleFont.Style = []
+          Columns = <
+            item
+              Expanded = False
+              FieldName = 'id_prazo'
+              Title.Caption = 'C'#243'digo'
+              Width = 55
+              Visible = True
+            end
+            item
+              Expanded = False
+              FieldName = 'prazo'
+              Title.Caption = 'Prazo'
+              Width = 272
+              Visible = True
+            end>
+        end
+        object BtAddPrazo: TsBitBtn
+          Left = 380
+          Top = 18
+          Width = 95
+          Height = 28
+          Caption = 'Adicionar'
+          TabOrder = 2
+          OnClick = BtAddPrazoClick
+          SkinData.SkinSection = 'BUTTON'
+        end
+        object BtRemPrazo: TsBitBtn
+          Left = 380
+          Top = 50
+          Width = 95
+          Height = 28
+          Caption = 'Remover'
+          TabOrder = 3
+          OnClick = BtRemPrazoClick
+          SkinData.SkinSection = 'BUTTON'
+        end
+      end
       object PrNao_Gerar_CR: TsCheckBox
         Left = 322
         Top = 104
@@ -739,6 +822,16 @@ object Fr_forma_pagamento: TFr_forma_pagamento
   object q_fop: TFDQuery
     Connection = dao.CN
     Left = 456
+    Top = 16
+  end
+  object dsPrazos: TDataSource
+    DataSet = q_prazos
+    Left = 416
+    Top = 16
+  end
+  object q_prazos: TFDQuery
+    Connection = dao.CN
+    Left = 376
     Top = 16
   end
 end

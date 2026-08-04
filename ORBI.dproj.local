@@ -278,5 +278,6 @@
     <File Path="Un_speedio_api.pas"/>
     <File Path="Un_BB_Cobrancas.pas"/>
     <File Path="Un_BB_Cobrancas_Api.pas"/>
+    <File Path="Un_Error_Logger.pas"/>
   </ProjectSortOrder>
 </BorlandProject>

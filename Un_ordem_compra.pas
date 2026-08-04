@@ -314,40 +314,43 @@ begin
 
     while not dao.Q1.eof do
     begin
-      if dao.Q1.fieldbyname('QTD_ENTRADA').AsCurrency = 0 then
-      begin
-        mmLista.Append;
-        mmListaIDPRODUTO.AsString := dao.Q1.fieldbyname('COD_PRODUTO').AsString;
-        mmListaNOME_PRODUTO.AsString := dao.Q1.fieldbyname('NOM_PRODUTO').AsString;
-        mmListaCUSTO.Value := dao.Q1.fieldbyname('CUSTO_TOTAL').AsCurrency;
-        mmListaQTD_ENTRADA.Value := dao.Q1.fieldbyname('QTD_ENTRADA').AsCurrency;
-        mmListaSUB_TOTAL.Value := dao.Q1.fieldbyname('SUB_TOTAL').AsCurrency;
-        mmListaQTD_EMBALAGEM.Value := dao.Q1.fieldbyname('QTD_EMBALAGEM').AsCurrency;
-        mmListaUNIDADE.AsString := dao.Q1.fieldbyname('UNIDADE').AsString;
-        mmListaCOD_PRODUTO_FORNECEDOR.AsString := dao.Q1.fieldbyname('COD_PRODUTO_FORNECEDOR').AsString;
 
-        if Prcod_fornecedor.Text <> '' then
-          sql_fornecedor := ' and e1.cod_fornecedor = ' + Prcod_fornecedor.Text
+        if dao.Q1.fieldbyname('QTD_ENTRADA').AsCurrency = 0 then
+        begin
+          mmLista.Append;
+          mmListaIDPRODUTO.AsString := dao.Q1.fieldbyname('COD_PRODUTO').AsString;
+          mmListaNOME_PRODUTO.AsString := dao.Q1.fieldbyname('NOM_PRODUTO').AsString;
+          mmListaCUSTO.Value := dao.Q1.fieldbyname('CUSTO_TOTAL').AsCurrency;
+          mmListaQTD_ENTRADA.Value := dao.Q1.fieldbyname('QTD_ENTRADA').AsCurrency;
+          mmListaSUB_TOTAL.Value := dao.Q1.fieldbyname('SUB_TOTAL').AsCurrency;
+          mmListaQTD_EMBALAGEM.Value := dao.Q1.fieldbyname('QTD_EMBALAGEM').AsCurrency;
+          mmListaUNIDADE.AsString := dao.Q1.fieldbyname('UNIDADE').AsString;
+          mmListaCOD_PRODUTO_FORNECEDOR.AsString := dao.Q1.fieldbyname('COD_PRODUTO_FORNECEDOR').AsString;
+
+          if Prcod_fornecedor.Text <> '' then
+            sql_fornecedor := ' and e1.cod_fornecedor = ' + Prcod_fornecedor.Text
+          else
+            sql_fornecedor := '';
+
+          mmLista.Post;
+        end
         else
-          sql_fornecedor := '';
+          if (trim(prNr_OC.Text) = '') then
+          begin
+            mmOC.Append;
+            mmOCIDPRODUTO.AsString := dao.Q1.fieldbyname('COD_PRODUTO').AsString;
+            mmOCNOME_PRODUTO.AsString := dao.Q1.fieldbyname('NOM_PRODUTO').AsString;
+            mmOCCUSTO.Value := dao.Q1.fieldbyname('CUSTO_TOTAL').AsCurrency;
+            mmOCQTD_ENTRADA.Value := dao.Q1.fieldbyname('QTD_ENTRADA').AsCurrency;
+            mmOCSUB_TOTAL.Value := dao.Q1.fieldbyname('CUSTO_TOTAL').AsCurrency * dao.Q1.fieldbyname('QTD_ENTRADA').AsCurrency;
+            mmOCQTD_EMBALAGEM.Value := dao.Q1.fieldbyname('QTD_EMBALAGEM').AsCurrency;
+            mmOCUNIDADE.AsString := dao.Q1.fieldbyname('UNIDADE').AsString;
+            mmOCCOD_PRODUTO_FORNECEDOR.AsString := dao.Q1.fieldbyname('COD_PRODUTO_FORNECEDOR').AsString;
+            mmOC.Post;
 
-        mmLista.Post;
-      end
-      else
-      begin
-        mmOC.Append;
-        mmOCIDPRODUTO.AsString := dao.Q1.fieldbyname('COD_PRODUTO').AsString;
-        mmOCNOME_PRODUTO.AsString := dao.Q1.fieldbyname('NOM_PRODUTO').AsString;
-        mmOCCUSTO.Value := dao.Q1.fieldbyname('CUSTO_TOTAL').AsCurrency;
-        mmOCQTD_ENTRADA.Value := dao.Q1.fieldbyname('QTD_ENTRADA').AsCurrency;
-        mmOCSUB_TOTAL.Value := dao.Q1.fieldbyname('CUSTO_TOTAL').AsCurrency * dao.Q1.fieldbyname('QTD_ENTRADA').AsCurrency;
-        mmOCQTD_EMBALAGEM.Value := dao.Q1.fieldbyname('QTD_EMBALAGEM').AsCurrency;
-        mmOCUNIDADE.AsString := dao.Q1.fieldbyname('UNIDADE').AsString;
-        mmOCCOD_PRODUTO_FORNECEDOR.AsString := dao.Q1.fieldbyname('COD_PRODUTO_FORNECEDOR').AsString;
-        mmOC.Post;
+            valor_total := valor_total + mmOCSUB_TOTAL.Value;
 
-        valor_total := valor_total + mmOCSUB_TOTAL.Value;
-      end;
+          end;
 
       fm_splash.ggProgress.AddProgress(1);
       fm_splash.update;

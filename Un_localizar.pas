@@ -98,6 +98,7 @@ type
     procedure loc_motorista(valor: string);
     procedure loc_veiculos(valor: string);
     procedure loc_cargas(valor: string);
+    procedure loc_carga_pedido(valor: string);
     procedure loc_marca(valor: string);
     procedure loc_compra(valor: string);
     procedure loc_pre_pedido(valor: string);
@@ -352,6 +353,10 @@ begin
   else if chamou_pesquisa = 'fr_carga' then
   begin
     loc_cargas(trim(EDlocalizar.Text));
+  end
+  else if chamou_pesquisa = 'fr_carga_pedido' then
+  begin
+    loc_carga_pedido(trim(EDlocalizar.Text));
   end
   else if chamou_pesquisa = 'fr_marca' then
   begin
@@ -3408,28 +3413,6 @@ begin
     end;
     close;
   end
-  else if chamou_form = 'fr_pedido_supervisor' then
-  begin
-    if not Qu_localizar.IsEmpty then
-    begin
-      Fr_vendas_industria2.prcod_supervisor.Text :=
-        mmLocalizar.fieldbyname('id').AsString;
-      Fr_vendas_industria2.Lbnom_supervisor.caption :=
-        mmLocalizar.fieldbyname('nom_representante').AsString;
-    end;
-    close;
-  end
-  else if chamou_form = 'fr_pedido_simplificado_supervisor' then
-  begin
-    if not Qu_localizar.IsEmpty then
-    begin
-      Fr_pedido_simplificado.Prcod_supervisor.Text :=
-        mmLocalizar.fieldbyname('id').AsString;
-      Fr_pedido_simplificado.LbNomSupervisor.caption :=
-        mmLocalizar.fieldbyname('nom_representante').AsString;
-    end;
-    close;
-  end
   else if chamou_form = 'fr_complemento_cliente' then
   begin
     if not Qu_localizar.IsEmpty then
@@ -3599,6 +3582,19 @@ begin
     end;
     close;
   end
+  else if chamou_form = 'fr_forma_prazo_relacionado' then
+  begin
+    if tem_selecionado then
+      Fr_forma_pagamento.AdicionarPrazosRelacionados(selecionados)
+    else if not Qu_localizar.IsEmpty then
+    begin
+      Fr_forma_pagamento.EdPrazoRelacionado.Text :=
+        mmLocalizar.fieldbyname('id').AsString;
+      Fr_forma_pagamento.LbPrazoRelacionado.caption :=
+        mmLocalizar.fieldbyname('prazo').AsString;
+    end;
+    close;
+  end
   else if chamou_form = 'fr_forma_prazo' then
   begin
     if not Qu_localizar.IsEmpty then
@@ -3750,7 +3746,15 @@ begin
     end;
     close;
   end
-  else if chamou_form = 'fr_nfe_danfe_arquivo_empresa' then
+  else if chamou_form = 'fr_pedido_carga' then
+  begin
+    if not Qu_localizar.IsEmpty then
+    begin
+      Fr_vendas_industria2.Prcod_carga.Text := mmLocalizar.fieldbyname('id').AsString;
+      Fr_vendas_industria2.lbDescCarga.Caption := mmLocalizar.fieldbyname('nom_carga').AsString;
+    end;
+    close;
+  end  else if chamou_form = 'fr_nfe_danfe_arquivo_empresa' then
   begin
     if not Qu_localizar.IsEmpty then
     begin
@@ -6499,26 +6503,45 @@ end;
 procedure TFr_localizar.loc_prazo_pagamento(valor: string);
 var
   i: Integer;
-  cmd, ativo, vendedor: string;
+  cmd, ativo, vendedor, filtro_fop, cod_fop: string;
 begin
   cmd := '';
-  cmd := 'select id, prazo, ativo from prazo ';
+  filtro_fop := '';
+  cod_fop := '';
+
+  if chamou_form = 'fr_pedido_prazo' then
+    cod_fop := Trim(Fr_vendas_industria2.Prcod_fop.Text)
+  else if chamou_form = 'fr_pedido_simplificado_prazo' then
+    cod_fop := Trim(Fr_pedido_simplificado.Prcod_fop.Text);
+
+ { if cod_fop <> '' then
+  begin
+    try
+      dao.Geral2('select count(*) as total from fop_prazo where cod_fop = ' + QuotedStr(cod_fop));
+      if dao.Q2.fieldbyname('total').AsInteger > 0 then
+        filtro_fop := ' inner join fop_prazo fp on fp.id_prazo = p.id and fp.cod_fop = ' + QuotedStr(cod_fop) + ' ';
+    except
+      filtro_fop := '';
+    end;
+  end;  }
+
+  cmd := 'select p.id, p.prazo, p.ativo from prazo p ' + filtro_fop;
 
   ativo := '';
   if chamou_form = 'fr_pedido_prazo' then
-    ativo := ' AND ATIVO = ''S''';
+    ativo := ' AND p.ATIVO = ''S''';
 
   if chamou_form = 'fr_pedido_simplificado_prazo' then
-    ativo := ' AND ATIVO = ''S'' AND INATIVO_PALM = ''N''';
+    ativo := ' AND p.ATIVO = ''S'' AND p.INATIVO_PALM = ''N''';
 
   vendedor := '';
   if (frpri.TipUsu = '0') or (frpri.TipUsu = '1') or frpri.representacao then
-    vendedor := ' AND INATIVO_PALM = ''N''';
+    vendedor := ' AND p.INATIVO_PALM = ''N''';
 
   if CBcampos.Text = 'Código' then
   begin
-    cmd := cmd + 'where id = ' + QuotedStr(valor) + ativo + vendedor +
-      ' order by id';
+    cmd := cmd + 'where p.id = ' + QuotedStr(valor) + ativo + vendedor +
+      ' order by p.id';
 
     with Qu_localizar do
     begin
@@ -6532,11 +6555,11 @@ begin
   else if CBcampos.Text = 'Descrição' then
   begin
     if zzbusca_qualquer.Checked then
-      cmd := cmd + 'where prazo like ' + QuotedStr('%' + valor + '%') + ativo +
-        vendedor + ' order by prazo'
+      cmd := cmd + 'where p.prazo like ' + QuotedStr('%' + valor + '%') + ativo +
+        vendedor + ' order by p.prazo'
     else
-      cmd := cmd + 'where prazo like ' + QuotedStr(valor + '%') + ativo +
-        vendedor + ' order by prazo';
+      cmd := cmd + 'where p.prazo like ' + QuotedStr(valor + '%') + ativo +
+        vendedor + ' order by p.prazo';
     with Qu_localizar do
     begin
       close;
@@ -6974,6 +6997,42 @@ begin
 
 end;
 
+procedure TFr_localizar.loc_carga_pedido(valor: string);
+var
+  cmd: string;
+begin
+  cmd := 'select id, nom_carga from carga1 ';
+
+  if CBcampos.Text = 'Código' then
+    cmd := cmd + 'where id = ' + QuotedStr(valor)
+  else if CBcampos.Text = 'Descrição' then
+  begin
+    if zzbusca_qualquer.Checked then
+      cmd := cmd + 'where nom_carga like ' + QuotedStr('%' + valor + '%') + ' order by nom_carga'
+    else
+      cmd := cmd + 'where nom_carga like ' + QuotedStr(valor + '%') + ' order by nom_carga';
+  end;
+
+  with Qu_localizar do
+  begin
+    close;
+    sql.clear;
+    sql.add(cmd);
+    open;
+  end;
+
+  if Qu_localizar.RecordCount <= 0 then
+  begin
+    MessageBox(handle, 'Não Foi Encontrado Registro com Este Dado!', 'ORBI',
+      MB_ICONWARNING);
+    exit;
+  end;
+
+  mmLocalizar.fieldbyname('id').DisplayLabel := 'Código';
+  mmLocalizar.fieldbyname('id').DisplayWidth := 8;
+  mmLocalizar.fieldbyname('nom_carga').DisplayLabel := 'Descrição';
+  mmLocalizar.fieldbyname('nom_carga').DisplayWidth := 40;
+end;
 procedure TFr_localizar.loc_marca(valor: string);
 var
   i: Integer;
@@ -7980,113 +8039,141 @@ end;
 
 procedure TFr_localizar.Qu_localizarAfterOpen(DataSet: TDataSet);
 var
-  x, tam, ant: Integer;
+  x, tam, ant, LenCampo: Integer;
+  TamanhosTexto: array of Integer;
+
+  function CampoTexto(AField: TField): Boolean;
+  begin
+    Result := AField.DataType in [ftString, ftWideString, ftFixedChar,
+      ftFixedWideChar, ftMemo, ftWideMemo];
+  end;
+
+  function TamanhoCampoTexto(AField: TField; AMaxLen: Integer): Integer;
+  begin
+    Result := AField.Size;
+    if Result < AField.DataSize then
+      Result := AField.DataSize;
+    if Result < AMaxLen then
+      Result := AMaxLen;
+    if Result < 1 then
+      Result := 1;
+    if Result > 8192 then
+      Result := 8192;
+  end;
+
 begin
   if Qu_localizar.IsEmpty then
   begin
     ds_localizar.DataSet := dsnone.DataSet;
-    exit;
+    Exit;
   end;
-  { else
-    ds_localizar.DataSet := Qu_localizar;
-  }
+
   Qu_localizar.DisableControls;
+  try
+    SetLength(TamanhosTexto, Qu_localizar.FieldCount);
 
-  mmLocalizar.FieldDefs.clear;
+    for x := 0 to Qu_localizar.FieldCount - 1 do
+    begin
+      tam := 0;
+      Qu_localizar.First;
+      while not Qu_localizar.Eof do
+      begin
+        LenCampo := Length(Qu_localizar.Fields[x].AsString);
+        if tam < LenCampo then
+          tam := LenCampo;
+        Qu_localizar.Next;
+      end;
 
-  for x := 0 to Qu_localizar.fieldcount - 1 do
-  begin
-    if Qu_localizar.Fields[x].DataType = ftstring then
-      mmLocalizar.FieldDefs.add(Qu_localizar.Fields[x].FieldName,
-        Qu_localizar.Fields[x].DataType, Qu_localizar.Fields[x].DataSize)
-    else if (Qu_localizar.Fields[x].DataType = ftBCD) or
-            (Qu_localizar.Fields[x].DataType = ftFloat) or
-            (Qu_localizar.Fields[x].DataType = ftFMTBcd)
-    then
-      mmLocalizar.FieldDefs.add(Qu_localizar.Fields[x].FieldName, ftFloat)
-    else
-      mmLocalizar.FieldDefs.add(Qu_localizar.Fields[x].FieldName,
-        Qu_localizar.Fields[x].DataType);
-  end;
+      if tam > 0 then
+        Qu_localizar.Fields[x].DisplayWidth := tam;
+      TamanhosTexto[x] := tam;
+    end;
 
-  mmLocalizar.FieldDefs.add('check', ftBoolean);
+    if mmLocalizar.Active then
+      mmLocalizar.Close;
+    mmLocalizar.FieldDefs.Clear;
 
-  for x := 0 to Qu_localizar.fieldcount - 1 do
-  begin
+    for x := 0 to Qu_localizar.FieldCount - 1 do
+    begin
+      if CampoTexto(Qu_localizar.Fields[x]) then
+        mmLocalizar.FieldDefs.Add(Qu_localizar.Fields[x].FieldName, ftString,
+          TamanhoCampoTexto(Qu_localizar.Fields[x], TamanhosTexto[x]))
+      else if (Qu_localizar.Fields[x].DataType = ftBCD) or
+              (Qu_localizar.Fields[x].DataType = ftFloat) or
+              (Qu_localizar.Fields[x].DataType = ftFMTBcd) then
+        mmLocalizar.FieldDefs.Add(Qu_localizar.Fields[x].FieldName, ftFloat)
+      else
+        mmLocalizar.FieldDefs.Add(Qu_localizar.Fields[x].FieldName,
+          Qu_localizar.Fields[x].DataType);
+    end;
+
+    mmLocalizar.FieldDefs.Add('check', ftBoolean);
+
+    mmLocalizar.Close;
+    mmLocalizar.EmptyTable;
+    mmLocalizar.Open;
     Qu_localizar.First;
 
     while not Qu_localizar.Eof do
     begin
+      mmLocalizar.Append;
+      try
+        for x := 0 to Qu_localizar.FieldCount - 1 do
+        begin
+          mmLocalizar.Fields[x].DisplayLabel := Qu_localizar.Fields[x].DisplayLabel;
 
-      if tam < length((Qu_localizar.Fields[x].AsString)) then
-      begin
-        tam := length((Qu_localizar.Fields[x].AsString));
-        Qu_localizar.Fields[x].DisplayWidth := tam;
+          if Qu_localizar.Fields[x].IsNull then
+            mmLocalizar.Fields[x].Clear
+          else if (mmLocalizar.Fields[x].DataType = ftFloat) or
+                  (mmLocalizar.Fields[x].DataType = ftFMTBcd) then
+          begin
+            TNumericField(mmLocalizar.Fields[x]).DisplayFormat := '#,###,##0.00';
+            mmLocalizar.Fields[x].Value := Qu_localizar.Fields[x].Value;
+          end
+          else if CampoTexto(mmLocalizar.Fields[x]) then
+            mmLocalizar.Fields[x].AsString := Copy(Qu_localizar.Fields[x].AsString,
+              1, mmLocalizar.Fields[x].Size)
+          else
+            mmLocalizar.Fields[x].AsVariant := Qu_localizar.Fields[x].AsVariant;
+        end;
+        mmLocalizar.Post;
+      except
+        mmLocalizar.Cancel;
+        raise;
       end;
+
       Qu_localizar.Next;
     end;
 
-  end;
-
-  mmLocalizar.close;
-  mmLocalizar.EmptyTable;
-  mmLocalizar.open;
-  Qu_localizar.First;
-
-  while not Qu_localizar.Eof do
-  begin
-    mmLocalizar.Append;
-
-    for x := 0 to Qu_localizar.fieldcount - 1 do
-    begin
-      mmLocalizar.Fields[x].DisplayLabel := Qu_localizar.Fields[x].DisplayLabel;
-
-      if (mmLocalizar.Fields[x].DataType = ftFloat) or (mmLocalizar.Fields[x].DataType = ftFMTBcd) then
-      begin
-        TNumericField(mmLocalizar.Fields[x]).DisplayFormat := '#,###,##0.00';
-        mmLocalizar.Fields[x].value := Qu_localizar.Fields[x].value;
-      end
-      else if (mmLocalizar.Fields[x].DataType = ftString) or (mmLocalizar.Fields[x].DataType = ftString) then
-        mmLocalizar.Fields[x].AsString := Qu_localizar.Fields[x].AsString
-      else
-        mmLocalizar.Fields[x].AsVariant := Qu_localizar.Fields[x].AsVariant;
-    end;
-
-    mmLocalizar.post;
-    Qu_localizar.Next;
-  end;
-
-  Qu_localizar.First;
-  mmLocalizar.First;
-
-  for x := 0 to mmLocalizar.fieldcount - 1 do
-  begin
-
-    if ant <> x then
-    begin
-      ant := x;
-      tam := 0;
-    end;
+    Qu_localizar.First;
     mmLocalizar.First;
-    mmLocalizar.Fields[x].DisplayWidth := 1;
-    while not mmLocalizar.Eof do
-    begin
-      tam := length(trim(mmLocalizar.Fields[x].AsString));
-      if mmLocalizar.Fields[x].DisplayWidth < tam then
-        mmLocalizar.Fields[x].DisplayWidth := tam;
 
-      // mmLocalizar.fields[x].DisplayWidth := 10;
-      mmLocalizar.Next;
+    ant := -1;
+    for x := 0 to mmLocalizar.FieldCount - 1 do
+    begin
+      if ant <> x then
+      begin
+        ant := x;
+        tam := 0;
+      end;
+      mmLocalizar.First;
+      mmLocalizar.Fields[x].DisplayWidth := 1;
+      while not mmLocalizar.Eof do
+      begin
+        tam := Length(Trim(mmLocalizar.Fields[x].AsString));
+        if mmLocalizar.Fields[x].DisplayWidth < tam then
+          mmLocalizar.Fields[x].DisplayWidth := tam;
+        mmLocalizar.Next;
+      end;
     end;
 
+    mmLocalizar.First;
+    mmLocalizar.FieldByName('check').DisplayLabel := ' ';
+    if ds_localizar.DataSet = nil then
+      ds_localizar.DataSet := mmLocalizar;
+  finally
+    Qu_localizar.EnableControls;
   end;
-
-  mmLocalizar.First;
-  mmLocalizar.fieldbyname('check').DisplayLabel := ' ';
-  Qu_localizar.EnableControls;
-  if ds_localizar.DataSet = nil then
-    ds_localizar.DataSet := mmLocalizar;
-
 end;
 
 procedure TFr_localizar.DgLocalizarKeyDown(Sender: TObject; var Key: Word;
@@ -8144,11 +8231,4 @@ begin
 end;
 
 end.
-
-
-
-
-
-
-
 

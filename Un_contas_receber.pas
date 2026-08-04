@@ -625,6 +625,27 @@ begin
     Result := False;
   end;
 end;
+
+function CRBoletoRegistradoNaApiAmbiente(ADataSet: TDataSet; ABBambiente: TBBApiAmbiente;
+  ACEFAmbiente: TCEFApiAmbiente; out ADataPagamento: TDateTime; out AValorPago: Double): Boolean;
+var
+  Banco: string;
+begin
+  Banco := CRBBOnlyNumbers(CRBBFieldStr(ADataSet, 'nr_banco', ''));
+  if (Banco = '1') or (Banco = '001') then
+    Result := Un_BB_Cobrancas_Api.BBBoletoRegistradoNaApi(ADataSet, ABBambiente,
+      BB_CONTAS_RECEBER_SCOPE, nil, ADataPagamento, AValorPago)
+  else if Banco = '104' then
+    Result := Un_CEF_Cobrancas_Api.CEFBoletoRegistradoNaApi(ADataSet, ACEFAmbiente,
+      nil, ADataPagamento, AValorPago)
+  else
+  begin
+    ADataPagamento := 0;
+    AValorPago := 0;
+    Result := False;
+  end;
+end;
+
 procedure CRBBMarcarBoletoRegistrado(AIdCR1: Integer; ADataPagamento: TDateTime; AValorPago: Double);
 var
   SQL: string;
@@ -1818,9 +1839,9 @@ begin
 
   Screen.Cursor := crDefault;
 
-  if not Q_cr1.fieldbyname('DTAREC').IsNull then
+{  if not Q_cr1.fieldbyname('DTAREC').IsNull then
     PermiteAlterar := false
-  else
+  else  }
     PermiteAlterar := true;
 
   if not Q_cr1.fieldbyname('BOLETO_REMESSA_ORDEM').IsNull then
@@ -1997,9 +2018,9 @@ begin
       close;
       sql.Clear;
       sql.Add(cmd + ordem);
-      open;
     end;
 
+    dao.grava_log(Q_resultado.sql.Text, cod_usuario);
     fm_splash.lbStatus.Caption := 'Listando...';
     fm_splash.ggProgress.Visible := true;
   {  fm_splash.ggProgress.MaxValue := Q_resultado.RecordCount;
@@ -2007,9 +2028,7 @@ begin
     fm_splash.Update;
     }
     preenche_grid;
-    Screen.Cursor := crDefault;
     Pccor.ActivePage := tab_resultado;
-    dao.grava_log(Q_resultado.sql.Text, cod_usuario);
   except
     on e: Exception do
     begin
@@ -2026,11 +2045,15 @@ procedure TFr_contas_receber.preenche_grid;
 var
   SQLConsulta, ConnDriverName: string;
   ConnParams: TStringList;
+  BBAmbiente: TBBApiAmbiente;
+  CEFAmbiente: TCEFApiAmbiente;
 begin
   SQLConsulta := Q_resultado.SQL.Text;
   ConnDriverName := dao.cn.DriverName;
   ConnParams := TStringList.Create;
   ConnParams.Assign(dao.cn.Params);
+  BBAmbiente := CRBBAmbienteApi;
+  CEFAmbiente := CRCEFAmbienteApi;
 
   mmContasPagar.DisableControls;
   mmContasPagar.Close;
@@ -2070,8 +2093,12 @@ begin
         QThread.Open;
         QThread.FetchAll;
         QThread.First;
-        fm_splash.ggProgress.Progress := 0;
-        fm_splash.ggProgress.MaxValue := QThread.RecordCount;
+        TThread.Synchronize(nil,
+          procedure
+          begin
+            fm_splash.ggProgress.Progress := 0;
+            fm_splash.ggProgress.MaxValue := QThread.RecordCount;
+          end);
         while not QThread.Eof do
         begin
           LID := QThread.FieldByName('id').AsInteger;
@@ -2098,7 +2125,7 @@ begin
              (QThread.FieldByName('valor_recebido').AsFloat <= 0) then
           begin
             try
-              if CRBoletoRegistradoNaApi(QThread, LDataPagamento, LValorPago) then
+              if CRBoletoRegistradoNaApiAmbiente(QThread, BBAmbiente, CEFAmbiente, LDataPagamento, LValorPago) then
               begin
                 TThread.Synchronize(nil,
                   procedure
@@ -2114,7 +2141,14 @@ begin
               end;
             except
               on E: Exception do
-                CRBBLogApi('preenche_grid verificar boleto registrado ERRO - cr1_id=' + IntToStr(LID) + ', erro=' + E.Message);
+              begin
+                LErro := E.Message;
+                TThread.Synchronize(nil,
+                  procedure
+                  begin
+                    CRBBLogApi('preenche_grid verificar boleto registrado ERRO - cr1_id=' + IntToStr(LID) + ', erro=' + LErro);
+                  end);
+              end;
             end;
           end;
 
@@ -2143,8 +2177,12 @@ begin
               mmContasPagar.Post;
             end);
 
-          fm_splash.ggProgress.Progress := fm_splash.ggProgress.Progress + 1;
-          fm_splash.Update;
+          TThread.Synchronize(nil,
+            procedure
+            begin
+              fm_splash.ggProgress.Progress := fm_splash.ggProgress.Progress + 1;
+              fm_splash.Update;
+            end);
 
           QThread.Next;
         end;
@@ -2325,9 +2363,9 @@ begin
   else
     Prconferido.Checked := false;
 
-  if not Q_cr1.fieldbyname('DTAREC').IsNull then
+{  if not Q_cr1.fieldbyname('DTAREC').IsNull then
     PermiteAlterar := false
-  else
+  else }
     PermiteAlterar := true;
   PrCONTA_BOLETOExit(Self);
 
@@ -2874,7 +2912,6 @@ begin
     close;
     sql.Clear;
     sql.Add(cmd + ordem);
-    open;
   end;
 
   if Dm.q_contas_receber.RecordCount <= 0 then
@@ -3115,14 +3152,11 @@ end;
 
 procedure TFr_contas_receber.sbAbrirClick(Sender: TObject);
 begin
-  if not Q_resultado.IsEmpty then
-  begin
-    Q_resultado.Locate('id', mmContasPagarID.AsString, []);
-    ativa_cr1(mmContasPagarID.AsString);
-    preenche_campos;
-    Pccor.ActivePage := tab_dados;
-  end;
+  if mmContasPagar.IsEmpty then Exit;
 
+  ativa_cr1(mmContasPagarID.AsString);
+  preenche_campos;
+  Pccor.ActivePage := tab_dados;
 end;
 
 procedure TFr_contas_receber.FormKeyPress(Sender: TObject; var Key: Char);
@@ -3522,14 +3556,14 @@ begin
    dao.Q4.fieldbyname('CEP').AsString,
    carteira_conta,
    Boleto_Avalista,
-   Q_cr1.fieldbyname('titulo').AsString,
-   Q_cr1.fieldbyname('sequencia').AsString,
+   Prtitulo.text,
+   Prsequencia.text,
    PrInstrucao_Boleto.Text+#13+mensagem_padrao,
    Prdtaven.Date,
    dias_protesto,
    dias_baixar,
    dao.Q4.fieldbyname('isento').asinteger,
-   Q_cr1.fieldbyname('valor').AsFloat);
+   Prvalor.Value);
 
 end;
 
@@ -3623,9 +3657,17 @@ begin
       fmfun.ACBrBoleto1.Cedente.ContaDigito :=
         copy(dao.q2.fieldbyname('nr_conta').AsString,
         pos('-', dao.q2.fieldbyname('nr_conta').AsString) + 1, 2);
-      fmfun.ACBrBoleto1.Cedente.CodigoCedente :=
-        dao.q2.fieldbyname('codigo_cedente').AsString;
-      fmfun.ACBrBoleto1.Cedente.Convenio := dao.q2.fieldbyname('convenio').AsString;
+
+      if fmfun.ACBrBoleto1.Banco.TipoCobranca <> cobCaixaEconomica then
+      begin
+        fmfun.ACBrBoleto1.Cedente.CodigoCedente := dao.Q2.fieldbyname('codigo_cedente').AsString;
+        fmfun.ACBrBoleto1.Cedente.Convenio := dao.Q2.fieldbyname('convenio').AsString;
+      end
+      else begin
+        fmfun.ACBrBoleto1.Cedente.CodigoCedente := FMFUN.enchezero(IntToStr(StrToIntDef(dao.Q2.fieldbyname('codigo_cedente').AsString, 0)), 6);
+        fmfun.ACBrBoleto1.Cedente.Convenio := FMFUN.enchezero(IntToStr(StrToIntDef(dao.Q2.fieldbyname('convenio').AsString, 0)), 6);
+      end;
+
       fmfun.ACBrBoleto1.Cedente.Nome :=
         dao.q2.fieldbyname('NOME_CORRENTISTA').AsString;
       fmfun.ACBrBoleto1.Cedente.CNPJCPF := dao.q2.fieldbyname('CNPJ').AsString;
@@ -3965,6 +4007,9 @@ begin
 end;
 
 end.
+
+
+
 
 
 

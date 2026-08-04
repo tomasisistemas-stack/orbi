@@ -5,7 +5,7 @@
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppName=ORBI
-AppVersion=2.00.82
+AppVersion=2.00.90
 AppPublisher=TOMASI SISTEMAS DE INFORMAÇÃO
 DefaultDirName=C:\ORBI
 DefaultGroupName=ORBI
@@ -24,6 +24,9 @@ Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortugue
 
 [Files]
 Source: "C:\Tomasi Sistemas\orbi\Orbi.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Tomasi Sistemas\orbi\Orbi.rsm"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Tomasi Sistemas\orbi\Orbi.map"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Tomasi Sistemas\orbi\Orbi.drc"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Tomasi Sistemas\orbi\BorlndMM.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Tomasi Sistemas\orbi\CnpjDll.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Tomasi Sistemas\orbi\DelZip179.dll"; DestDir: "{app}"; Flags: ignoreversion

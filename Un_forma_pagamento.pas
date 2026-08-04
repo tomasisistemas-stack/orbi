@@ -4,12 +4,12 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, ExtCtrls,  Mask, sPanel, sBitBtn, sLabel, sCheckBox,
+  Dialogs, StdCtrls, Buttons, ExtCtrls,  Mask, Grids, DBGrids, SToolEdit, sPanel, sBitBtn, sLabel, sCheckBox,
   sGroupBox, sMaskEdit, sCustomComboEdit, sCurrEdit, sCurrencyEdit, sEdit,
   sComboEdit,  FireDAC.Stan.Intf, FireDAC.Stan.Option,
   FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf,
   FireDAC.DApt.Intf, FireDAC.Stan.Async, FireDAC.DApt, Data.DB,
-  FireDAC.Comp.DataSet, FireDAC.Comp.Client;
+  FireDAC.Comp.DataSet, FireDAC.Comp.Client, RxToolEdit;
 
 type
   TFr_forma_pagamento = class(TForm)
@@ -39,6 +39,14 @@ type
     lb_conta: TsLabel;
     PrNao_Gerar_CR: TsCheckBox;
     q_fop: TFDQuery;
+    GroupBox2: TsGroupBox;
+    dgPrazos: TDBGrid;
+    dsPrazos: TDataSource;
+    q_prazos: TFDQuery;
+    BtAddPrazo: TsBitBtn;
+    BtRemPrazo: TsBitBtn;
+    EdPrazoRelacionado: TComboEdit;
+    LbPrazoRelacionado: TsLabel;
     procedure BtnovClick(Sender: TObject);
     procedure BtaltClick(Sender: TObject);
     procedure BtgraClick(Sender: TObject);
@@ -53,10 +61,19 @@ type
     procedure PrPrazo_PadraoExit(Sender: TObject);
     procedure PrCONTA_PADRAOButtonClick(Sender: TObject);
     procedure PrCONTA_PADRAOExit(Sender: TObject);
+    procedure BtAddPrazoClick(Sender: TObject);
+    procedure BtRemPrazoClick(Sender: TObject);
+    procedure EdPrazoRelacionadoButtonClick(Sender: TObject);
+    procedure EdPrazoRelacionadoExit(Sender: TObject);
   private
     procedure limpa_campos;
     procedure readonly_false;
     procedure readonly_true;
+    procedure CarregarPrazoPadraoAssociado;
+    procedure SincronizarPrazoPadrao;
+    procedure CarregarPrazosRelacionados;
+    procedure AdicionarPrazoRelacionado(const AIdPrazo: string);
+    procedure RemoverPrazoRelacionado;
 
   public
     modo_insert: boolean;
@@ -65,6 +82,7 @@ type
     campo_pesquisado, dado_pesquisado: string;
 
     id: string;
+    procedure AdicionarPrazosRelacionados(const AIdsPrazo: string);
     procedure ativa_fop(id: string);
     procedure mostra_campos(prefixo: string);
 
@@ -75,7 +93,7 @@ var
 
 implementation
 
-uses UnPri, Un_dao, Un_localizar, UnFun;
+uses UnPri, Un_dao, Un_localizar, UnFun, Un_Error_Logger;
 
 {$R *.dfm}
 
@@ -92,6 +110,201 @@ begin
   end;
 end;
 
+procedure TFr_forma_pagamento.CarregarPrazoPadraoAssociado;
+begin
+  if (Trim(Prcod_fop.Text) <> '') and (Trim(PrPrazo_Padrao.Text) = '') then
+  begin
+    dao.Geral2('select id_prazo from fop_prazo where cod_fop = ' +
+      QuotedStr(Prcod_fop.Text) + ' and padrao = ''S'' order by id_prazo');
+    if dao.Q2.RecordCount > 0 then
+      PrPrazo_Padrao.Text := dao.Q2.fieldbyname('id_prazo').AsString;
+  end;
+end;
+
+procedure TFr_forma_pagamento.SincronizarPrazoPadrao;
+begin
+  if Trim(Prcod_fop.Text) = '' then
+    Exit;
+  dao.Execsql('delete from fop_prazo where cod_fop = ' + QuotedStr(Prcod_fop.Text) +
+    ' and padrao = ''S''');
+
+  if Trim(PrPrazo_Padrao.Text) <> '' then
+  begin
+    dao.Execsql('update fop_prazo set padrao = ''S'' where cod_fop = ' +
+      QuotedStr(Prcod_fop.Text) + ' and id_prazo = ' + QuotedStr(PrPrazo_Padrao.Text));
+    dao.Execsql('insert into fop_prazo (cod_fop, id_prazo, padrao) ' +
+      'select ' + QuotedStr(Prcod_fop.Text) + ', ' + QuotedStr(PrPrazo_Padrao.Text) + ', ''S'' ' +
+      'where not exists (select 1 from fop_prazo where cod_fop = ' +
+      QuotedStr(Prcod_fop.Text) + ' and id_prazo = ' + QuotedStr(PrPrazo_Padrao.Text) + ')');
+  end;
+end;
+
+procedure TFr_forma_pagamento.CarregarPrazosRelacionados;
+begin
+  q_prazos.Close;
+
+  if Trim(Prcod_fop.Text) = '' then
+    Exit;
+
+  q_prazos.SQL.Text :=
+    'select fp.id_prazo, p.prazo, coalesce(fp.padrao, ''N'') as padrao ' +
+    'from fop_prazo fp inner join prazo p on p.id = fp.id_prazo ' +
+    'where fp.cod_fop = ' + QuotedStr(Prcod_fop.Text) + ' ' +
+    'order by coalesce(fp.padrao, ''N'') desc, p.prazo';
+  q_prazos.Open;
+end;
+
+procedure TFr_forma_pagamento.AdicionarPrazoRelacionado(const AIdPrazo: string);
+var
+  QExec: TFDQuery;
+begin
+  if Trim(Prcod_fop.Text) = '' then
+  begin
+    dao.msg('LOCALIZE OU GRAVE A FORMA DE PAGAMENTO ANTES DE VINCULAR PRAZOS!');
+    Exit;
+  end;
+
+  if Trim(AIdPrazo) = '' then
+    Exit;
+
+  if not FMFUN.verificaNumerico(AIdPrazo) then
+  begin
+    dao.msg('Código do prazo deve ser numérico!');
+    Exit;
+  end;
+
+  dao.Geral2('select id from prazo where id = ' + QuotedStr(AIdPrazo));
+  if dao.Q2.RecordCount <= 0 then
+  begin
+    dao.msg('Prazo não encontrado!');
+    Exit;
+  end;
+
+  QExec := TFDQuery.Create(nil);
+  try
+    QExec.Connection := dao.CN;
+    if not dao.cn.InTransaction then
+      dao.cn.StartTransaction;
+
+    QExec.SQL.Text := 'insert into fop_prazo (cod_fop, id_prazo, padrao) ' +
+      'select ' + QuotedStr(Prcod_fop.Text) + ', ' + QuotedStr(AIdPrazo) + ', ''N'' ' +
+      'where not exists (select 1 from fop_prazo where cod_fop = ' +
+      QuotedStr(Prcod_fop.Text) + ' and id_prazo = ' + QuotedStr(AIdPrazo) + ')';
+    QExec.ExecSQL;
+
+    dao.cn.Commit;
+    CarregarPrazosRelacionados;
+  except
+    on E: Exception do
+    begin
+      if dao.cn.InTransaction then
+        dao.cn.Rollback;
+      RegistrarErroAplicacao(E, 'TFr_forma_pagamento.AdicionarPrazoRelacionado', QExec.SQL.Text, 'cod_fop=' + Prcod_fop.Text + '; id_prazo=' + AIdPrazo);
+      dao.msg('Erro ao gravar prazo relacionado!' + #13 + E.Message);
+    end;
+  end;
+  QExec.Free;
+end;
+
+procedure TFr_forma_pagamento.AdicionarPrazosRelacionados(const AIdsPrazo: string);
+var
+  QExec: TFDQuery;
+  Lista: TStringList;
+  I: Integer;
+  IdPrazo, SQLText: string;
+begin
+  if Trim(Prcod_fop.Text) = '' then
+  begin
+    dao.msg('LOCALIZE OU GRAVE A FORMA DE PAGAMENTO ANTES DE VINCULAR PRAZOS!');
+    Exit;
+  end;
+
+  Lista := TStringList.Create;
+  QExec := TFDQuery.Create(nil);
+  try
+    Lista.Text := StringReplace(StringReplace(StringReplace(AIdsPrazo, ',', #13#10, [rfReplaceAll]), ';', #13#10, [rfReplaceAll]), '''', '', [rfReplaceAll]);
+    QExec.Connection := dao.CN;
+
+    if not dao.cn.InTransaction then
+      dao.cn.StartTransaction;
+
+    try
+      for I := 0 to Lista.Count - 1 do
+      begin
+        IdPrazo := Trim(Lista[I]);
+        if IdPrazo = '' then
+          Continue;
+
+        if not FMFUN.verificaNumerico(IdPrazo) then
+          raise Exception.Create('Código do prazo deve ser numérico: ' + IdPrazo);
+
+        SQLText := 'insert into fop_prazo (cod_fop, id_prazo, padrao) ' +
+          'select ' + QuotedStr(Prcod_fop.Text) + ', ' + QuotedStr(IdPrazo) + ', ''N'' ' +
+          'where exists (select 1 from prazo where id = ' + QuotedStr(IdPrazo) + ') ' +
+          'and not exists (select 1 from fop_prazo where cod_fop = ' +
+          QuotedStr(Prcod_fop.Text) + ' and id_prazo = ' + QuotedStr(IdPrazo) + ')';
+        QExec.SQL.Text := SQLText;
+        QExec.ExecSQL;
+      end;
+
+      dao.cn.Commit;
+      CarregarPrazosRelacionados;
+    except
+      on E: Exception do
+      begin
+        if dao.cn.InTransaction then
+          dao.cn.Rollback;
+        RegistrarErroAplicacao(E, 'TFr_forma_pagamento.AdicionarPrazosRelacionados', QExec.SQL.Text, 'cod_fop=' + Prcod_fop.Text + '; ids=' + AIdsPrazo);
+        dao.msg('Erro ao gravar prazos relacionados!' + #13 + E.Message);
+      end;
+    end;
+  finally
+    QExec.Free;
+    Lista.Free;
+  end;
+end;
+procedure TFr_forma_pagamento.RemoverPrazoRelacionado;
+var
+  QExec: TFDQuery;
+  IdPrazo: string;
+begin
+  if q_prazos.IsEmpty then
+    Exit;
+
+  if q_prazos.fieldbyname('padrao').AsString = 'S' then
+  begin
+    dao.msg('Não é possível remover o prazo padrão por aqui. Limpe ou altere o Prazo Pagamento.');
+    Exit;
+  end;
+
+  if MessageDlg('Remover este prazo da forma de pagamento?', mtConfirmation, [mbyes, mbno], 0) <> mryes then
+    Exit;
+
+  IdPrazo := q_prazos.fieldbyname('id_prazo').AsString;
+  QExec := TFDQuery.Create(nil);
+  try
+    QExec.Connection := dao.CN;
+    if not dao.cn.InTransaction then
+      dao.cn.StartTransaction;
+
+    QExec.SQL.Text := 'delete from fop_prazo where cod_fop = ' + QuotedStr(Prcod_fop.Text) +
+      ' and id_prazo = ' + QuotedStr(IdPrazo);
+    QExec.ExecSQL;
+
+    dao.cn.Commit;
+    CarregarPrazosRelacionados;
+  except
+    on E: Exception do
+    begin
+      if dao.cn.InTransaction then
+        dao.cn.Rollback;
+      RegistrarErroAplicacao(E, 'TFr_forma_pagamento.RemoverPrazoRelacionado', QExec.SQL.Text, 'cod_fop=' + Prcod_fop.Text + '; id_prazo=' + IdPrazo);
+      dao.msg('Erro ao remover prazo relacionado!' + #13 + E.Message);
+    end;
+  end;
+  QExec.Free;
+end;
+
 procedure TFr_forma_pagamento.limpa_campos;
 var
   i: integer;
@@ -106,6 +319,9 @@ begin
       tsCheckbox(Components[i]).Checked := false;
   end;
   Lbprazo_pgto.Caption := '...';
+  EdPrazoRelacionado.Clear;
+  LbPrazoRelacionado.Caption := '...';
+  q_prazos.Close;
 end;
 
 procedure TFr_forma_pagamento.mostra_campos(prefixo: string);
@@ -144,7 +360,11 @@ begin
         tsCheckbox(FindComponent(campo)).Checked := false;
     end;
   end;
+  CarregarPrazoPadraoAssociado;
   PrPrazo_PadraoExit(Self);
+  EdPrazoRelacionado.Clear;
+  LbPrazoRelacionado.Caption := '...';
+  CarregarPrazosRelacionados;
 end;
 
 procedure TFr_forma_pagamento.readonly_false;
@@ -243,7 +463,9 @@ begin
     else
       dao.update('fop', 'cod_fop', Prcod_fop.Text, 'Pr', Fr_forma_pagamento);
 
+    SincronizarPrazoPadrao;
     dao.cn.commit;
+    CarregarPrazosRelacionados;
     readonly_true;
   except
   end;
@@ -483,6 +705,83 @@ begin
   end;
 end;
 
+procedure TFr_forma_pagamento.EdPrazoRelacionadoButtonClick(Sender: TObject);
+var
+  Campos_combo: array of string;
+  i: integer;
+  chamou_form_old, chamou_pesquisa_old: string;
+begin
+  Application.CreateForm(TFr_localizar, Fr_localizar);
+
+  chamou_form_old := chamou_form;
+  chamou_pesquisa_old := chamou_pesquisa;
+
+  Fr_localizar.Caption := 'Localizar Prazo';
+  chamou_pesquisa := 'fr_prazo';
+  chamou_form := 'fr_forma_prazo_relacionado';
+  chamou_cadastro := 'fr_prazo';
+
+  Fr_localizar.BT_cadastro.Caption := 'Cadastro de' + #13 + 'prazo';
+  Fr_localizar.BT_cadastro.Visible := true;
+
+  SetLength(Campos_combo, 2);
+  Campos_combo[0] := 'Código';
+  Campos_combo[1] := 'Descrição';
+
+  for i := 0 to 1 do
+    Fr_localizar.CBcampos.Items.Add(Campos_combo[i]);
+
+  Fr_localizar.CBcampos.ItemIndex := 1;
+  Fr_localizar.loc_prazo_pagamento('');
+
+  try
+    Fr_localizar.ShowModal;
+  finally
+    Fr_localizar.Free;
+  end;
+
+  chamou_form := chamou_form_old;
+  chamou_pesquisa := chamou_pesquisa_old;
+end;
+
+procedure TFr_forma_pagamento.EdPrazoRelacionadoExit(Sender: TObject);
+begin
+  if Trim(EdPrazoRelacionado.Text) = '' then
+  begin
+    LbPrazoRelacionado.Caption := '...';
+    Exit;
+  end;
+
+  if not FMFUN.verificaNumerico(EdPrazoRelacionado.Text) then
+  begin
+    dao.msg('Dado tem que ser sempre Numérico!');
+    EdPrazoRelacionado.SetFocus;
+    Exit;
+  end;
+
+  dao.Geral2('select prazo from prazo where id = ' + QuotedStr(EdPrazoRelacionado.Text));
+  if dao.Q2.RecordCount > 0 then
+    LbPrazoRelacionado.Caption := dao.Q2.fieldbyname('prazo').AsString
+  else
+  begin
+    dao.msg('Prazo não encontrado!');
+    EdPrazoRelacionado.Text := '';
+    LbPrazoRelacionado.Caption := '...';
+    EdPrazoRelacionado.SetFocus;
+  end;
+end;
+procedure TFr_forma_pagamento.BtAddPrazoClick(Sender: TObject);
+begin
+  EdPrazoRelacionadoExit(Self);
+  AdicionarPrazoRelacionado(EdPrazoRelacionado.Text);
+  EdPrazoRelacionado.Clear;
+  LbPrazoRelacionado.Caption := '...';
+end;
+
+procedure TFr_forma_pagamento.BtRemPrazoClick(Sender: TObject);
+begin
+  RemoverPrazoRelacionado;
+end;
 procedure TFr_forma_pagamento.PrCONTA_PADRAOButtonClick(Sender: TObject);
 var
   Campos_combo: array of string;

@@ -667,7 +667,13 @@ begin
     if (frpri.TipUsu = '0') or (frpri.TipUsu = '1') then
       Prid_representante.ReadOnly := true;
 
-    Prcliente_bloqueado.Enabled := Tipo_usuario = '9';
+    //Prcliente_bloqueado.Enabled := Tipo_usuario = '9';
+
+    if (FRPRI.TipUsu < '9') then
+      Prid_representante.ReadOnly := true
+    else
+      Prid_representante.ReadOnly := false;
+
   except
   end;
 

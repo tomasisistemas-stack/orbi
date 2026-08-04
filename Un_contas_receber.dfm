@@ -25,7 +25,7 @@ object Fr_contas_receber: TFr_contas_receber
     Top = 0
     Width = 605
     Height = 493
-    ActivePage = tab_localizar
+    ActivePage = tab_dados
     Align = alClient
     TabOrder = 0
     SkinData.SkinSection = 'PAGECONTROL'
@@ -1290,10 +1290,6 @@ object Fr_contas_receber: TFr_contas_receber
       OnShow = tab_resultadoShow
       SkinData.CustomColor = False
       SkinData.CustomFont = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Panel11: TsPanel
         Left = 0
         Top = 428
@@ -1659,10 +1655,6 @@ object Fr_contas_receber: TFr_contas_receber
       OnShow = tab_dadosShow
       SkinData.CustomColor = False
       SkinData.CustomFont = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Pcdados_cr1: TsPageControl
         Left = 0
         Top = 0
@@ -1676,10 +1668,6 @@ object Fr_contas_receber: TFr_contas_receber
           Caption = 'Dados'
           SkinData.CustomColor = False
           SkinData.CustomFont = False
-          ExplicitLeft = 0
-          ExplicitTop = 0
-          ExplicitWidth = 0
-          ExplicitHeight = 0
           object Label18: TsLabel
             Left = 8
             Top = 68
@@ -2692,10 +2680,6 @@ object Fr_contas_receber: TFr_contas_receber
           ImageIndex = 1
           SkinData.CustomColor = False
           SkinData.CustomFont = False
-          ExplicitLeft = 0
-          ExplicitTop = 0
-          ExplicitWidth = 0
-          ExplicitHeight = 0
           object GroupBox3: TsGroupBox
             Left = 0
             Top = 0
@@ -3188,10 +3172,6 @@ object Fr_contas_receber: TFr_contas_receber
           ImageIndex = 2
           SkinData.CustomColor = False
           SkinData.CustomFont = False
-          ExplicitLeft = 0
-          ExplicitTop = 0
-          ExplicitWidth = 0
-          ExplicitHeight = 0
           object GroupBox4: TsGroupBox
             Left = 0
             Top = 0
@@ -3999,10 +3979,6 @@ object Fr_contas_receber: TFr_contas_receber
           TabVisible = False
           SkinData.CustomColor = False
           SkinData.CustomFont = False
-          ExplicitLeft = 0
-          ExplicitTop = 0
-          ExplicitWidth = 0
-          ExplicitHeight = 0
           object dgPedidosAgrupar: TDBGrid
             Left = 0
             Top = 0
@@ -7739,7 +7715,7 @@ object Fr_contas_receber: TFr_contas_receber
     Left = 152
     Top = 160
     Bitmap = {
-      494C01010100C809C80910001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010100DC09DC0910001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

@@ -69,13 +69,6 @@ object Fr_pedido_simplificado: TFr_pedido_simplificado
       Height = 13
       Caption = 'Or'#231'amento'
     end
-    object lbSupervisor: TLabel
-      Left = 902
-      Top = 11
-      Width = 51
-      Height = 13
-      Caption = 'Supervisor'
-    end
     object LbNomCliente: TLabel
       Left = 212
       Top = 32
@@ -97,20 +90,6 @@ object Fr_pedido_simplificado: TFr_pedido_simplificado
       Height = 13
       AutoSize = False
       Caption = 'Descricao representante'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clNavy
-      Font.Height = -11
-      Font.Name = 'Tahoma'
-      Font.Style = [fsBold]
-      ParentFont = False
-    end
-    object LbNomSupervisor: TLabel
-      Left = 969
-      Top = 31
-      Width = 250
-      Height = 13
-      AutoSize = False
-      Caption = 'Descricao supervisor'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clNavy
       Font.Height = -11
@@ -179,38 +158,13 @@ object Fr_pedido_simplificado: TFr_pedido_simplificado
       GlyphMode.Blend = 0
       GlyphMode.Grayed = False
     end
-    object Prcod_supervisor: TsComboEdit
-      Left = 902
-      Top = 27
-      Width = 60
-      Height = 21
-      AutoSize = False
-      TabOrder = 3
-      Text = ''
-      OnExit = Prcod_supervisorExit
-      CheckOnExit = True
-      BoundLabel.Indent = 0
-      BoundLabel.Font.Charset = DEFAULT_CHARSET
-      BoundLabel.Font.Color = clWindowText
-      BoundLabel.Font.Height = -11
-      BoundLabel.Font.Name = 'Tahoma'
-      BoundLabel.Font.Style = []
-      BoundLabel.Layout = sclLeft
-      BoundLabel.MaxWidth = 0
-      BoundLabel.UseSkinColor = True
-      SkinData.SkinSection = 'EDIT'
-      OnButtonClick = Prcod_supervisorButtonClick
-      ClickKey = 120
-      GlyphMode.Blend = 0
-      GlyphMode.Grayed = False
-    end
     object Prcod_fop: TsComboEdit
       Left = 18
       Top = 71
       Width = 50
       Height = 21
       AutoSize = False
-      TabOrder = 4
+      TabOrder = 3
       Text = ''
       OnExit = Prcod_fopExit
       CheckOnExit = True
@@ -235,7 +189,7 @@ object Fr_pedido_simplificado: TFr_pedido_simplificado
       Width = 50
       Height = 21
       AutoSize = False
-      TabOrder = 5
+      TabOrder = 4
       Text = ''
       OnExit = Prcod_prazo_pgtoExit
       CheckOnExit = True
@@ -261,7 +215,7 @@ object Fr_pedido_simplificado: TFr_pedido_simplificado
       Height = 21
       Style = csDropDownList
       ItemIndex = 0
-      TabOrder = 6
+      TabOrder = 5
       Text = 'N'#227'o'
       Items.Strings = (
         'N'#227'o'

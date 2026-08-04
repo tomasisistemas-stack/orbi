@@ -116,7 +116,7 @@ type
     Label46: tsLabel;
     Prdta_emissao: TsDateEdit;
     Prdta_saida: TsDateEdit;
-    Prcod_carga: TsEdit;
+    Prcod_carga: TsComboEdit;
     ActionList1: TActionList;
     Ac_inserir: TAction;
     Ac_alterar: TAction;
@@ -197,8 +197,6 @@ type
     XMLNFe: TXMLDocument;
     TaNFe: TsTabSheet;
     Lbnom_supervisor: tsLabel;
-    lbSupervisor: tsLabel;
-    Prcod_supervisor: TsComboEdit;
     Timer1: TTimer;
     Prcod_fornecedor: TsComboEdit;
     LbNom_fornecedor: tsLabel;
@@ -434,6 +432,7 @@ type
     lb_valor_st: tsLabel;
     mmVendas2NAO_VALIDAR_MARGEM: TStringField;
     BtAltTransp: TSpeedButton;
+    BtAltCarga: TSpeedButton;
     M1: TMenuItem;
     pgNFE: TsPageControl;
     TabDadosNFE: TsTabSheet;
@@ -499,7 +498,6 @@ type
     btHistorico: TSpeedButton;
     MePERC_COMISSAO: TsDBCalcEdit;
     lbComis: tsLabel;
-    btAltSup: TSpeedButton;
     ACBrNFe1: TACBrNFe;
     qrGravaXmlCCe: TFDQuery;
     lbTotalFaturado: tsLabel;
@@ -639,9 +637,6 @@ type
     procedure BtnEnviarCancelamentoNFeClick(Sender: TObject);
     procedure BtnDanfeClick(Sender: TObject);
     procedure PrJUSTIF_CANC_NFEChange(Sender: TObject);
-    procedure Prcod_supervisorKeyPress(Sender: TObject; var Key: Char);
-    procedure Prcod_supervisorExit(Sender: TObject);
-    procedure Prcod_supervisorButtonClick(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure Prcod_fornecedorExit(Sender: TObject);
     procedure Prcod_fornecedorButtonClick(Sender: TObject);
@@ -730,6 +725,7 @@ type
     procedure Medesconto_ValorKeyPress(Sender: TObject; var Key: Char);
     procedure Medesconto_ValorExit(Sender: TObject);
     procedure BtAltTranspClick(Sender: TObject);
+    procedure BtAltCargaClick(Sender: TObject);
     procedure M1Click(Sender: TObject);
     procedure I2Click(Sender: TObject);
     procedure q_cceAfterOpen(DataSet: TDataSet);
@@ -747,7 +743,6 @@ type
     procedure edDecTranspExit(Sender: TObject);
     procedure BtStatusClick(Sender: TObject);
     procedure MePERC_COMISSAOExit(Sender: TObject);
-    procedure btAltSupClick(Sender: TObject);
     procedure Mesub_totalExit(Sender: TObject);
     procedure BtnEmailNFe_DevClick(Sender: TObject);
     procedure Prempresa_faturarChange(Sender: TObject);
@@ -774,6 +769,7 @@ type
     procedure imprimirLotedePedidos1Click(Sender: TObject);
     procedure DesfaturarPedido1Click(Sender: TObject);
     procedure Prcod_cargaExit(Sender: TObject);
+    procedure Prcod_cargaButtonClick(Sender: TObject);
     procedure btXmlClick(Sender: TObject);
     procedure btHistoricoClick(Sender: TObject);
     procedure MeqtdExit(Sender: TObject);
@@ -965,7 +961,7 @@ uses
   un_motivo, un_mais_precos, Un_splash, Un_Cliente, Un_Transportadora,
   Un_Fornecedor, Un_produto_fornecedor, Un_produto_fornecedor_unidade,
   un_definir_saldo_inicial, ACBrNFeWebServices, pcnProcNFe, un_email_envio, Un_BB_Cobrancas, Un_BB_Cobrancas_Api, Un_CEF_Cobrancas, Un_CEF_Cobrancas_Api,
-  un_historico_processo_pedido, un_escolhe_impressora_termica, un_nfe, Un_status_emissor, System.JSON;
+  un_historico_processo_pedido, un_escolhe_impressora_termica, un_nfe, Un_status_emissor, System.JSON, Un_Error_Logger;
 
 {$R *.dfm}
 
@@ -1475,6 +1471,7 @@ begin
   Msg := BBMensagemErroApi(E);
   if Trim(APrefixo) <> '' then
     Msg := APrefixo + #13 + Msg;
+  RegistrarErroAplicacao(E, 'BBMessageDlgErroApi', '', Msg);
   MessageDlg(Msg, mtError, [mbOK], 0);
 end;
 procedure TFr_vendas_industria2.Prcod_cargaExit(Sender: TObject);
@@ -1510,6 +1507,43 @@ begin
 
 end;
 
+procedure TFr_vendas_industria2.Prcod_cargaButtonClick(Sender: TObject);
+var
+  Campos_combo: array of string;
+  i: integer;
+  valor_combo: string;
+  chamou_form_old, chamou_pesquisa_old: string;
+begin
+  Application.CreateForm(TFr_localizar, Fr_localizar);
+
+  chamou_form_old := chamou_form;
+  chamou_pesquisa_old := chamou_pesquisa;
+
+  Fr_localizar.Caption := 'Localizar Carga';
+  chamou_pesquisa := 'fr_carga_pedido';
+  chamou_form := 'fr_pedido_carga';
+  chamou_cadastro := 'fr_carga';
+
+  Fr_localizar.BT_cadastro.Caption := 'Cadastro de' + #13 + 'Cargas';
+  Fr_localizar.BT_cadastro.Visible := true;
+
+  SetLength(Campos_combo, 2);
+  Campos_combo[0] := 'Código';
+  Campos_combo[1] := 'Descrição';
+
+  for i := 0 to 1 do
+  begin
+    valor_combo := Campos_combo[i];
+    Fr_localizar.CBcampos.Items.Add(valor_combo);
+  end;
+  Fr_localizar.CBcampos.ItemIndex := 1;
+
+  Fr_localizar.ShowModal;
+  Fr_localizar.Free;
+
+  chamou_form := chamou_form_old;
+  chamou_pesquisa := chamou_pesquisa_old;
+end;
 procedure TFr_vendas_industria2.Prcod_clienteButtonClick(Sender: TObject);
 var
   Campos_combo: array of string;
@@ -2270,6 +2304,8 @@ begin
       Exit;
     end;
 
+
+
     dao.Geral3('select nom_representante, funcionario, MARGEM_MINIMA, MARGEM_IDEAL, INDICE_ABAIXO, INDICE_ACIMA, PERC_COMISSAO_FIXA, somente_consumidor_final from representante where ativo = ''S'' and funcionario in (''0'', ''1'', ''4'') and id=' + Prcod_representante.Text);
     if dao.q3.RecordCount > 0 then
     begin
@@ -2420,10 +2456,21 @@ begin
       else
         cliente_pre_cadastrado := false;
 
-      if FRPRI.TeleVendas then
+      if modo_insert then
       begin
-        if Prcod_representante.Text <> dao.q4.fieldbyname('id_representante').AsString then
-          showmessage('Representante informado no Cliente é diferente ao informado.');
+        if not dao.q4.fieldbyname('id_representante').IsNull then
+        begin
+          if Prcod_representante.Text <> dao.q4.fieldbyname('id_representante').AsString then
+          begin
+            Prcod_representante.Text := dao.q4.fieldbyname('id_representante').AsString;
+            Prcod_representanteExit(Self);
+            if tipo_usuario < '9' then
+            begin
+              Prcod_representante.ReadOnly := True;
+              btAltRep.Enabled := False;
+            end;
+          end;
+        end;
       end;
 
       Lbnom_cliente.Caption := dao.q4.fieldbyname('nom_cliente').AsString + ' | CNPJ: ' + dao.q4.fieldbyname('cnpj').AsString + ' | Cidade: ' + dao.q4.fieldbyname('nom_cidade').AsString + '/' + dao.q4.fieldbyname('uf').AsString;
@@ -3389,7 +3436,7 @@ begin
       Exit;
     end;
 
-{    if venda then
+    if (Lbnom_fop.Caption <> 'DEVOLUÇÃO') then
     begin
       dao.Geral1('select cd.uf from cliente c ' +
                  'left join cidades cd on cd.cod_cidade=c.cod_cidade ' +
@@ -3401,7 +3448,7 @@ begin
         Prcod_fiscal.Text := '6102';
 
         ChecaCFOP;
-    end;}
+    end;
     ChecaCFOP;
   end;
 
@@ -3847,7 +3894,7 @@ begin
     // mmVendas2NOM_PRODUTO.AsString := dao.Q3.fieldbyname('nom_produto').AsString;
 
     cod_fiscal := '';
-      if mform = 'vendas_industria' then
+      if Lbnom_fop.Caption <> 'DEVOLUÇÃO' then
       begin
         if dao.q3.fieldbyname('trib_icms').AsString = '0' then
         begin
@@ -4778,7 +4825,7 @@ begin
 
   Lbnom_supervisor.Caption := q_vendas1.fieldbyname('supervisor').AsString;
 
-  if not venda then
+  if (Lbnom_fop.Caption = 'DEVOLUÇÃO') then
   begin
     Prcod_fornecedorExit(Self);
     CarregaChaveNfeDev;
@@ -5471,7 +5518,11 @@ begin
         }
 
         if not LimparBoletos then
+        begin
+          if dao.cn.InTransaction then
+            dao.cn.Rollback;
           Exit;
+        end;
 
         if Prempresa_faturar.Text = '1' then
           letra_titulo := 'b'
@@ -5620,12 +5671,15 @@ begin
     else
       LimparBoletos;
 
-    q_vendas2.First;
+    if not q_vendas2.Active then
+      ativa_vendas2(nr_documento)
+    else
+      q_vendas2.First;
 
     produto_lst := TStringList.Create;
     qtd_lst := TStringList.Create;
 
-    while not (q_vendas2.Eof) do
+    while q_vendas2.Active and not (q_vendas2.Eof) do
     begin
       produto_lst.Add(q_vendas2.fieldbyname('COD_PRODUTO').AsString);
       qtd_lst.Add(q_vendas2.fieldbyname('QTD').AsString);
@@ -5638,7 +5692,7 @@ begin
       dao.Execsql('UPDATE VENDAS1 A SET PROCESSO_ID = ' + PrProcesso_id.Text + ' WHERE NUMDOC = ' + Prnumdoc.Text);
     end;
 
-    if mform <> 'vendas_devolucoes' then
+    if Lbnom_fop.Caption <> 'DEVOLUÇÃO' then
       FMFUN.GravarProcessoPedido('FATURADO-VENDAS', PrProcesso_id.Text, Prnumdoc.Text)
     else
       FMFUN.GravarProcessoPedido('FATURADO-DEVOLUÇÃO', PrProcesso_id.Text, Prnumdoc.Text);
@@ -5848,8 +5902,15 @@ begin
     btalt.Enabled := false;
 
   Prempresa_faturar.ReadOnly := false;
-  if (FRPRI.TipUsu = '0') or (FRPRI.TipUsu = '1') then
+  if (FRPRI.TipUsu < '9') then
+  begin
     Prcod_representante.ReadOnly := true;
+    btAltRep.Enabled := false;
+  end
+  else begin
+    Prcod_representante.ReadOnly := false;
+    btAltRep.Enabled := true;
+  end;
  {
 
   if trim(PrNFE.Text) <> '' then
@@ -5945,14 +6006,14 @@ begin
     cliente_alterado := false;
 
     Pc_vendas.TabIndex := 0;
-    if (Prcod_representante.Text = '') and venda then
+    if (Prcod_representante.Text = '') and (Lbnom_fop.Caption <> 'DEVOLUÇÃO') then
     begin
       dao.msg('O campo Representante deve ser Preenchido');
       Prcod_representante.SetFocus;
       Exit;
     end;
 
-    if venda and (Lbnom_fop.Caption <> 'DEVOLUÇÃO') then
+    if (Lbnom_fop.Caption <> 'DEVOLUÇÃO') then
     begin
       if Prcod_cliente.Text = '' then
       begin
@@ -6021,7 +6082,7 @@ begin
       end;
     end;
 
-    if mform <> 'vendas_devolucoes' then
+    if Lbnom_fop.Caption <> 'DEVOLUÇÃO' then
     begin
       if not VerificarMargem then
         Exit;
@@ -6096,7 +6157,7 @@ begin
           checar_qtd := false;
           mmVendas2.Edit;
 
-          if mform = 'vendas_industria' then
+          if Lbnom_fop.Caption <> 'DEVOLUÇÃO' then
           begin
             dados_produto(mmVendas2COD_PRODUTO.AsString);
             btgraClick(Self);
@@ -7806,6 +7867,16 @@ end;
 function TFr_vendas_industria2.LimparBoletos: boolean;
 begin
   Result := true;
+
+  dao.Geral1('select count(*) as total from cr1 ' +
+    ' where nr_documento = ' + QuotedStr(Prnumdoc.Text) +
+    ' and coalesce(BOLETO_REMESSA_ORDEM, 0) <> 0');
+  if dao.q1.FieldByName('total').AsInteger > 0 then
+  begin
+    MessageDlg('Nao e possivel limpar os boletos deste pedido, pois existem boletos relacionados a remessa.', mtInformation, [mbOK], 0);
+    Result := false;
+    Exit;
+  end;
 
   {try
     BaixarBoletoApi;
@@ -11301,7 +11372,7 @@ begin
       Exit;
     end;
 
-    if (Prcod_representante.Text = '') and venda then
+    if (Prcod_representante.Text = '') and (Lbnom_fop.Caption <> 'DEVOLUÇÃO')  then
     begin
       dao.msg('O campo Representante deve ser Preenchido');
       BtaltpedClick(Self);
@@ -11339,7 +11410,7 @@ begin
     if not ChecarDadosTransportadora then
       Exit;
 
-    if (Prcod_fop.Text = '') and venda then
+    if (Prcod_fop.Text = '') then
     begin
       dao.msg('O campo Forma de Pagamento deve ser Preenchido');
       BtaltpedClick(Self);
@@ -11348,7 +11419,7 @@ begin
       Exit;
     end;
 
-    if (Prcod_prazo_pgto.Text = '') and venda then
+    if (Prcod_prazo_pgto.Text = '') then
     begin
       dao.msg('O campo Prazo Pagamento deve ser Preenchido');
       BtaltpedClick(Self);
@@ -11761,7 +11832,6 @@ begin
                 BoletoCEF.Titulo.TipoEspecie := '99';
                 BoletoCEF.Titulo.FlagAceite := 'N';
                 BoletoCEF.Titulo.DataEmissao := CEFDataApi(Date);
-                BoletoCEF.Titulo.CodigoMoeda := '9';
                 if UpperCase(Trim(BBFieldStr(Q, 'tip_pessoa', ''))) = 'J' then
                 begin
                   BoletoCEF.Titulo.Pagador.CNPJ := BBOnlyNumbers(BBFieldStr(Q, 'cnpj', ''));
@@ -12197,7 +12267,7 @@ begin
       checar_qtd := false;
       mmVendas2.Edit;
 
-      if mform = 'vendas_industria' then
+      if Lbnom_fop.Caption <> 'DEVOLUÇÃO' then
       begin
         GravarPedido := true;
         Mecod_produtoExit(Self);
@@ -12631,6 +12701,7 @@ begin
   end;
 end;
 
+(*
 procedure TFr_vendas_industria2.Prcod_supervisorKeyPress(Sender: TObject; var Key: Char);
 var
   Campos_combo: array of string;
@@ -12785,6 +12856,8 @@ begin
   end;
 end;
 
+*)
+
 procedure TFr_vendas_industria2.Timer1Timer(Sender: TObject);
 begin
   { if dao.terminal_nfe then
@@ -12912,7 +12985,7 @@ begin
   if not ChecarLiberacao then
     Exit;
 
-  if (Prcod_representante.Text = '') and venda then
+  if (Prcod_representante.Text = '') then
   begin
     dao.msg('O campo Representante deve ser Preenchido');
     BtaltpedClick(Self);
@@ -12955,7 +13028,7 @@ begin
     Exit;
   end;
 }
-  if (Prcod_prazo_pgto.Text = '') and venda then
+  if (Prcod_prazo_pgto.Text = '') then
   begin
     dao.msg('O campo Prazo Pagamento deve ser Preenchido');
     BtaltpedClick(Self);
@@ -13452,11 +13525,6 @@ begin
     gbtotal.Height := 40;
     BtnEmailPedido.Visible := true;
     btAltRep.Enabled := false;
-    btAltSup.Enabled := false;
-
-    Lbnom_supervisor.Visible := false;
-    lbSupervisor.Visible := false;
-    Prcod_supervisor.Visible := false;
   end;
 
   if (FRPRI.TipUsu = '1') then
@@ -14303,12 +14371,29 @@ var
   dia, mes, ano, ord, ext, pathSaida, tempFile, nosso_numero, nosso_numero_div, sql_cliente, dir_remessa: string;
   sequencial_arquivo: integer;
 begin
-  // CABEÇALHO 0
+  if Trim(Prcod_cliente.Text) = '' then Exit;
+
   sequencial_arquivo := 1;
   q_cr1.First;
   FMFUN.ACBrBoleto1.ListadeBoletos.Clear;
 
-  sql_cliente := ' SELECT a.COD_CLIENTE, ' + '   a.NOM_CLIENTE, ' + '   a.ENDERECO, ' + '   a.COMPLEMENTO, ' + '   a.BAIRRO, ' + '   a.CEP, ' + '   a.COD_CIDADE, ' + '   a.TIP_PESSOA, ' + '   a.CNPJ, ' + '   a.CPF, ' + '   a.NR_ENDERECO, ' + '   cd.NOM_CIDADE, ' + '   cd.uf, ' + '   CASE WHEN a.IE IS NULL THEN 1 ELSE 0 END AS ISENTO ' + ' FROM CLIENTE a ' + ' inner join cidades cd on (cd.COD_CIDADE = a.COD_CIDADE) ' + ' where a.cod_cliente = ' + Prcod_cliente.Text;
+  sql_cliente := ' SELECT a.COD_CLIENTE, ' +
+                 '   a.NOM_CLIENTE, ' +
+                 '   a.ENDERECO, ' +
+                 '   a.COMPLEMENTO, ' +
+                 '   a.BAIRRO, ' +
+                 '   a.CEP, ' +
+                 '   a.COD_CIDADE, ' +
+                 '   a.TIP_PESSOA, ' +
+                 '   a.CNPJ, ' +
+                 '   a.CPF, ' +
+                 '   a.NR_ENDERECO, ' +
+                 '   cd.NOM_CIDADE, ' +
+                 '   cd.uf, ' +
+                 '   CASE WHEN a.IE IS NULL THEN 1 ELSE 0 END AS ISENTO ' +
+                 ' FROM CLIENTE a ' +
+                 ' inner join cidades cd on (cd.COD_CIDADE = a.COD_CIDADE) ' +
+                 ' where a.cod_cliente = ' + Prcod_cliente.Text;
 
   dao.Geral4(sql_cliente);
 
@@ -14765,8 +14850,17 @@ begin
       FMFUN.ACBrBoleto1.Cedente.AgenciaDigito := copy(dao.q2.fieldbyname('nr_agencia').AsString, Pos('-', dao.q2.fieldbyname('nr_agencia').AsString) + 1, 2);
       FMFUN.ACBrBoleto1.Cedente.Conta := copy(dao.q2.fieldbyname('nr_conta').AsString, 1, Pos('-', dao.q2.fieldbyname('nr_conta').AsString) - 1);
       FMFUN.ACBrBoleto1.Cedente.ContaDigito := copy(dao.q2.fieldbyname('nr_conta').AsString, Pos('-', dao.q2.fieldbyname('nr_conta').AsString) + 1, 2);
-      FMFUN.ACBrBoleto1.Cedente.CodigoCedente := dao.q2.fieldbyname('codigo_cedente').AsString;
-      FMFUN.ACBrBoleto1.Cedente.Convenio := dao.q2.fieldbyname('convenio').AsString;
+
+      if fmfun.ACBrBoleto1.Banco.TipoCobranca <> cobCaixaEconomica then
+      begin
+        fmfun.ACBrBoleto1.Cedente.CodigoCedente := dao.Q2.fieldbyname('codigo_cedente').AsString;
+        fmfun.ACBrBoleto1.Cedente.Convenio := dao.Q2.fieldbyname('convenio').AsString;
+      end
+      else begin
+        fmfun.ACBrBoleto1.Cedente.CodigoCedente := FMFUN.enchezero(IntToStr(StrToIntDef(dao.Q2.fieldbyname('codigo_cedente').AsString, 0)), 6);
+        fmfun.ACBrBoleto1.Cedente.Convenio := FMFUN.enchezero(IntToStr(StrToIntDef(dao.Q2.fieldbyname('convenio').AsString, 0)), 6);
+      end;
+
       FMFUN.ACBrBoleto1.Cedente.nome := dao.q2.fieldbyname('NOME_CORRENTISTA').AsString;
 
       FMFUN.ACBrBoleto1.Cedente.CNPJCPF := dao.q2.fieldbyname('CNPJ').AsString;
@@ -14842,6 +14936,8 @@ var
   ajustar_cliente: boolean;
   mensagem, emailEndNfe, nfeEmail: string;
 begin
+  if trim(Prcod_cliente.Text) = '' then exit;
+
   Result := false;
   ajustar_cliente := false;
   emailEndNfe := '';
@@ -16112,29 +16208,6 @@ begin
   end;
 end;
 
-procedure TFr_vendas_industria2.btAltSupClick(Sender: TObject);
-begin
-  if not Btaltped.Enabled then
-    Exit;
-  if Prnumdoc.Text = '' then
-    Exit;
-
-  if btAltSup.Caption = 'Alterar' then
-  begin
-    Prcod_supervisor.Enabled := true;
-    Prcod_supervisor.SetFocus;
-    btAltSup.Caption := 'Gravar';
-  end
-  else
-  begin
-    dao.cn.StartTransaction;
-    dao.Execsql('UPDATE VENDAS1 SET COD_SUPERVISOR = ' + Prcod_supervisor.Text + ' WHERE NUMDOC = ' + Prnumdoc.Text);
-    dao.cn.Commit;
-    Prcod_supervisor.Enabled := false;
-    btAltSup.Caption := 'Alterar';
-  end;
-end;
-
 procedure TFr_vendas_industria2.btnNfeDevClick(Sender: TObject);
 var
   EmissaoNFe: TNFePedido;
@@ -16274,7 +16347,7 @@ begin
     Exit;
   end;
 
-  if (Prcod_fop.Text = '') and venda then
+  if (Prcod_fop.Text = '') then
   begin
     dao.msg('Campo Forma de Pagamento deve ser Preenchido!');
     readonly_false('Pr');
@@ -16303,7 +16376,7 @@ begin
     end;
   end;
 
-  if (Prcod_representante.Text = '') and venda then
+  if (Prcod_representante.Text = '') then
   begin
     dao.msg('Campo Representante deve ser Preenchido!');
     readonly_false('Pr');
@@ -17289,6 +17362,43 @@ begin
 
 end;
 
+procedure TFr_vendas_industria2.BtAltCargaClick(Sender: TObject);
+var
+  CodCargaSql: string;
+  CodCargaDigitado: string;
+begin
+
+  if not Btaltped.Enabled then
+    Exit;
+  if Prnumdoc.Text = '' then
+    Exit;
+
+  if BtAltCarga.Caption = 'Alterar' then
+  begin
+    Prcod_carga.Enabled := true;
+    Prcod_carga.SetFocus;
+    BtAltCarga.Caption := 'Gravar';
+  end
+  else
+  begin
+    CodCargaDigitado := Trim(Prcod_carga.Text);
+    Prcod_cargaExit(Self);
+    if (CodCargaDigitado <> '') and (Trim(Prcod_carga.Text) = '') then
+      Exit;
+
+    if Trim(Prcod_carga.Text) = '' then
+      CodCargaSql := 'NULL'
+    else
+      CodCargaSql := QuotedStr(Trim(Prcod_carga.Text));
+
+    dao.cn.StartTransaction;
+    dao.Execsql('UPDATE VENDAS1 SET COD_CARGA = ' + CodCargaSql + ' WHERE NUMDOC = ' + Prnumdoc.Text);
+    dao.cn.Commit;
+    Prcod_carga.Enabled := false;
+    BtAltCarga.Caption := 'Alterar';
+  end;
+
+end;
 procedure TFr_vendas_industria2.btcanClick(Sender: TObject);
 begin
   try
@@ -17447,7 +17557,7 @@ begin
 
   cst := mmVendas2TRIB_ICMS.Value;
   // Calcula o vlr icms do item
-  if mform <> 'vendas_devolucoes' then
+  if Lbnom_fop.Caption <> 'DEVOLUÇÃO' then
   begin
     dados_produto(mmVendas2COD_PRODUTO.AsString);
     CalculoIcmsItem;
@@ -17472,7 +17582,7 @@ begin
   if mmVendas2VLR_ICMS_ITEM.IsNull then
     mmVendas2VLR_ICMS_ITEM.Value := 0;
 
-  if mform <> 'vendas_devolucoes' then
+  if Lbnom_fop.Caption <> 'DEVOLUÇÃO' then
   begin
     if mmVendas2VLR_BC.IsNull then
       mmVendas2VLR_BC.Value := 0;
@@ -17855,8 +17965,8 @@ begin
     ed_Chave_nfe_ref.Clear;
     Prcod_cliente.Clear;
     Prcod_fornecedor.Clear;
-    Prcod_fiscal.Clear;
-    Prempresa_faturar.Clear;
+   { Prcod_fiscal.Clear;
+    Prempresa_faturar.Clear; }
 
     PrCod_clienteExit(self);
     PrCod_fornecedorExit(self);
@@ -18093,35 +18203,3 @@ begin
 end;
 
 end.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

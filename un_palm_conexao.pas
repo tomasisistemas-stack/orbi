@@ -494,7 +494,8 @@ begin
       CarregaDadosPedidoNovos;
       q_pedidos.EnableControls;
     finally
-      ImprimirNotebook(pedidos, true);
+      if pedidos <> '' then
+        ImprimirNotebook(pedidos, true);
     end;
   end;
 end;

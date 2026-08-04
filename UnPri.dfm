@@ -27,7 +27,7 @@ object FRPRI: TFRPRI
   object Image1: TImage
     Left = 250
     Top = 92
-    Width = 414
+    Width = 438
     Height = 478
     Align = alClient
     Picture.Data = {
@@ -1895,9 +1895,9 @@ object FRPRI: TFRPRI
     Stretch = True
     Transparent = True
     Visible = False
-    ExplicitLeft = 418
-    ExplicitTop = 148
-    ExplicitWidth = 778
+    ExplicitLeft = 245
+    ExplicitTop = 86
+    ExplicitWidth = 414
   end
   object sbFechar: TsSpeedButton
     Left = 3
@@ -9637,9 +9637,9 @@ object FRPRI: TFRPRI
     OnClick = Button3Click
   end
   object pnlCertAviso: TsPanel
-    Left = 664
+    Left = 688
     Top = 92
-    Width = 364
+    Width = 340
     Height = 478
     Align = alRight
     Color = clInfoBk
@@ -9655,6 +9655,8 @@ object FRPRI: TFRPRI
       Align = alLeft
       Brush.Color = clRed
       Pen.Style = psClear
+      ExplicitLeft = 162
+      ExplicitTop = -4
     end
     object lblCertAvisoTitulo: TsLabel
       Left = 12
@@ -9672,7 +9674,7 @@ object FRPRI: TFRPRI
     object lblCertAvisoMsg: TsLabel
       Left = 12
       Top = 24
-      Width = 1008
+      Width = 324
       Height = 18
       AutoSize = False
       Caption = 'Aguardando verificacao do certificado.'
@@ -9683,6 +9685,1098 @@ object FRPRI: TFRPRI
       Font.Height = -11
       Font.Name = 'MS Sans Serif'
       Font.Style = []
+    end
+  end
+  object pgDashboard: TPageControl
+    Left = 250
+    Top = 92
+    Width = 438
+    Height = 478
+    ActivePage = tsVendas
+    Align = alClient
+    TabOrder = 8
+    object tsVendas: TTabSheet
+      Caption = 'Vendas'
+      object DashVendasRoot: TPanel
+        Left = 0
+        Top = 0
+        Width = 430
+        Height = 450
+        Align = alClient
+        BevelOuter = bvNone
+        Color = 16775150
+        ParentBackground = False
+        TabOrder = 0
+        object DashChartPanel: TPanel
+          Left = 30
+          Top = 0
+          Width = 400
+          Height = 450
+          Align = alRight
+          BevelOuter = bvNone
+          Color = clWhite
+          ParentBackground = False
+          TabOrder = 1
+          object DashChartMetaRealizado: TChart
+            Left = 0
+            Top = 0
+            Width = 400
+            Height = 450
+            Legend.Alignment = laBottom
+            Title.Text.Strings = (
+              'Meta x Realizado')
+            BottomAxis.LabelsAngle = 45
+            View3D = False
+            Align = alClient
+            TabOrder = 0
+            DefaultCanvas = 'TGDIPlusCanvas'
+            ColorPaletteIndex = 13
+            object DashSeriesRealizado: TBarSeries
+              Marks.Visible = False
+              SeriesColor = 14847806
+              Title = 'Realizado'
+              XValues.Name = 'X'
+              XValues.Order = loAscending
+              YValues.Name = 'Bar'
+              YValues.Order = loNone
+            end
+            object DashSeriesMeta: TLineSeries
+              SeriesColor = clRed
+              Title = 'Meta'
+              Brush.BackColor = clDefault
+              LinePen.Width = 2
+              Pointer.InflateMargins = True
+              Pointer.Style = psCircle
+              Pointer.Visible = True
+              XValues.Name = 'X'
+              XValues.Order = loAscending
+              YValues.Name = 'Y'
+              YValues.Order = loNone
+            end
+          end
+        end
+        object DashContentPanel: TPanel
+          Left = 0
+          Top = 0
+          Width = 30
+          Height = 450
+          Align = alClient
+          BevelOuter = bvNone
+          Color = 16775150
+          ParentBackground = False
+          TabOrder = 0
+          object DashTopo: TPanel
+            Left = 0
+            Top = 0
+            Width = 30
+            Height = 72
+            Align = alTop
+            BevelOuter = bvNone
+            Color = 14847806
+            ParentBackground = False
+            TabOrder = 0
+            object DashTitulo: TLabel
+              Left = 16
+              Top = 10
+              Width = 102
+              Height = 24
+              Caption = 'Dashboard'
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clWhite
+              Font.Height = -21
+              Font.Name = 'MS Sans Serif'
+              Font.Style = [fsBold]
+              ParentFont = False
+              Transparent = True
+            end
+            object DashSubtitulo: TLabel
+              Left = 18
+              Top = 42
+              Width = 77
+              Height = 13
+              Caption = 'Painel comercial'
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clWhite
+              Font.Height = -11
+              Font.Name = 'MS Sans Serif'
+              Font.Style = []
+              ParentFont = False
+              Transparent = True
+            end
+            object DashCbMes: TComboBox
+              Left = 250
+              Top = 22
+              Width = 120
+              Height = 21
+              Style = csDropDownList
+              TabOrder = 0
+            end
+          end
+          object DashFiltros: TPanel
+            Left = 0
+            Top = 72
+            Width = 30
+            Height = 44
+            Align = alTop
+            BevelOuter = bvNone
+            Color = clWhite
+            ParentBackground = False
+            TabOrder = 1
+            object DashLbStatus: TLabel
+              Left = 10
+              Top = 14
+              Width = 30
+              Height = 13
+              Caption = 'Status'
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clGray
+              Font.Height = -11
+              Font.Name = 'MS Sans Serif'
+              Font.Style = []
+              ParentFont = False
+              Transparent = True
+            end
+            object DashLbDias: TLabel
+              Left = 162
+              Top = 14
+              Width = 21
+              Height = 13
+              Caption = 'Dias'
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clGray
+              Font.Height = -11
+              Font.Name = 'MS Sans Serif'
+              Font.Style = []
+              ParentFont = False
+              Transparent = True
+            end
+            object DashLbBusca: TLabel
+              Left = 276
+              Top = 14
+              Width = 30
+              Height = 13
+              Caption = 'Busca'
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clGray
+              Font.Height = -11
+              Font.Name = 'MS Sans Serif'
+              Font.Style = []
+              ParentFont = False
+              Transparent = True
+            end
+            object DashCbStatus: TComboBox
+              Left = 56
+              Top = 10
+              Width = 95
+              Height = 21
+              Style = csDropDownList
+              ItemIndex = 0
+              TabOrder = 0
+              Text = 'FATURADO'
+              Items.Strings = (
+                'FATURADO'
+                'ABERTO'
+                'TODOS')
+            end
+            object DashEdDiaInicial: TEdit
+              Left = 196
+              Top = 10
+              Width = 32
+              Height = 21
+              TabOrder = 1
+              Text = '01'
+            end
+            object DashEdDiaFinal: TEdit
+              Left = 232
+              Top = 10
+              Width = 32
+              Height = 21
+              TabOrder = 2
+            end
+            object DashEdBusca: TEdit
+              Left = 318
+              Top = 10
+              Width = 160
+              Height = 21
+              TabOrder = 3
+            end
+            object DashBtnAtualizar: TButton
+              Left = 486
+              Top = 8
+              Width = 75
+              Height = 25
+              Caption = 'Atualizar'
+              TabOrder = 4
+            end
+          end
+          object DashCards: TPanel
+            Left = 0
+            Top = 116
+            Width = 30
+            Height = 144
+            Align = alTop
+            BevelOuter = bvNone
+            Color = 16775150
+            ParentBackground = False
+            TabOrder = 2
+            object DashCardRealizado: TPanel
+              Left = 8
+              Top = 8
+              Width = 160
+              Height = 60
+              BevelOuter = bvLowered
+              Color = 16775408
+              ParentBackground = False
+              TabOrder = 0
+              object DashCardRealizadoTitulo: TLabel
+                Left = 10
+                Top = 8
+                Width = 71
+                Height = 13
+                Caption = 'REALIZADO'
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clGray
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = [fsBold]
+                ParentFont = False
+                Transparent = True
+              end
+              object DashCardRealizadoValor: TLabel
+                Left = 10
+                Top = 28
+                Width = 46
+                Height = 13
+                Caption = 'R$ 0,00'
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clBlack
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = [fsBold]
+                ParentFont = False
+                Transparent = True
+              end
+              object DashCardRealizadoSub: TLabel
+                Left = 10
+                Top = 44
+                Width = 3
+                Height = 13
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clGray
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = []
+                ParentFont = False
+                Transparent = True
+              end
+            end
+            object DashCardClientes: TPanel
+              Left = 178
+              Top = 8
+              Width = 160
+              Height = 60
+              BevelOuter = bvLowered
+              Color = 16775408
+              ParentBackground = False
+              TabOrder = 1
+              object DashCardClientesTitulo: TLabel
+                Left = 10
+                Top = 8
+                Width = 61
+                Height = 13
+                Caption = 'CLIENTES'
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clGray
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = [fsBold]
+                ParentFont = False
+                Transparent = True
+              end
+              object DashCardClientesValor: TLabel
+                Left = 10
+                Top = 28
+                Width = 8
+                Height = 13
+                Caption = '0'
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clBlack
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = [fsBold]
+                ParentFont = False
+                Transparent = True
+              end
+              object DashCardClientesSub: TLabel
+                Left = 10
+                Top = 44
+                Width = 3
+                Height = 13
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clGray
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = []
+                ParentFont = False
+                Transparent = True
+              end
+            end
+            object DashCardPositivacao: TPanel
+              Left = 350
+              Top = 8
+              Width = 160
+              Height = 60
+              BevelOuter = bvLowered
+              Color = 16775408
+              ParentBackground = False
+              TabOrder = 2
+              object DashCardPositivacaoTitulo: TLabel
+                Left = 10
+                Top = 8
+                Width = 83
+                Height = 13
+                Caption = 'POSITIVACAO'
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clGray
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = [fsBold]
+                ParentFont = False
+                Transparent = True
+              end
+              object DashCardPositivacaoValor: TLabel
+                Left = 10
+                Top = 28
+                Width = 35
+                Height = 13
+                Caption = '0,00%'
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clBlack
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = [fsBold]
+                ParentFont = False
+                Transparent = True
+              end
+              object DashCardPositivacaoSub: TLabel
+                Left = 10
+                Top = 44
+                Width = 3
+                Height = 13
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clGray
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = []
+                ParentFont = False
+                Transparent = True
+              end
+            end
+            object DashCardDesconto: TPanel
+              Left = 650
+              Top = 6
+              Width = 160
+              Height = 60
+              BevelOuter = bvLowered
+              Color = 16775408
+              ParentBackground = False
+              TabOrder = 3
+              object DashCardDescontoTitulo: TLabel
+                Left = 10
+                Top = 8
+                Width = 113
+                Height = 13
+                Caption = 'DESCONTO MEDIO'
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clGray
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = [fsBold]
+                ParentFont = False
+                Transparent = True
+              end
+              object DashCardDescontoValor: TLabel
+                Left = 10
+                Top = 28
+                Width = 35
+                Height = 13
+                Caption = '0,00%'
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clBlack
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = [fsBold]
+                ParentFont = False
+                Transparent = True
+              end
+              object DashCardDescontoSub: TLabel
+                Left = 10
+                Top = 44
+                Width = 3
+                Height = 13
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clGray
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = []
+                ParentFont = False
+                Transparent = True
+              end
+            end
+            object DashCardTicket: TPanel
+              Left = 8
+              Top = 76
+              Width = 160
+              Height = 60
+              BevelOuter = bvLowered
+              Color = 16775408
+              ParentBackground = False
+              TabOrder = 4
+              object DashCardTicketTitulo: TLabel
+                Left = 10
+                Top = 8
+                Width = 89
+                Height = 13
+                Caption = 'TICKET MEDIO'
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clGray
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = [fsBold]
+                ParentFont = False
+                Transparent = True
+              end
+              object DashCardTicketValor: TLabel
+                Left = 10
+                Top = 28
+                Width = 46
+                Height = 13
+                Caption = 'R$ 0,00'
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clBlack
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = [fsBold]
+                ParentFont = False
+                Transparent = True
+              end
+              object DashCardTicketSub: TLabel
+                Left = 10
+                Top = 44
+                Width = 3
+                Height = 13
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clGray
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = []
+                ParentFont = False
+                Transparent = True
+              end
+            end
+            object DashCardComissao: TPanel
+              Left = 178
+              Top = 76
+              Width = 160
+              Height = 60
+              BevelOuter = bvLowered
+              Color = 16775408
+              ParentBackground = False
+              TabOrder = 5
+              object DashCardComissaoTitulo: TLabel
+                Left = 10
+                Top = 8
+                Width = 65
+                Height = 13
+                Caption = 'COMISSAO'
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clGray
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = [fsBold]
+                ParentFont = False
+                Transparent = True
+              end
+              object DashCardComissaoValor: TLabel
+                Left = 10
+                Top = 28
+                Width = 46
+                Height = 13
+                Caption = 'R$ 0,00'
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clBlack
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = [fsBold]
+                ParentFont = False
+                Transparent = True
+              end
+              object DashCardComissaoSub: TLabel
+                Left = 10
+                Top = 44
+                Width = 3
+                Height = 13
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clGray
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = []
+                ParentFont = False
+                Transparent = True
+              end
+            end
+            object DashCardMeta: TPanel
+              Left = 350
+              Top = 74
+              Width = 160
+              Height = 60
+              BevelOuter = bvLowered
+              Color = 16775408
+              ParentBackground = False
+              TabOrder = 6
+              object DashCardMetaTitulo: TLabel
+                Left = 10
+                Top = 8
+                Width = 35
+                Height = 13
+                Caption = 'META'
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clGray
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = [fsBold]
+                ParentFont = False
+                Transparent = True
+              end
+              object DashCardMetaValor: TLabel
+                Left = 10
+                Top = 28
+                Width = 46
+                Height = 13
+                Caption = 'R$ 0,00'
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clBlack
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = [fsBold]
+                ParentFont = False
+                Transparent = True
+              end
+              object DashCardMetaSub: TLabel
+                Left = 10
+                Top = 44
+                Width = 3
+                Height = 13
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clGray
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = []
+                ParentFont = False
+                Transparent = True
+              end
+            end
+            object DashCardResumo: TPanel
+              Left = 650
+              Top = 74
+              Width = 160
+              Height = 60
+              BevelOuter = bvLowered
+              Color = 16775408
+              ParentBackground = False
+              TabOrder = 7
+              object DashCardResumoTitulo: TLabel
+                Left = 10
+                Top = 8
+                Width = 54
+                Height = 13
+                Caption = 'RESUMO'
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clGray
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = [fsBold]
+                ParentFont = False
+                Transparent = True
+              end
+              object DashCardResumoValor: TLabel
+                Left = 10
+                Top = 28
+                Width = 56
+                Height = 13
+                Caption = '0 pedidos'
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clBlack
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = [fsBold]
+                ParentFont = False
+                Transparent = True
+              end
+              object DashCardResumoSub: TLabel
+                Left = 10
+                Top = 44
+                Width = 3
+                Height = 13
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clGray
+                Font.Height = -11
+                Font.Name = 'MS Sans Serif'
+                Font.Style = []
+                ParentFont = False
+                Transparent = True
+              end
+            end
+          end
+          object DashListaPanel: TPanel
+            Left = 0
+            Top = 260
+            Width = 30
+            Height = 190
+            Align = alClient
+            BevelOuter = bvNone
+            Color = clWhite
+            ParentBackground = False
+            TabOrder = 3
+            object DashListaTitulo: TLabel
+              Left = 10
+              Top = 8
+              Width = 46
+              Height = 13
+              Caption = 'Pedidos'
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clBlack
+              Font.Height = -11
+              Font.Name = 'MS Sans Serif'
+              Font.Style = [fsBold]
+              ParentFont = False
+              Transparent = True
+            end
+            object DashListaQtd: TLabel
+              Left = 300
+              Top = 8
+              Width = 46
+              Height = 13
+              Caption = '0 pedidos'
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clGray
+              Font.Height = -11
+              Font.Name = 'MS Sans Serif'
+              Font.Style = []
+              ParentFont = False
+              Transparent = True
+            end
+            object DashGridPedidos: TStringGrid
+              Left = 0
+              Top = 0
+              Width = 30
+              Height = 190
+              Align = alClient
+              ColCount = 6
+              FixedCols = 0
+              RowCount = 2
+              Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowSelect]
+              TabOrder = 0
+              ColWidths = (
+                70
+                80
+                299
+                105
+                70
+                105)
+            end
+          end
+        end
+      end
+    end
+    object tsClientesNaoAtendidos: TTabSheet
+      Caption = 'Clientes N'#227'o Atendidos'
+      object CliNaoRoot: TPanel
+        Left = 0
+        Top = 0
+        Width = 430
+        Height = 450
+        Align = alClient
+        BevelOuter = bvNone
+        Color = clWhite
+        ParentBackground = False
+        TabOrder = 0
+        object CliNaoFiltros: TPanel
+          Left = 0
+          Top = 0
+          Width = 430
+          Height = 48
+          Align = alTop
+          BevelOuter = bvNone
+          Color = clWhite
+          ParentBackground = False
+          TabOrder = 0
+          object CliNaoLbMes: TLabel
+            Left = 12
+            Top = 16
+            Width = 44
+            Height = 13
+            Caption = 'Mes/Ano'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clGray
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Style = []
+            ParentFont = False
+            Transparent = True
+          end
+          object CliNaoLbBusca: TLabel
+            Left = 254
+            Top = 16
+            Width = 30
+            Height = 13
+            Caption = 'Busca'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clGray
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Style = []
+            ParentFont = False
+            Transparent = True
+          end
+          object CliNaoLbStatus: TLabel
+            Left = 650
+            Top = 16
+            Width = 110
+            Height = 13
+            Caption = 'Aguardando consulta...'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clGray
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Style = []
+            ParentFont = False
+            Transparent = True
+          end
+          object CliNaoCbMes: TComboBox
+            Left = 64
+            Top = 12
+            Width = 120
+            Height = 21
+            Style = csDropDownList
+            TabOrder = 0
+          end
+          object CliNaoBtnAtualizar: TButton
+            Left = 190
+            Top = 10
+            Width = 54
+            Height = 25
+            Caption = 'Atualizar'
+            TabOrder = 1
+          end
+          object CliNaoEdBusca: TEdit
+            Left = 290
+            Top = 12
+            Width = 220
+            Height = 21
+            TabOrder = 2
+          end
+        end
+        object CliNaoGrid: TStringGrid
+          Left = 0
+          Top = 48
+          Width = 430
+          Height = 402
+          Align = alClient
+          ColCount = 4
+          FixedCols = 0
+          RowCount = 2
+          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowSelect]
+          TabOrder = 1
+          ExplicitWidth = 766
+          ColWidths = (
+            80
+            420
+            240
+            110)
+        end
+      end
+    end
+    object tsTotais: TTabSheet
+      Caption = 'Totais'
+      object DashTotaisRoot: TPanel
+        Left = 0
+        Top = 0
+        Width = 430
+        Height = 450
+        Align = alClient
+        BevelOuter = bvNone
+        Color = clWhite
+        ParentBackground = False
+        TabOrder = 0
+        object DashTotaisTopo: TPanel
+          Left = 0
+          Top = 0
+          Width = 430
+          Height = 48
+          Align = alTop
+          BevelOuter = bvNone
+          Color = 14847806
+          ParentBackground = False
+          TabOrder = 0
+          object DashTotaisTitulo: TLabel
+            Left = 16
+            Top = 12
+            Width = 57
+            Height = 24
+            Caption = 'Totais'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWhite
+            Font.Height = -21
+            Font.Name = 'MS Sans Serif'
+            Font.Style = [fsBold]
+            ParentFont = False
+            Transparent = True
+          end
+          object DashTotaisStatus: TLabel
+            Left = 352
+            Top = 18
+            Width = 110
+            Height = 13
+            Caption = 'Aguardando consulta...'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWhite
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Style = []
+            ParentFont = False
+            Transparent = True
+          end
+          object DashTotaisLbMes: TLabel
+            Left = 136
+            Top = 18
+            Width = 44
+            Height = 13
+            Caption = 'Mes/Ano'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWhite
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Style = []
+            ParentFont = False
+            Transparent = True
+          end
+          object DashTotaisCbMes: TComboBox
+            Left = 188
+            Top = 14
+            Width = 120
+            Height = 21
+            Style = csDropDownList
+            TabOrder = 0
+          end
+        end
+        object DashChartTotaisEmpresa: TChart
+          Left = 0
+          Top = 48
+          Width = 760
+          Height = 402
+          Legend.Alignment = laBottom
+          Title.Text.Strings = (
+            '')
+          View3D = False
+          View3DOptions.Elevation = 315
+          View3DOptions.Orthogonal = False
+          View3DOptions.Perspective = 0
+          View3DOptions.Rotation = 360
+          Align = alLeft
+          TabOrder = 1
+          DefaultCanvas = 'TGDIPlusCanvas'
+          ColorPaletteIndex = 13
+          object DashSeriesTotaisEmpresa: TPieSeries
+            Marks.Visible = False
+            Title = 'Faturado'
+            XValues.Order = loAscending
+            YValues.Name = 'Pie'
+            YValues.Order = loNone
+            Frame.InnerBrush.BackColor = clRed
+            Frame.InnerBrush.Gradient.EndColor = clGray
+            Frame.InnerBrush.Gradient.MidColor = clWhite
+            Frame.InnerBrush.Gradient.StartColor = 4210752
+            Frame.InnerBrush.Gradient.Visible = True
+            Frame.MiddleBrush.BackColor = clYellow
+            Frame.MiddleBrush.Gradient.EndColor = 8553090
+            Frame.MiddleBrush.Gradient.MidColor = clWhite
+            Frame.MiddleBrush.Gradient.StartColor = clGray
+            Frame.MiddleBrush.Gradient.Visible = True
+            Frame.OuterBrush.BackColor = clGreen
+            Frame.OuterBrush.Gradient.EndColor = 4210752
+            Frame.OuterBrush.Gradient.MidColor = clWhite
+            Frame.OuterBrush.Gradient.StartColor = clSilver
+            Frame.OuterBrush.Gradient.Visible = True
+            Frame.Width = 4
+            OtherSlice.Legend.Visible = False
+          end
+        end
+        object DashChartTotaisStatus: TChart
+          Left = 760
+          Top = 48
+          Width = 246
+          Height = 402
+          Legend.Alignment = laBottom
+          Title.Text.Strings = (
+            'Faturado x Em aberto')
+          View3D = False
+          Align = alClient
+          TabOrder = 2
+          DefaultCanvas = 'TGDIPlusCanvas'
+          ColorPaletteIndex = 13
+          object DashSeriesTotaisStatus: TBarSeries
+            Title = 'Totais'
+            XValues.Name = 'X'
+            XValues.Order = loAscending
+            YValues.Name = 'Bar'
+            YValues.Order = loNone
+          end
+        end
+      end
+    end
+    object tsFinanceiro: TTabSheet
+      Caption = 'Financeiro'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
+      object FinRoot: TPanel
+        Left = 0
+        Top = 0
+        Width = 766
+        Height = 450
+        Align = alClient
+        BevelOuter = bvNone
+        Color = clWhite
+        ParentBackground = False
+        TabOrder = 0
+        object FinTopo: TPanel
+          Left = 0
+          Top = 0
+          Width = 766
+          Height = 48
+          Align = alTop
+          BevelOuter = bvNone
+          Color = 14847806
+          ParentBackground = False
+          TabOrder = 0
+          object FinTitulo: TLabel
+            Left = 16
+            Top = 12
+            Width = 101
+            Height = 24
+            Caption = 'Financeiro'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWhite
+            Font.Height = -21
+            Font.Name = 'MS Sans Serif'
+            Font.Style = [fsBold]
+            ParentFont = False
+            Transparent = True
+          end
+          object FinStatus: TLabel
+            Left = 140
+            Top = 18
+            Width = 110
+            Height = 13
+            Caption = 'Aguardando consulta...'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWhite
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Style = []
+            ParentFont = False
+            Transparent = True
+          end
+        end
+        object FinChartInadimplencia: TChart
+          Left = 0
+          Top = 48
+          Width = 380
+          Height = 402
+          Legend.Alignment = laBottom
+          Title.Text.Strings = (
+            '')
+          View3D = False
+          View3DOptions.Elevation = 315
+          View3DOptions.Orthogonal = False
+          View3DOptions.Perspective = 0
+          View3DOptions.Rotation = 360
+          Align = alLeft
+          TabOrder = 1
+          DefaultCanvas = 'TGDIPlusCanvas'
+          ColorPaletteIndex = 13
+          object FinSeriesInadimplencia: TPieSeries
+            Marks.Visible = False
+            Title = 'Financeiro'
+            XValues.Order = loAscending
+            YValues.Name = 'Pie'
+            YValues.Order = loNone
+            Frame.InnerBrush.BackColor = clRed
+            Frame.InnerBrush.Gradient.EndColor = clGray
+            Frame.InnerBrush.Gradient.MidColor = clWhite
+            Frame.InnerBrush.Gradient.StartColor = 4210752
+            Frame.InnerBrush.Gradient.Visible = True
+            Frame.MiddleBrush.BackColor = clYellow
+            Frame.MiddleBrush.Gradient.EndColor = 8553090
+            Frame.MiddleBrush.Gradient.MidColor = clWhite
+            Frame.MiddleBrush.Gradient.StartColor = clGray
+            Frame.MiddleBrush.Gradient.Visible = True
+            Frame.OuterBrush.BackColor = clGreen
+            Frame.OuterBrush.Gradient.EndColor = 4210752
+            Frame.OuterBrush.Gradient.MidColor = clWhite
+            Frame.OuterBrush.Gradient.StartColor = clSilver
+            Frame.OuterBrush.Gradient.Visible = True
+            Frame.Width = 4
+            OtherSlice.Legend.Visible = False
+          end
+        end
+        object FinGridPanel: TPanel
+          Left = 380
+          Top = 48
+          Width = 386
+          Height = 402
+          Align = alClient
+          BevelOuter = bvNone
+          Color = clWhite
+          ParentBackground = False
+          TabOrder = 2
+          object FinGridTitulo: TLabel
+            Left = 8
+            Top = 8
+            Width = 195
+            Height = 13
+            Caption = 'Ranking de clientes inadimplentes'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Style = [fsBold]
+            ParentFont = False
+            Transparent = True
+          end
+          object FinGrid: TStringGrid
+            Left = 0
+            Top = 28
+            Width = 386
+            Height = 374
+            Align = alClient
+            ColCount = 6
+            FixedCols = 0
+            RowCount = 2
+            Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowSelect]
+            TabOrder = 0
+            ColWidths = (
+              70
+              300
+              60
+              90
+              105
+              55)
+          end
+        end
+      end
     end
   end
   object ISMTPmail: TIdSMTP
@@ -10288,6 +11382,8 @@ object FRPRI: TFRPRI
           end
           object C9: TMenuItem
             Caption = 'Completo'
+            Enabled = False
+            Visible = False
             OnClick = C9Click
           end
         end
@@ -10719,7 +11815,6 @@ object FRPRI: TFRPRI
     Top = 184
   end
   object ApplicationEvents1: TApplicationEvents
-    OnActivate = ApplicationEvents1Activate
     Left = 824
     Top = 392
   end

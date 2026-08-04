@@ -3338,6 +3338,10 @@ object Fr_produtos: TFr_produtos
       TabVisible = False
       SkinData.CustomColor = False
       SkinData.CustomFont = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object GroupBox10: TsGroupBox
         Left = 3
         Top = 1
@@ -3692,6 +3696,10 @@ object Fr_produtos: TFr_produtos
       ImageIndex = 6
       SkinData.CustomColor = False
       SkinData.CustomFont = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object GroupBox7: TsGroupBox
         Left = 0
         Top = 65
@@ -3954,6 +3962,10 @@ object Fr_produtos: TFr_produtos
             Caption = 'Entradas'
             SkinData.CustomColor = False
             SkinData.CustomFont = False
+            ExplicitLeft = 0
+            ExplicitTop = 0
+            ExplicitWidth = 0
+            ExplicitHeight = 0
             object Panel4: TsPanel
               Left = 232
               Top = 32
@@ -4035,6 +4047,10 @@ object Fr_produtos: TFr_produtos
             ImageIndex = 1
             SkinData.CustomColor = False
             SkinData.CustomFont = False
+            ExplicitLeft = 0
+            ExplicitTop = 0
+            ExplicitWidth = 0
+            ExplicitHeight = 0
             object DBGrid2: TDBGrid
               Left = 0
               Top = 0
@@ -4100,6 +4116,10 @@ object Fr_produtos: TFr_produtos
             ImageIndex = 2
             SkinData.CustomColor = False
             SkinData.CustomFont = False
+            ExplicitLeft = 0
+            ExplicitTop = 0
+            ExplicitWidth = 0
+            ExplicitHeight = 0
             object DBGrid3: TDBGrid
               Left = 0
               Top = 0
@@ -4165,6 +4185,10 @@ object Fr_produtos: TFr_produtos
             ImageIndex = 3
             SkinData.CustomColor = False
             SkinData.CustomFont = False
+            ExplicitLeft = 0
+            ExplicitTop = 0
+            ExplicitWidth = 0
+            ExplicitHeight = 0
             object DBGrid4: TDBGrid
               Left = 0
               Top = 0
@@ -4654,6 +4678,10 @@ object Fr_produtos: TFr_produtos
       ImageIndex = 2
       SkinData.CustomColor = False
       SkinData.CustomFont = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object btGrafico: TsSpeedButton
         Left = 627
         Top = 127
@@ -6636,6 +6664,10 @@ object Fr_produtos: TFr_produtos
       ImageIndex = 3
       SkinData.CustomColor = False
       SkinData.CustomFont = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object GroupBox6: TsGroupBox
         Left = 336
         Top = 8
@@ -6884,6 +6916,10 @@ object Fr_produtos: TFr_produtos
       ImageIndex = 1
       SkinData.CustomColor = False
       SkinData.CustomFont = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object GroupBox4: TsGroupBox
         Left = 4
         Top = 60
@@ -7388,6 +7424,10 @@ object Fr_produtos: TFr_produtos
       ImageIndex = 5
       SkinData.CustomColor = False
       SkinData.CustomFont = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label47: TsLabel
         Left = 272
         Top = 8
@@ -7739,6 +7779,10 @@ object Fr_produtos: TFr_produtos
       ImageIndex = 7
       SkinData.CustomColor = False
       SkinData.CustomFont = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Panel10: TsPanel
         Left = 0
         Top = 0
@@ -7984,6 +8028,10 @@ object Fr_produtos: TFr_produtos
       ImageIndex = 8
       SkinData.CustomColor = False
       SkinData.CustomFont = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Panel9: TsPanel
         Left = 0
         Top = 0

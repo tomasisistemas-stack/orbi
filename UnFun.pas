@@ -324,8 +324,8 @@ begin
     if ACBrBoleto1.Banco.Numero = 104 then
     begin
       LocalPagamento := 'EM TODA A REDE BANCÁRIA E SEUS CORRESPONDENTES ATÉ O VALOR LIMITE';
-      ACBrBoleto1.Banco.LayoutVersaoArquivo := 107;
-      ACBrBoleto1.Banco.LayoutVersaoLote := 67;
+      // Nao setar layout 107/67 na impressao: no ACBr Caixa isso altera o campo livre para 7 digitos.
+      // O layout da remessa continua sendo definido pela conta corrente.
     end;
     // MEnsagem exigida pelo cef
 
@@ -418,13 +418,13 @@ begin
     if trim(Instrucao) <> '' then
       mensagem.Add(Instrucao);
 
-    if ACBrBoleto1.Banco.Numero = 104 then
+    {if ACBrBoleto1.Banco.Numero = 104 then
     begin
       mensagem.Add('SAC CAIXA: 0800 726 0101 (Informações, reclamações, sugestões e elogios).');
       mensagem.Add('Para pessoas com deficiência auditiva ou de fala: 0800 726 2492.');
       mensagem.Add('Ouvidoria: 0800 725 7474 (Reclamações não solucionadas e denúncias).');
       mensagem.Add('caixa.gov.br');
-    end;
+    end;}
 
     if ACBrBoleto1.Banco.Numero = 41 then
     begin

@@ -12,7 +12,7 @@ interface
 
 uses
     Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, Menus, ComCtrls, Buttons, XPMan, AppEvnts,
+  Dialogs, Menus, ComCtrls, Buttons, XPMan, AppEvnts, DateUtils,
   XPStyleActnCtrls, ActnList, ActnMan, ExtCtrls,
   StdCtrls, midaslib, IdGlobal,
   shellApi, ACBrBase, IdMessage,
@@ -35,7 +35,9 @@ uses
   ACBrDFeReport, ACBrDFeDANFeReport, frxExportBaseDialog,
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Param,
   FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf, FireDAC.DApt.Intf,
-  FireDAC.Stan.Async, FireDAC.DApt, FireDAC.Comp.DataSet, FireDAC.Comp.Client, sLabel;
+  FireDAC.Stan.Async, FireDAC.DApt, FireDAC.Comp.DataSet, FireDAC.Comp.Client, sLabel,
+  VclTee.TeEngine, VclTee.Series, VclTee.TeeProcs, VclTee.Chart,
+  VclTee.TeeGDIPlus;
 
 
 var
@@ -339,6 +341,95 @@ type
     lblCertAvisoMsg: TsLabel;
     S6: TMenuItem;
     C9: TMenuItem;
+    pgDashboard: TPageControl;
+    tsVendas: TTabSheet;
+    DashVendasRoot: TPanel;
+    DashContentPanel: TPanel;
+    DashTopo: TPanel;
+    DashTitulo: TLabel;
+    DashSubtitulo: TLabel;
+    DashCbMes: TComboBox;
+    DashFiltros: TPanel;
+    DashLbStatus: TLabel;
+    DashCbStatus: TComboBox;
+    DashLbDias: TLabel;
+    DashEdDiaInicial: TEdit;
+    DashEdDiaFinal: TEdit;
+    DashLbBusca: TLabel;
+    DashEdBusca: TEdit;
+    DashBtnAtualizar: TButton;
+    DashCards: TPanel;
+    DashCardRealizado: TPanel;
+    DashCardRealizadoTitulo: TLabel;
+    DashCardRealizadoValor: TLabel;
+    DashCardRealizadoSub: TLabel;
+    DashCardClientes: TPanel;
+    DashCardClientesTitulo: TLabel;
+    DashCardClientesValor: TLabel;
+    DashCardClientesSub: TLabel;
+    DashCardPositivacao: TPanel;
+    DashCardPositivacaoTitulo: TLabel;
+    DashCardPositivacaoValor: TLabel;
+    DashCardPositivacaoSub: TLabel;
+    DashCardDesconto: TPanel;
+    DashCardDescontoTitulo: TLabel;
+    DashCardDescontoValor: TLabel;
+    DashCardDescontoSub: TLabel;
+    DashCardTicket: TPanel;
+    DashCardTicketTitulo: TLabel;
+    DashCardTicketValor: TLabel;
+    DashCardTicketSub: TLabel;
+    DashCardComissao: TPanel;
+    DashCardComissaoTitulo: TLabel;
+    DashCardComissaoValor: TLabel;
+    DashCardComissaoSub: TLabel;
+    DashCardMeta: TPanel;
+    DashCardMetaTitulo: TLabel;
+    DashCardMetaValor: TLabel;
+    DashCardMetaSub: TLabel;
+    DashCardResumo: TPanel;
+    DashCardResumoTitulo: TLabel;
+    DashCardResumoValor: TLabel;
+    DashCardResumoSub: TLabel;
+    DashListaPanel: TPanel;
+    DashListaTitulo: TLabel;
+    DashListaQtd: TLabel;
+    DashGridPedidos: TStringGrid;
+    DashChartPanel: TPanel;
+    DashChartMetaRealizado: TChart;
+    DashSeriesRealizado: TBarSeries;
+    DashSeriesMeta: TLineSeries;
+    tsTotais: TTabSheet;
+    DashTotaisRoot: TPanel;
+    DashTotaisTopo: TPanel;
+    DashTotaisTitulo: TLabel;
+    DashTotaisLbMes: TLabel;
+    DashTotaisCbMes: TComboBox;
+    DashTotaisStatus: TLabel;
+    DashChartTotaisEmpresa: TChart;
+    DashSeriesTotaisEmpresa: TPieSeries;
+    DashChartTotaisStatus: TChart;
+    DashSeriesTotaisStatus: TBarSeries;
+    tsClientesNaoAtendidos: TTabSheet;
+    CliNaoRoot: TPanel;
+    CliNaoFiltros: TPanel;
+    CliNaoLbMes: TLabel;
+    CliNaoCbMes: TComboBox;
+    CliNaoBtnAtualizar: TButton;
+    CliNaoLbBusca: TLabel;
+    CliNaoEdBusca: TEdit;
+    CliNaoLbStatus: TLabel;
+    CliNaoGrid: TStringGrid;
+    tsFinanceiro: TTabSheet;
+    FinRoot: TPanel;
+    FinTopo: TPanel;
+    FinTitulo: TLabel;
+    FinStatus: TLabel;
+    FinChartInadimplencia: TChart;
+    FinSeriesInadimplencia: TPieSeries;
+    FinGridPanel: TPanel;
+    FinGridTitulo: TLabel;
+    FinGrid: TStringGrid;
     procedure JvXPBar1Items0Click(Sender: TObject);
     procedure JvXPBar1Items1Click(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -558,6 +649,8 @@ type
     procedure C9Click(Sender: TObject);
   private
     FUltimaGeracaoRankingVendas: TDateTime;
+    FDashboardCarregando: Boolean;
+    FClientesNaoAtendidosCarregando: Boolean;
     FUltimaGeracaoComissaoDesconto: TDateTime;
     procedure GerarRankingVendasDiario;
     procedure GerarComissaoDescontoDiario;
@@ -691,6 +784,17 @@ type
     function BuscaCEP(tipo_logradouro, logradouro, uf, cidade, bairro,
       Numero: string): TStringList;
     procedure CheckPedidoVendedor;
+    procedure CarregarDashboardVendas;
+    procedure CarregarDashboardTotais;
+    procedure CarregarDashboardFinanceiro;
+    procedure CarregarDashboardMeses;
+    procedure CarregarClientesNaoAtendidos;
+    procedure CarregarClientesNaoAtendidosMeses;
+    procedure ClientesNaoAtendidosFiltroChange(Sender: TObject);
+    procedure ClientesNaoAtendidosAtualizarClick(Sender: TObject);
+    procedure DashboardVendasFiltroChange(Sender: TObject);
+    procedure DashboardVendasAtualizarClick(Sender: TObject);
+    procedure DashboardTotaisFiltroChange(Sender: TObject);
     function BaixarNovaVersao: Boolean;
     procedure HabilitaTimers;
     procedure DesabilitaTimers;
@@ -701,7 +805,7 @@ type
 
 const
   ////////////////////////////////////////////////////////////
-  versao: ShortString = '2.00.82';
+  versao: ShortString = '2.00.90';
   ///////////////////////////////////////////////////////////
 var
 
@@ -1188,6 +1292,1047 @@ begin
   end;
 end;
 
+function DashMoneyBR(AValue: Double): string;
+begin
+  Result := 'R$ ' + FormatFloat('#,##0.00', AValue);
+end;
+
+function DashPercentBR(AValue: Double): string;
+begin
+  Result := FormatFloat('0.00', AValue) + '%';
+end;
+
+function DashEndOfMonth(AMes, AAno: Integer): TDateTime;
+begin
+  if AMes = 12 then
+    Result := EncodeDate(AAno + 1, 1, 1) - 1
+  else
+    Result := EncodeDate(AAno, AMes + 1, 1) - 1;
+  Result := Result + EncodeTime(23, 59, 59, 0);
+end;
+
+procedure DashSetLabel(AOwner: TComponent; const AName, ACaption: string);
+var
+  L: TLabel;
+begin
+  L := TLabel(AOwner.FindComponent(AName));
+  if Assigned(L) then
+    L.Caption := ACaption;
+end;
+
+function DashGetComboText(AOwner: TComponent; const AName, ADefault: string): string;
+var
+  C: TComboBox;
+begin
+  Result := ADefault;
+  C := TComboBox(AOwner.FindComponent(AName));
+  if Assigned(C) and (Trim(C.Text) <> '') then
+    Result := Trim(C.Text);
+end;
+
+function DashGetEditText(AOwner: TComponent; const AName: string): string;
+var
+  E: TEdit;
+begin
+  Result := '';
+  E := TEdit(AOwner.FindComponent(AName));
+  if Assigned(E) then
+    Result := Trim(E.Text);
+end;
+
+procedure TFRPRI.CarregarDashboardMeses;
+var
+  Cb, CbTotais: TComboBox;
+  I: Integer;
+  Mes: string;
+  OldOnChange, OldTotaisOnChange: TNotifyEvent;
+begin
+  Cb := TComboBox(FindComponent('DashCbMes'));
+  CbTotais := TComboBox(FindComponent('DashTotaisCbMes'));
+  if (not Assigned(Cb)) and (not Assigned(CbTotais)) then
+    Exit;
+
+  OldOnChange := nil;
+  OldTotaisOnChange := nil;
+  if Assigned(Cb) then
+  begin
+    OldOnChange := Cb.OnChange;
+    Cb.OnChange := nil;
+  end;
+  if Assigned(CbTotais) then
+  begin
+    OldTotaisOnChange := CbTotais.OnChange;
+    CbTotais.OnChange := nil;
+  end;
+  try
+    if Assigned(Cb) then
+      Cb.Items.Clear;
+    if Assigned(CbTotais) then
+      CbTotais.Items.Clear;
+
+    for I := 0 to 23 do
+    begin
+      Mes := FormatDateTime('mm/yyyy', IncMonth(Date, -I));
+      if Assigned(Cb) then
+        Cb.Items.Add(Mes);
+      if Assigned(CbTotais) then
+        CbTotais.Items.Add(Mes);
+    end;
+
+    Mes := FormatDateTime('mm/yyyy', Date);
+    if Assigned(Cb) then
+    begin
+      if Cb.Items.IndexOf(Mes) >= 0 then
+        Cb.ItemIndex := Cb.Items.IndexOf(Mes)
+      else
+        Cb.ItemIndex := 0;
+      TEdit(FindComponent('DashEdDiaFinal')).Text := FormatDateTime('dd', DashEndOfMonth(StrToIntDef(Copy(Cb.Text, 1, 2), MonthOf(Date)), StrToIntDef(Copy(Cb.Text, 4, 4), YearOf(Date))));
+    end;
+    if Assigned(CbTotais) then
+    begin
+      if CbTotais.Items.IndexOf(Mes) >= 0 then
+        CbTotais.ItemIndex := CbTotais.Items.IndexOf(Mes)
+      else
+        CbTotais.ItemIndex := 0;
+    end;
+  finally
+    if Assigned(Cb) then
+      Cb.OnChange := OldOnChange;
+    if Assigned(CbTotais) then
+      CbTotais.OnChange := OldTotaisOnChange;
+  end;
+end;
+
+procedure TFRPRI.CarregarClientesNaoAtendidosMeses;
+var
+  Cb: TComboBox;
+  I: Integer;
+  Mes: string;
+  OldOnChange: TNotifyEvent;
+begin
+  Cb := TComboBox(FindComponent('CliNaoCbMes'));
+  if not Assigned(Cb) then
+    Exit;
+
+  OldOnChange := Cb.OnChange;
+  Cb.OnChange := nil;
+  try
+    Cb.Items.Clear;
+    for I := 0 to 23 do
+    begin
+      Mes := FormatDateTime('mm/yyyy', IncMonth(Date, -I));
+      Cb.Items.Add(Mes);
+    end;
+
+    Mes := FormatDateTime('mm/yyyy', Date);
+    if Cb.Items.IndexOf(Mes) >= 0 then
+      Cb.ItemIndex := Cb.Items.IndexOf(Mes)
+    else if Cb.Items.Count > 0 then
+      Cb.ItemIndex := 0;
+  finally
+    Cb.OnChange := OldOnChange;
+  end;
+end;
+
+procedure TFRPRI.ClientesNaoAtendidosAtualizarClick(Sender: TObject);
+begin
+  CarregarClientesNaoAtendidos;
+end;
+
+procedure TFRPRI.ClientesNaoAtendidosFiltroChange(Sender: TObject);
+begin
+  if FindComponent('CliNaoRoot') <> nil then
+    CarregarClientesNaoAtendidos;
+end;
+
+procedure TFRPRI.CarregarClientesNaoAtendidos;
+var
+  ConnParams: TStringList;
+  ConnDriverName, ConnDefName: string;
+  Grid: TStringGrid;
+  Mes, RepCodigo, Busca, SqlLista: string;
+  MesNum, AnoNum, Row: Integer;
+  DtaIni, DtaFim: TDateTime;
+begin
+  if FClientesNaoAtendidosCarregando then
+    Exit;
+
+  if Assigned(CliNaoCbMes) and (CliNaoCbMes.Items.Count = 0) then
+    CarregarClientesNaoAtendidosMeses;
+
+  Mes := DashGetComboText(Self, 'CliNaoCbMes', FormatDateTime('mm/yyyy', Date));
+  Busca := DashGetEditText(Self, 'CliNaoEdBusca');
+  MesNum := StrToIntDef(Copy(Mes, 1, 2), 0);
+  AnoNum := StrToIntDef(Copy(Mes, 4, 4), 0);
+  if (MesNum < 1) or (MesNum > 12) or (AnoNum <= 0) then
+    Exit;
+
+  RepCodigo := Trim(Representante_usuario);
+  if StrToIntDef(RepCodigo, 0) <= 0 then
+  begin
+    DashSetLabel(Self, 'CliNaoLbStatus', 'Usuario sem representante vinculado.');
+    Exit;
+  end;
+
+  DtaIni := EncodeDate(AnoNum, MesNum, 1);
+  DtaFim := DashEndOfMonth(MesNum, AnoNum) + EncodeTime(23, 59, 59, 0);
+
+  SqlLista :=
+    'select c.cod_cliente, c.nom_cliente, coalesce(cd.nom_cidade, '''') as nom_cidade, cd.uf, ' +
+    '       (select max(vu.dta_emissao) from vendas1 vu ' +
+    '         where vu.cod_cliente = c.cod_cliente ' +
+    '           and vu.cod_representante = :rep ' +
+    '           and vu.faturado = ''1'' ' +
+    '           and vu.nfeentradasaida = ''0'' ' +
+    '           and vu.orcamento = ''0'' ' +
+    '           and vu.dta_emissao <= :dtafim) as ultima_venda ' +
+    'from cliente c ' +
+    'left join cidades cd on cd.cod_cidade = c.cod_cidade ' +
+    'where c.id_representante = :rep ' +
+    '  and coalesce(c.cliente_bloqueado, ''N'') <> ''S'' ' +
+    '  and not exists (select 1 from vendas1 v1 ' +
+    '                   where v1.cod_cliente = c.cod_cliente ' +
+    '                     and v1.cod_representante = :rep ' +
+    '                     and v1.faturado = ''1'' ' +
+    '                     and v1.nfeentradasaida = ''0'' ' +
+    '                     and v1.orcamento = ''0'' ' +
+    '                     and v1.dta_emissao between :dtaini and :dtafim) ';
+
+        if Busca <> '' then
+    SqlLista := SqlLista +
+      '  and (cast(c.cod_cliente as varchar) ilike :busca or coalesce(c.nom_cliente, '''') ilike :busca or coalesce(cd.nom_cidade, '''') ilike :busca) ';
+
+  SqlLista := SqlLista +
+    'order by ultima_venda desc nulls last, cd.nom_cidade, c.nom_cliente';
+
+  Grid := TStringGrid(FindComponent('CliNaoGrid'));
+  if Assigned(Grid) then
+  begin
+    Grid.ColCount := 4;
+    Grid.FixedRows := 1;
+    Grid.RowCount := 2;
+    Grid.Options := Grid.Options + [goColSizing, goRowSelect];
+    Grid.Cells[0, 0] := 'Codigo';
+    Grid.Cells[1, 0] := 'Cliente';
+    Grid.Cells[2, 0] := 'Cidade';
+    Grid.Cells[3, 0] := 'Ultima venda';
+    Grid.ColWidths[0] := 80;
+    Grid.ColWidths[1] := 420;
+    Grid.ColWidths[2] := 240;
+    Grid.ColWidths[3] := 110;
+    for Row := 0 to Grid.ColCount - 1 do
+      Grid.Cells[Row, 1] := '';
+  end;
+
+  ConnParams := TStringList.Create;
+  ConnParams.Assign(dao.CN.Params);
+  ConnDriverName := dao.CN.DriverName;
+  ConnDefName := dao.CN.ConnectionDefName;
+  FClientesNaoAtendidosCarregando := True;
+  DashSetLabel(Self, 'CliNaoLbStatus', 'Carregando clientes nao atendidos...');
+  if Assigned(CliNaoBtnAtualizar) then
+    CliNaoBtnAtualizar.Enabled := False;
+
+  TThread.CreateAnonymousThread(
+    procedure
+    var
+      ConnThread: TFDConnection;
+      Q: TFDQuery;
+      Lista: TStringList;
+      Partes: TStringList;
+      Erro: string;
+      Qtde: Integer;
+      Cidade, UltimaVenda: string;
+    begin
+      ConnThread := nil;
+      Q := nil;
+      Lista := TStringList.Create;
+      Partes := TStringList.Create;
+      Erro := '';
+      Qtde := 0;
+      try
+        ConnThread := TFDConnection.Create(nil);
+        if ConnDefName <> '' then
+          ConnThread.ConnectionDefName := ConnDefName;
+        ConnThread.Params.Assign(ConnParams);
+        if ConnDriverName <> '' then
+          ConnThread.DriverName := ConnDriverName;
+        ConnThread.LoginPrompt := False;
+        ConnThread.Connected := True;
+
+        Q := TFDQuery.Create(nil);
+        Q.Connection := ConnThread;
+        Q.SQL.Text := SqlLista;
+        Q.ParamByName('rep').AsInteger := StrToIntDef(RepCodigo, 0);
+        Q.ParamByName('dtaini').AsDateTime := DtaIni;
+        Q.ParamByName('dtafim').AsDateTime := DtaFim;
+        if Busca <> '' then
+          Q.ParamByName('busca').AsString := '%' + Busca + '%';
+        Q.Open;
+        while not Q.Eof do
+        begin
+          Inc(Qtde);
+          Cidade := Trim(Q.FieldByName('nom_cidade').AsString);
+          if Trim(Q.FieldByName('uf').AsString) <> '' then
+            Cidade := Cidade + '/' + Trim(Q.FieldByName('uf').AsString);
+          if Q.FieldByName('ultima_venda').IsNull then
+            UltimaVenda := ''
+          else
+            UltimaVenda := FormatDateTime('dd/mm/yyyy', Q.FieldByName('ultima_venda').AsDateTime);
+          Lista.Add(Q.FieldByName('cod_cliente').AsString + #9 +
+            Q.FieldByName('nom_cliente').AsString + #9 + Cidade + #9 + UltimaVenda);
+          Q.Next;
+        end;
+      except
+        on E: Exception do
+          Erro := E.Message;
+      end;
+
+      TThread.Synchronize(nil,
+        procedure
+        var
+          G: TStringGrid;
+          Idx: Integer;
+        begin
+          if Erro <> '' then
+            DashSetLabel(Self, 'CliNaoLbStatus', 'Dados indisponiveis: ' + Erro)
+          else
+          begin
+            G := TStringGrid(FindComponent('CliNaoGrid'));
+            if Assigned(G) then
+            begin
+              G.RowCount := 2;
+              for Idx := 0 to Lista.Count - 1 do
+              begin
+                Partes.Clear;
+                ExtractStrings([#9], [], PChar(Lista[Idx]), Partes);
+                if Partes.Count >= 3 then
+                begin
+                  if G.RowCount <= Idx + 1 then
+                    G.RowCount := Idx + 2;
+                  G.Cells[0, Idx + 1] := Partes[0];
+                  G.Cells[1, Idx + 1] := Partes[1];
+                  G.Cells[2, Idx + 1] := Partes[2];
+                  if Partes.Count >= 4 then
+                    G.Cells[3, Idx + 1] := Partes[3]
+                  else
+                    G.Cells[3, Idx + 1] := '';
+                end;
+              end;
+            end;
+            DashSetLabel(Self, 'CliNaoLbStatus', IntToStr(Qtde) + ' clientes nao atendidos em ' + Mes);
+          end;
+
+          FClientesNaoAtendidosCarregando := False;
+          if Assigned(CliNaoBtnAtualizar) then
+            CliNaoBtnAtualizar.Enabled := True;
+        end);
+
+      Partes.Free;
+      Lista.Free;
+      Q.Free;
+      ConnThread.Free;
+      ConnParams.Free;
+    end).Start;
+end;
+procedure TFRPRI.DashboardTotaisFiltroChange(Sender: TObject);
+begin
+  CarregarDashboardTotais;
+end;
+
+procedure TFRPRI.CarregarDashboardTotais;
+var
+  Q: TFDQuery;
+  Mes: string;
+  MesNum, AnoNum: Integer;
+  DtaIni, DtaFim: TDateTime;
+  TotalGeral, TotalFaturado, TotalAberto, Valor: Double;
+begin
+  if not Assigned(DashSeriesTotaisEmpresa) then
+    Exit;
+
+  DashSeriesTotaisEmpresa.Clear;
+  if Assigned(DashChartTotaisEmpresa) then
+  begin
+    DashChartTotaisEmpresa.Legend.Visible := True;
+    DashChartTotaisEmpresa.Legend.Alignment := laBottom;
+    DashChartTotaisEmpresa.Legend.LegendStyle := lsValues;
+    DashSeriesTotaisEmpresa.ValueFormat := 'R$ #,##0.00';
+  end;
+  if Assigned(DashSeriesTotaisStatus) then
+    DashSeriesTotaisStatus.Clear;
+  DashSetLabel(Self, 'DashTotaisStatus', 'Carregando totais...');
+
+  Mes := DashGetComboText(Self, 'DashTotaisCbMes', DashGetComboText(Self, 'DashCbMes', FormatDateTime('mm/yyyy', Date)));
+  MesNum := StrToIntDef(Copy(Mes, 1, 2), 0);
+  AnoNum := StrToIntDef(Copy(Mes, 4, 4), 0);
+  if (MesNum < 1) or (MesNum > 12) or (AnoNum <= 0) then
+    Exit;
+
+  DtaIni := EncodeDate(AnoNum, MesNum, 1);
+  DtaFim := DashEndOfMonth(MesNum, AnoNum) + EncodeTime(23, 59, 59, 0);
+
+  Q := TFDQuery.Create(nil);
+  try
+    Q.Connection := dao.CN;
+    Q.SQL.Text :=
+      'select empresa, tipo, coalesce(sum(total), 0) as total ' +
+      'from ( ' +
+      '  select case when v1.faturado = ''0'' then ''Em Aberto'' ' +
+      '              when v1.faturado = ''1'' and v1.nfe is null then ''Cod. 7'' ' +
+      '              else ''Cod. '' || coalesce(v1.empresa_faturar::varchar, ''0'') || ' +
+      '                   case when coalesce(e.nom_empresa, '''') <> '''' then '' - '' || e.nom_empresa else '''' end ' +
+      '         end as empresa, ' +
+      '         case when v1.faturado = ''0'' then ''A'' else ''F'' end as tipo, ' +
+      '         coalesce(v1.tot_liquido, 0) as total ' +
+      '    from vendas1 v1 ' +
+      '    left join empresa e on e.cod_empresa = v1.empresa_faturar ' +
+      '   where (v1.cod_fiscal not in (''6152'', ''6409'') or v1.cod_fiscal is null) ' +
+      '     and v1.numdoc_grupo is null ' +
+      '     and v1.nfeentradasaida = ''0'' ' +
+      '     and not exists (select 1 from vendas1 ve where ve.numdoc_ref_ent = v1.numdoc and ve.faturado <> 2 and ve.nfeentradasaida = ''1'') ' +
+      '     and (v1.nfe_dev is null or v1.status_nfe_dev = 135) ' +
+      '     and coalesce(v1.consignacao, 0) <> 1 ' +
+      '     and coalesce(v1.cod_fop, 0) not in (7, 9, 22, 23, 24, 26, 32, 46, 47, 51, 52, 53, 54, 57, 58) ' +
+      '     and ((v1.faturado = ''1'' and v1.dta_emissao between :dtaini and :dtafim) ' +
+      '       or (v1.faturado = ''0'' and v1.dtadoc between :dtaini and :dtafim)) ' +
+      '     and v1.orcamento = ''0'' ' +
+      '     and v1.faturado in (''0'', ''1'') ' +
+      '     and (v1.faturado = ''1'' or exists ( ' +
+      '       select 1 from representante r ' +
+      '       where r.id = v1.cod_representante ' +
+      '         and r.funcionario in (''0'', ''1'', ''4'') ' +
+      '         and exists (select 1 from vendas1 vf ' +
+      '           where vf.dta_emissao between :dtaini and :dtafim ' +
+      '             and (vf.consignacao <> 1 and vf.orcamento = 0) ' +
+      '             and vf.faturado in (1) ' +
+      '             and (vf.cod_fiscal not in (''6152'', ''6409'') or vf.cod_fiscal is null) ' +
+      '             and vf.numdoc_grupo is null ' +
+      '             and (vf.nfe_dev is null or vf.status_nfe_dev = 135) ' +
+      '             and vf.nfeentradasaida = ''0'' ' +
+      '             and vf.numdoc not in (select numdoc_ref_ent from vendas1 where faturado <> 2 and nfeentradasaida = ''1'' and numdoc_ref_ent is not null) ' +
+      '             and vf.cod_representante = r.id) ' +
+      '       ) or exists ( ' +
+      '       select 1 from representante r ' +
+      '       where r.id = v1.cod_supervisor ' +
+      '         and r.funcionario in (''4'') ' +
+      '         and exists (select 1 from vendas1 vf ' +
+      '           where vf.dta_emissao between :dtaini and :dtafim ' +
+      '             and (vf.consignacao <> 1 and vf.orcamento = 0) ' +
+      '             and vf.faturado in (1) ' +
+      '             and (vf.cod_fiscal not in (''6152'', ''6409'') or vf.cod_fiscal is null) ' +
+      '             and vf.numdoc_grupo is null ' +
+      '             and (vf.nfe_dev is null or vf.status_nfe_dev = 135) ' +
+      '             and vf.nfeentradasaida = ''0'' ' +
+      '             and vf.numdoc not in (select numdoc_ref_ent from vendas1 where faturado <> 2 and nfeentradasaida = ''1'' and numdoc_ref_ent is not null) ' +
+      '             and vf.cod_supervisor = r.id) ' +
+      '       )) ' +
+      ') x group by empresa, tipo order by total desc';
+    Q.ParamByName('dtaini').AsDateTime := DtaIni;
+    Q.ParamByName('dtafim').AsDateTime := DtaFim;
+    Q.Open;
+
+    TotalGeral := 0;
+    TotalFaturado := 0;
+    TotalAberto := 0;
+    while not Q.Eof do
+    begin
+      Valor := Q.FieldByName('total').AsFloat;
+      if Valor > 0 then
+      begin
+        DashSeriesTotaisEmpresa.AddY(Valor, Q.FieldByName('empresa').AsString, clDefault);
+        TotalGeral := TotalGeral + Valor;
+        if SameText(Q.FieldByName('tipo').AsString, 'A') then
+          TotalAberto := TotalAberto + Valor
+        else
+          TotalFaturado := TotalFaturado + Valor;
+      end;
+      Q.Next;
+    end;
+    if Assigned(DashSeriesTotaisStatus) then
+    begin
+      DashSeriesTotaisStatus.Clear;
+      if Assigned(DashChartTotaisStatus) then
+        DashChartTotaisStatus.Legend.LegendStyle := lsValues;
+      DashSeriesTotaisStatus.AddY(TotalFaturado, DashMoneyBR(TotalFaturado) + '  Faturado', clDefault);
+      DashSeriesTotaisStatus.AddY(TotalAberto, DashMoneyBR(TotalAberto) + '  Em Aberto', clDefault);
+    end;
+
+    DashSetLabel(Self, 'DashTotaisStatus', 'Faturado: ' + DashMoneyBR(TotalFaturado) + ' | Em Aberto: ' + DashMoneyBR(TotalAberto) + ' | Total: ' + DashMoneyBR(TotalGeral));
+  except
+    on E: Exception do
+      DashSetLabel(Self, 'DashTotaisStatus', 'Dados indisponiveis: ' + E.Message);
+  end;
+  Q.Free;
+end;
+procedure TFRPRI.CarregarDashboardFinanceiro;
+var
+  Q: TFDQuery;
+  Grid: TStringGrid;
+  TotalAdimplente, TotalInadimplente, TotalGeral, PercAdimplente, PercInadimplente: Double;
+  Row: Integer;
+begin
+  if not Assigned(FinSeriesInadimplencia) then
+    Exit;
+
+  FinSeriesInadimplencia.Clear;
+  FinSeriesInadimplencia.ValueFormat := '0.00%';
+  if Assigned(FinChartInadimplencia) then
+  begin
+    FinChartInadimplencia.Legend.Visible := True;
+    FinChartInadimplencia.Legend.Alignment := laBottom;
+    FinChartInadimplencia.Legend.LegendStyle := lsValues;
+  end;
+
+  Grid := TStringGrid(FindComponent('FinGrid'));
+  if Assigned(Grid) then
+  begin
+    Grid.ColCount := 6;
+    Grid.FixedRows := 1;
+    Grid.RowCount := 2;
+    Grid.Options := Grid.Options + [goColSizing, goRowSelect];
+    Grid.Cells[0, 0] := 'Codigo';
+    Grid.Cells[1, 0] := 'Cliente';
+    Grid.Cells[2, 0] := 'Titulos';
+    Grid.Cells[3, 0] := 'Valor';
+    Grid.Cells[4, 0] := 'Venc. mais antigo';
+    Grid.Cells[5, 0] := 'Dias';
+    Grid.ColWidths[0] := 70;
+    Grid.ColWidths[1] := 300;
+    Grid.ColWidths[2] := 60;
+    Grid.ColWidths[3] := 90;
+    Grid.ColWidths[4] := 105;
+    Grid.ColWidths[5] := 55;
+    for Row := 0 to Grid.ColCount - 1 do
+      Grid.Cells[Row, 1] := '';
+  end;
+
+  DashSetLabel(Self, 'FinStatus', 'Carregando financeiro...');
+
+  Q := TFDQuery.Create(nil);
+  try
+    Q.Connection := dao.CN;
+    Q.SQL.Text :=
+      'select ' +
+      '  coalesce(sum(case when cr.dtaven < current_date and cr.dtarec is null then coalesce(cr.valor, 0) else 0 end), 0) as inadimplente, ' +
+      '  coalesce(sum(case when cr.dtarec is not null or cr.dtaven >= current_date or cr.dtaven is null then coalesce(cr.valor, 0) else 0 end), 0) as adimplente ' +
+      'from cr1 cr ' +
+      'where coalesce(cr.valor, 0) > 0';
+    Q.Open;
+
+    TotalInadimplente := Q.FieldByName('inadimplente').AsFloat;
+    TotalAdimplente := Q.FieldByName('adimplente').AsFloat;
+    TotalGeral := TotalInadimplente + TotalAdimplente;
+    if TotalGeral > 0 then
+    begin
+      PercInadimplente := (TotalInadimplente / TotalGeral) * 100;
+      PercAdimplente := (TotalAdimplente / TotalGeral) * 100;
+    end
+    else
+    begin
+      PercInadimplente := 0;
+      PercAdimplente := 0;
+    end;
+
+    FinSeriesInadimplencia.AddY(PercAdimplente, 'Adimplentes', clGreen);
+    FinSeriesInadimplencia.AddY(PercInadimplente, 'Inadimplentes', clRed);
+
+    Q.Close;
+    Q.SQL.Text :=
+      'select cr.cod_cliente, coalesce(c.nom_cliente, '''') as nom_cliente, ' +
+      '       count(*) as qtd_titulos, ' +
+      '       coalesce(sum(coalesce(cr.valor, 0)), 0) as valor_total, ' +
+      '       min(cr.dtaven) as dtaven_mais_antiga, ' +
+      '       current_date - min(cr.dtaven) as dias_atraso ' +
+      'from cr1 cr ' +
+      'left join cliente c on c.cod_cliente = cr.cod_cliente ' +
+      'where cr.dtaven < current_date ' +
+      '  and cr.dtarec is null ' +
+      '  and coalesce(cr.valor, 0) > 0 ' +
+      'group by cr.cod_cliente, c.nom_cliente ' +
+      'order by min(cr.dtaven), coalesce(sum(coalesce(cr.valor, 0)), 0) desc';
+    Q.Open;
+
+    Row := 1;
+    if Assigned(Grid) then
+    begin
+      while not Q.Eof do
+      begin
+        if Grid.RowCount <= Row then
+          Grid.RowCount := Row + 1;
+        Grid.Cells[0, Row] := Q.FieldByName('cod_cliente').AsString;
+        Grid.Cells[1, Row] := Q.FieldByName('nom_cliente').AsString;
+        Grid.Cells[2, Row] := Q.FieldByName('qtd_titulos').AsString;
+        Grid.Cells[3, Row] := DashMoneyBR(Q.FieldByName('valor_total').AsFloat);
+        if Q.FieldByName('dtaven_mais_antiga').IsNull then
+          Grid.Cells[4, Row] := ''
+        else
+          Grid.Cells[4, Row] := FormatDateTime('dd/mm/yyyy', Q.FieldByName('dtaven_mais_antiga').AsDateTime);
+        Grid.Cells[5, Row] := Q.FieldByName('dias_atraso').AsString;
+        Inc(Row);
+        Q.Next;
+      end;
+    end;
+
+    DashSetLabel(Self, 'FinStatus',
+      'Adimplentes: ' + FormatFloat('0.00', PercAdimplente) + '% | Inadimplentes: ' +
+      FormatFloat('0.00', PercInadimplente) + '%');
+  except
+    on E: Exception do
+      DashSetLabel(Self, 'FinStatus', 'Dados indisponiveis: ' + E.Message);
+  end;
+  Q.Free;
+end;
+procedure TFRPRI.DashboardVendasAtualizarClick(Sender: TObject);
+begin
+  CarregarDashboardVendas;
+  CarregarDashboardTotais;
+  CarregarDashboardFinanceiro;
+end;
+
+procedure TFRPRI.DashboardVendasFiltroChange(Sender: TObject);
+begin
+  if FindComponent('DashVendasRoot') <> nil then
+  begin
+    CarregarDashboardVendas;
+    CarregarDashboardTotais;
+  end;
+end;
+
+procedure TFRPRI.CarregarDashboardVendas;
+var
+  ConnParams: TStringList;
+  ConnDriverName, ConnDefName: string;
+  Grid: TStringGrid;
+  Mes, Status, Busca, RepCodigo, DataField, SqlBase, SqlBaseResumo, SqlResumo, SqlLista: string;
+  MesNum, AnoNum, DiaIni, DiaFim, DiasMes, Row: Integer;
+  DtaIni, DtaFim: TDateTime;
+begin
+  if FDashboardCarregando then
+    Exit;
+
+  if Assigned(DashCbMes) and (DashCbMes.Items.Count = 0) then
+    CarregarDashboardMeses;
+
+  Mes := DashGetComboText(Self, 'DashCbMes', FormatDateTime('mm/yyyy', Date));
+  MesNum := StrToIntDef(Copy(Mes, 1, 2), 0);
+  AnoNum := StrToIntDef(Copy(Mes, 4, 4), 0);
+  if (MesNum < 1) or (MesNum > 12) or (AnoNum <= 0) then
+    Exit;
+
+  DiasMes := StrToInt(FormatDateTime('dd', DashEndOfMonth(MesNum, AnoNum)));
+  DiaIni := StrToIntDef(DashGetEditText(Self, 'DashEdDiaInicial'), 1);
+  DiaFim := StrToIntDef(DashGetEditText(Self, 'DashEdDiaFinal'), DiasMes);
+  if DiaIni < 1 then DiaIni := 1;
+  if DiaFim < DiaIni then DiaFim := DiaIni;
+  if DiaFim > DiasMes then DiaFim := DiasMes;
+  DtaIni := EncodeDate(AnoNum, MesNum, DiaIni);
+  DtaFim := EncodeDate(AnoNum, MesNum, DiaFim) + EncodeTime(23, 59, 59, 0);
+
+  Status := UpperCase(DashGetComboText(Self, 'DashCbStatus', 'FATURADO'));
+  Busca := DashGetEditText(Self, 'DashEdBusca');
+  RepCodigo := Trim(Representante_usuario);
+  if StrToIntDef(RepCodigo, 0) <= 0 then
+  begin
+    DashSetLabel(Self, 'DashSubtitulo', 'Usuario sem representante vinculado.');
+    Exit;
+  end;
+
+  if Status = 'ABERTO' then
+    DataField := 'v1.dtadoc'
+  else if Status = 'TODOS' then
+    DataField := 'coalesce(v1.dta_emissao, v1.dtadoc)'
+  else
+    DataField := 'v1.dta_emissao';
+
+  SqlBase :=
+    ' from vendas1 v1 ' +
+    ' left join cliente c on c.cod_cliente = v1.cod_cliente ' +
+    ' where (v1.cod_fiscal not in (''6152'', ''6409'') or v1.cod_fiscal is null) ' +
+    '   and v1.nfeentradasaida = ''0'' ' +
+    '   and not exists (select 1 from vendas1 ve where ve.numdoc_ref_ent = v1.numdoc and ve.faturado <> 2 and ve.nfeentradasaida = ''1'') ' +
+    '   and (v1.nfe_dev is null or v1.status_nfe_dev = 135) ' +
+    '   and coalesce(v1.consignacao, 0) <> 1 ' +
+    '   and coalesce(v1.cod_fop, 0) not in (7, 9, 22, 23, 24, 26, 32, 46, 47, 51, 52, 53, 54, 57, 58) ' +
+    '   and ' + DataField + ' between :dtaini and :dtafim ' +
+    '   and v1.orcamento = ''0'' ' +
+    '   and v1.cod_representante = :rep ';
+
+  if Status = 'FATURADO' then
+    SqlBase := SqlBase + ' and v1.faturado = ''1'' '
+  else if Status = 'ABERTO' then
+    SqlBase := SqlBase + ' and v1.faturado = ''0'' ';
+
+        if Busca <> '' then
+    SqlBase := SqlBase + ' and (cast(v1.numdoc as varchar) ilike :busca or cast(coalesce(v1.numdoc_destino, v1.numdoc) as varchar) ilike :busca or coalesce(c.nom_cliente, '''') ilike :busca) ';
+
+  SqlBaseResumo := SqlBase;
+  if Busca = '' then
+    SqlBaseResumo := StringReplace(SqlBaseResumo, ' left join cliente c on c.cod_cliente = v1.cod_cliente ', ' ', [rfReplaceAll]);
+
+  SqlResumo :=
+    'select count(*) as qtd_pedidos, ' +
+    '       count(distinct v1.cod_cliente) as clientes_atendidos, ' +
+    '       coalesce(sum(coalesce(v1.tot_liquido, 0)), 0) as total_faturado, ' +
+    '       coalesce(sum(coalesce(v1.tot_bruto, 0)), 0) as total_bruto, ' +
+    '       coalesce(sum(coalesce(v1.vlr_comissao, 0)), 0) as total_comissao, ' +
+    '       coalesce(avg(coalesce(v1.perc_comissao, 0)), 0) as perc_comissao, ' +
+    '       coalesce(avg(coalesce(v1.desconto, 0)), 0) as perc_desconto ' + SqlBaseResumo;
+
+  SqlLista :=
+    'select v1.numdoc, coalesce(v1.numdoc_destino, v1.numdoc) as numdoc_destino, ' +
+    '       coalesce(c.cod_cliente, 0) as cod_cliente, coalesce(c.nom_cliente, '''') as nom_cliente, ' +
+    '       ' + DataField + ' as data_filtro, ' +
+    '       coalesce(v1.vlr_comissao, 0) as vlr_comissao, ' +
+    '       coalesce(v1.tot_liquido, 0) as tot_liquido, coalesce(v1.desconto, 0) as desconto ' +
+    SqlBase + ' order by data_filtro desc, v1.numdoc desc limit 100';
+
+  Grid := TStringGrid(FindComponent('DashGridPedidos'));
+  if Assigned(Grid) then
+  begin
+    Grid.ColCount := 6;
+    Grid.FixedRows := 1;
+    Grid.RowCount := 2;
+    Grid.Options := Grid.Options + [goColSizing, goRowSelect];
+    Grid.Cells[0, 0] := 'Pedido';
+    Grid.Cells[1, 0] := 'Data';
+    Grid.Cells[2, 0] := 'Cliente';
+    Grid.Cells[3, 0] := 'Total';
+    Grid.Cells[4, 0] := 'Desc';
+    Grid.Cells[5, 0] := 'Comissao';
+    Grid.ColWidths[0] := 70;
+    Grid.ColWidths[1] := 80;
+    Grid.ColWidths[2] := 420;
+    Grid.ColWidths[3] := 105;
+    Grid.ColWidths[4] := 70;
+    Grid.ColWidths[5] := 105;
+    for Row := 0 to Grid.ColCount - 1 do
+      Grid.Cells[Row, 1] := '';
+  end;
+
+  ConnParams := TStringList.Create;
+  ConnParams.Assign(dao.CN.Params);
+  ConnDriverName := dao.CN.DriverName;
+  ConnDefName := dao.CN.ConnectionDefName;
+  FDashboardCarregando := True;
+  DashSetLabel(Self, 'DashSubtitulo', 'Carregando dashboard...');
+  if Assigned(DashBtnAtualizar) then
+    DashBtnAtualizar.Enabled := False;
+
+  TThread.CreateAnonymousThread(
+    procedure
+    var
+      ConnThread: TFDConnection;
+      Q, QMeta, QBase: TFDQuery;
+      Lista: TStringList;
+      ChartData: TStringList;
+      Partes: TStringList;
+      Erro: string;
+      QtdPedidos, ClientesAtendidos, ClientesBase: Integer;
+      TotalFaturado, TotalBruto, TotalComissao, TotalPercDesconto: Double;
+      Meta, PercMeta, TicketMedio, DescMedio, PercComissao, Positivacao: Double;
+      ThreadMes, ChartLabel: string;
+      ThreadMesNum, ThreadAnoNum, ChartIdx: Integer;
+      ChartMesIni, ChartMesFim: TDateTime;
+      ChartRealizado, ChartMeta: Double;
+
+      function ThreadFieldFloat(AQuery: TFDQuery; const AName: string): Double;
+      begin
+        Result := 0;
+        if (AQuery.FindField(AName) <> nil) and (not AQuery.FieldByName(AName).IsNull) then
+          Result := AQuery.FieldByName(AName).AsFloat;
+      end;
+
+      procedure SetParams(AQuery: TFDQuery);
+      begin
+        AQuery.ParamByName('dtaini').AsDateTime := DtaIni;
+        AQuery.ParamByName('dtafim').AsDateTime := DtaFim;
+        AQuery.ParamByName('rep').AsInteger := StrToIntDef(RepCodigo, 0);
+        if Busca <> '' then
+          AQuery.ParamByName('busca').AsString := '%' + Busca + '%';
+      end;
+
+    begin
+      ConnThread := nil;
+      Q := nil;
+      QMeta := nil;
+      QBase := nil;
+      Lista := TStringList.Create;
+      ChartData := TStringList.Create;
+      Partes := TStringList.Create;
+      Erro := '';
+      QtdPedidos := 0;
+      ClientesAtendidos := 0;
+      ClientesBase := 0;
+      TotalFaturado := 0;
+      TotalBruto := 0;
+      TotalComissao := 0;
+      TotalPercDesconto := 0;
+      PercComissao := 0;
+      Meta := 0;
+      ThreadMes := Mes;
+      ThreadMesNum := MesNum;
+      ThreadAnoNum := AnoNum;
+      try
+        ConnThread := TFDConnection.Create(nil);
+        if ConnDefName <> '' then
+          ConnThread.ConnectionDefName := ConnDefName;
+        ConnThread.Params.Assign(ConnParams);
+        if ConnDriverName <> '' then
+          ConnThread.DriverName := ConnDriverName;
+        ConnThread.LoginPrompt := False;
+        ConnThread.Connected := True;
+
+        Q := TFDQuery.Create(nil);
+        Q.Connection := ConnThread;
+        Q.SQL.Text := SqlResumo;
+        SetParams(Q);
+        Q.Open;
+        if not Q.Eof then
+        begin
+          QtdPedidos := Q.FieldByName('qtd_pedidos').AsInteger;
+          ClientesAtendidos := Q.FieldByName('clientes_atendidos').AsInteger;
+          TotalFaturado := ThreadFieldFloat(Q, 'total_faturado');
+          TotalBruto := ThreadFieldFloat(Q, 'total_bruto');
+          TotalComissao := ThreadFieldFloat(Q, 'total_comissao');
+          PercComissao := ThreadFieldFloat(Q, 'perc_comissao');
+          TotalPercDesconto := ThreadFieldFloat(Q, 'perc_desconto');
+        end;
+
+        Q.Close;
+        Q.SQL.Text := SqlLista;
+        SetParams(Q);
+        Q.Open;
+        while not Q.Eof do
+        begin
+          Lista.Add(Q.FieldByName('numdoc').AsString + #9 +
+            FormatDateTime('dd/mm/yyyy', Q.FieldByName('data_filtro').AsDateTime) + #9 +
+            Q.FieldByName('nom_cliente').AsString + #9 +
+            DashMoneyBR(ThreadFieldFloat(Q, 'tot_liquido')) + #9 +
+            DashPercentBR(ThreadFieldFloat(Q, 'desconto')) + #9 +
+            DashMoneyBR(ThreadFieldFloat(Q, 'vlr_comissao')));
+          Q.Next;
+        end;
+
+        QMeta := TFDQuery.Create(nil);
+        QMeta.Connection := ConnThread;
+        try
+          QMeta.SQL.Text :=
+            'select vl_meta, qtd_clientes_base from metas_representante ' +
+            'where cod_representante = :rep ' +
+            'and (trim(mes::varchar) = :mes or trim(mes::varchar) = :mes2) limit 1';
+          QMeta.ParamByName('rep').AsInteger := StrToIntDef(RepCodigo, 0);
+          QMeta.ParamByName('mes').AsString := ThreadMes;
+          QMeta.ParamByName('mes2').AsString := Format('%.4d%.2d', [ThreadAnoNum, ThreadMesNum]);
+          QMeta.Open;
+        except
+          try
+            QMeta.Close;
+            QMeta.SQL.Text :=
+              'select vl_meta, qtd_clientes_base from metas_representante ' +
+              'where id_representante = :rep ' +
+              'and (trim(mes::varchar) = :mes or trim(mes::varchar) = :mes2) limit 1';
+            QMeta.ParamByName('rep').AsInteger := StrToIntDef(RepCodigo, 0);
+            QMeta.ParamByName('mes').AsString := ThreadMes;
+            QMeta.ParamByName('mes2').AsString := Format('%.4d%.2d', [ThreadAnoNum, ThreadMesNum]);
+            QMeta.Open;
+          except
+          end;
+        end;
+
+        if QMeta.Active and (not QMeta.Eof) then
+        begin
+          Meta := ThreadFieldFloat(QMeta, 'vl_meta');
+          ClientesBase := QMeta.FieldByName('qtd_clientes_base').AsInteger;
+        end;
+
+        if ClientesBase <= 0 then
+        begin
+          try
+            QBase := TFDQuery.Create(nil);
+            QBase.Connection := ConnThread;
+            QBase.SQL.Text := 'select count(*) as total from cliente where id_representante = :rep';
+            QBase.ParamByName('rep').AsInteger := StrToIntDef(RepCodigo, 0);
+            QBase.Open;
+            ClientesBase := QBase.FieldByName('total').AsInteger;
+          except
+            ClientesBase := ClientesAtendidos;
+          end;
+        end;
+
+
+        for ChartIdx := 11 downto 0 do
+        begin
+          ChartMesIni := IncMonth(EncodeDate(ThreadAnoNum, ThreadMesNum, 1), -ChartIdx);
+          ChartMesFim := DashEndOfMonth(MonthOf(ChartMesIni), YearOf(ChartMesIni));
+          ChartLabel := FormatDateTime('mm/yyyy', ChartMesIni);
+          ChartRealizado := 0;
+          ChartMeta := 0;
+
+          try
+            Q.Close;
+            Q.SQL.Text :=
+              'select coalesce(sum(coalesce(v1.tot_liquido, 0)), 0) as realizado ' +
+              'from vendas1 v1 ' +
+              'where (v1.cod_fiscal not in (''6152'', ''6409'') or v1.cod_fiscal is null) ' +
+              '  and v1.nfeentradasaida = ''0'' ' +
+              '  and not exists (select 1 from vendas1 ve where ve.numdoc_ref_ent = v1.numdoc and ve.faturado <> 2 and ve.nfeentradasaida = ''1'') ' +
+              '  and (v1.nfe_dev is null or v1.status_nfe_dev = 135) ' +
+              '  and coalesce(v1.consignacao, 0) <> 1 ' +
+              '  and coalesce(v1.cod_fop, 0) not in (7, 9, 22, 23, 24, 26, 32, 46, 47, 51, 52, 53, 54, 57, 58) ' +
+              '  and v1.dta_emissao between :dtaini and :dtafim ' +
+              '  and v1.orcamento = ''0'' ' +
+              '  and v1.cod_representante = :rep ' +
+              '  and v1.faturado = ''1'' ';
+            Q.ParamByName('dtaini').AsDateTime := ChartMesIni;
+            Q.ParamByName('dtafim').AsDateTime := ChartMesFim;
+            Q.ParamByName('rep').AsInteger := StrToIntDef(RepCodigo, 0);
+            Q.Open;
+            if not Q.Eof then
+              ChartRealizado := ThreadFieldFloat(Q, 'realizado');
+          except
+            ChartRealizado := 0;
+          end;
+
+          try
+            QMeta.Close;
+            QMeta.SQL.Text :=
+              'select vl_meta from metas_representante ' +
+              'where cod_representante = :rep ' +
+              'and (trim(mes::varchar) = :mes or trim(mes::varchar) = :mes2) limit 1';
+            QMeta.ParamByName('rep').AsInteger := StrToIntDef(RepCodigo, 0);
+            QMeta.ParamByName('mes').AsString := ChartLabel;
+            QMeta.ParamByName('mes2').AsString := FormatDateTime('yyyymm', ChartMesIni);
+            QMeta.Open;
+          except
+            try
+              QMeta.Close;
+              QMeta.SQL.Text :=
+                'select vl_meta from metas_representante ' +
+                'where id_representante = :rep ' +
+                'and (trim(mes::varchar) = :mes or trim(mes::varchar) = :mes2) limit 1';
+              QMeta.ParamByName('rep').AsInteger := StrToIntDef(RepCodigo, 0);
+              QMeta.ParamByName('mes').AsString := ChartLabel;
+              QMeta.ParamByName('mes2').AsString := FormatDateTime('yyyymm', ChartMesIni);
+              QMeta.Open;
+            except
+            end;
+          end;
+          if QMeta.Active and (not QMeta.Eof) then
+            ChartMeta := ThreadFieldFloat(QMeta, 'vl_meta');
+
+          ChartData.Add(ChartLabel + #9 + FloatToStr(ChartRealizado) + #9 + FloatToStr(ChartMeta));
+        end;
+        if TotalBruto > 0 then
+          DescMedio := 100 - ((TotalFaturado / TotalBruto) * 100)
+        else
+          DescMedio := TotalPercDesconto;
+
+        if QtdPedidos > 0 then
+          TicketMedio := TotalFaturado / QtdPedidos
+        else
+          TicketMedio := 0;
+
+        if Meta > 0 then
+          PercMeta := (TotalFaturado / Meta) * 100
+        else
+          PercMeta := 0;
+
+        if ClientesBase > 0 then
+          Positivacao := (ClientesAtendidos / ClientesBase) * 100
+        else
+          Positivacao := 0;
+      except
+        on E: Exception do
+          Erro := E.Message;
+      end;
+
+      TThread.Synchronize(nil,
+        procedure
+        var
+          G: TStringGrid;
+          Idx: Integer;
+          ValorRealizado, ValorMeta: Double;
+        begin
+          if Erro <> '' then
+            DashSetLabel(Self, 'DashSubtitulo', 'Dados indisponiveis: ' + Erro)
+          else
+          begin
+            G := TStringGrid(FindComponent('DashGridPedidos'));
+            if Assigned(G) then
+            begin
+              G.RowCount := 2;
+              for Idx := 0 to Lista.Count - 1 do
+              begin
+                Partes.Clear;
+                ExtractStrings([#9], [], PChar(Lista[Idx]), Partes);
+                if Partes.Count >= 6 then
+                begin
+                  if G.RowCount <= Idx + 1 then
+                    G.RowCount := Idx + 2;
+                  G.Cells[0, Idx + 1] := Partes[0];
+                  G.Cells[1, Idx + 1] := Partes[1];
+                  G.Cells[2, Idx + 1] := Partes[2];
+                  G.Cells[3, Idx + 1] := Partes[3];
+                  G.Cells[4, Idx + 1] := Partes[4];
+                  G.Cells[5, Idx + 1] := Partes[5];
+                end;
+              end;
+            end;
+
+
+            if Assigned(DashSeriesRealizado) and Assigned(DashSeriesMeta) then
+            begin
+              DashSeriesRealizado.Clear;
+              DashSeriesMeta.Clear;
+              for Idx := 0 to ChartData.Count - 1 do
+              begin
+                Partes.Clear;
+                ExtractStrings([#9], [], PChar(ChartData[Idx]), Partes);
+                if Partes.Count >= 3 then
+                begin
+                  ValorRealizado := StrToFloatDef(Partes[1], 0);
+                  ValorMeta := StrToFloatDef(Partes[2], 0);
+                  DashSeriesRealizado.AddY(ValorRealizado, Partes[0], clDefault);
+                  DashSeriesMeta.AddY(ValorMeta, Partes[0], clDefault);
+                end;
+              end;
+            end;
+            DashSetLabel(Self, 'DashSubtitulo', 'Painel comercial - ' + ThreadMes);
+            DashSetLabel(Self, 'DashCardRealizadoValor', DashMoneyBR(TotalFaturado));
+            DashSetLabel(Self, 'DashCardRealizadoSub', DashPercentBR(PercMeta) + ' da meta');
+            DashSetLabel(Self, 'DashCardClientesValor', IntToStr(ClientesAtendidos));
+            DashSetLabel(Self, 'DashCardClientesSub', 'de ' + IntToStr(ClientesBase) + ' clientes');
+            DashSetLabel(Self, 'DashCardPositivacaoValor', DashPercentBR(Positivacao));
+            DashSetLabel(Self, 'DashCardDescontoValor', DashPercentBR(DescMedio));
+            DashSetLabel(Self, 'DashCardTicketValor', DashMoneyBR(TicketMedio));
+            DashSetLabel(Self, 'DashCardComissaoValor', DashMoneyBR(TotalComissao));
+            DashSetLabel(Self, 'DashCardComissaoSub', DashPercentBR(PercComissao) + ' media');
+            DashSetLabel(Self, 'DashCardMetaValor', DashMoneyBR(Meta));
+            DashSetLabel(Self, 'DashCardResumoValor', IntToStr(QtdPedidos) + ' pedidos');
+            if ClientesBase > ClientesAtendidos then
+              DashSetLabel(Self, 'DashCardResumoSub', 'sem compra ' + IntToStr(ClientesBase - ClientesAtendidos))
+            else
+              DashSetLabel(Self, 'DashCardResumoSub', 'sem compra 0');
+            DashSetLabel(Self, 'DashListaQtd', IntToStr(QtdPedidos) + ' pedidos');
+          end;
+
+          FDashboardCarregando := False;
+          if Assigned(DashBtnAtualizar) then
+            DashBtnAtualizar.Enabled := True;
+        end);
+
+      Lista.Free;
+      ChartData.Free;
+      Partes.Free;
+      QBase.Free;
+      QMeta.Free;
+      Q.Free;
+      ConnThread.Free;
+      ConnParams.Free;
+    end).Start;
+end;
+
 function TFRPRI.DtaSerStr: string;
 begin
   dao.geral2('select current_date as dt from configuracao ');
@@ -1271,6 +2416,13 @@ begin
 
   Tipo_usuario := dao.Q1.fieldbyname('nivel').AsString;
   Representante_usuario := dao.Q1.fieldbyname('cod_representante').AsString;
+
+  tsVendas.TabVisible := (Tipo_usuario = '0') or (StrToIntDef(Trim(Representante_usuario), 0) > 0);
+  tsClientesNaoAtendidos.TabVisible := tsVendas.TabVisible;
+  tsTotais.TabVisible := True;
+  tsFinanceiro.TabVisible := True;
+  if (not tsVendas.TabVisible) and ((pgDashboard.ActivePage = tsVendas) or (pgDashboard.ActivePage = tsClientesNaoAtendidos)) then
+    pgDashboard.ActivePage := nil;
 
   if area_atuacao = '0' then
   begin
@@ -1640,6 +2792,9 @@ begin
   { if Tipo_usuario >= '3' then
     Avisos1Click(Self); }
   OcultaBotoes;
+  sbAbrir.Visible := True;
+  sbFechar.Visible := True;
+  sbFecharClick(Self);
 
   cliente_pre.Visible := modulo_vendedor;
 
@@ -1647,8 +2802,21 @@ begin
     ImprimirVisitas(Representante_usuario);
 
   MenuCarregado := True;
+  if tsTotais.TabVisible and (pgDashboard.ActivePage = nil) then
+    pgDashboard.ActivePage := tsTotais;
 
+  CarregarDashboardMeses;
+  CarregarDashboardTotais;
+  CarregarDashboardFinanceiro;
 
+  if tsVendas.TabVisible then
+  begin
+    if pgDashboard.ActivePage = tsTotais then
+      pgDashboard.ActivePage := tsVendas;
+    CarregarClientesNaoAtendidosMeses;
+    CarregarDashboardVendas;
+    CarregarClientesNaoAtendidos;
+  end;
 
 end;
 
@@ -1677,6 +2845,9 @@ begin
     TmContaVencida.Interval := 50000;
     TmContaVencida.Enabled := True;
   end;
+
+  TmAlertas.Interval := 1000;
+  TmAlertas.Enabled := True;
 end;
 
 procedure TFRPRI.DesabilitaTimers;
@@ -3949,16 +5120,32 @@ end;
 
 procedure TFRPRI.sbFecharClick(Sender: TObject);
 begin
-  Panel3.Visible := True;
+  Panel3.Visible := False;
+  sbFechar.Parent := Panel4;
+  sbAbrir.Parent := Panel4;
+  sbFechar.Left := 3;
+  sbAbrir.Left := sbFechar.Left + sbFechar.Width + 2;
+  sbFechar.Top := Panel4.Height - sbFechar.Height - 2;
+  sbAbrir.Top := sbFechar.Top;
   sbAbrir.Visible := True;
-  sbFechar.Visible := False;
+  sbFechar.Visible := True;
+  sbAbrir.BringToFront;
+  sbFechar.BringToFront;
 end;
 
 procedure TFRPRI.SBAbrirClick(Sender: TObject);
 begin
-  Panel3.Visible := False;
-  sbAbrir.Visible := False;
+  Panel3.Visible := True;
+  sbFechar.Parent := Panel4;
+  sbAbrir.Parent := Panel4;
+  sbFechar.Left := 3;
+  sbAbrir.Left := sbFechar.Left + sbFechar.Width + 2;
+  sbFechar.Top := Panel4.Height - sbFechar.Height - 2;
+  sbAbrir.Top := sbFechar.Top;
+  sbAbrir.Visible := True;
   sbFechar.Visible := True;
+  sbAbrir.BringToFront;
+  sbFechar.BringToFront;
 end;
 
 constructor TEmail.Create(corpo, assunto, end1, end2, end3, CC, BC: string;
@@ -4272,6 +5459,9 @@ begin
   end;
 end;
 
+function PainelAvisosLateral(AForm: TFRPRI): TsPanel; forward;
+procedure AtualizarPainelAvisosLateral(AForm: TFRPRI); forward;
+
 procedure TFRPRI.ChecarAvisoAtualizacao;
 var
   pnl: TsPanel;
@@ -4284,9 +5474,9 @@ begin
   begin
     pnl := TsPanel.Create(Self);
     pnl.Name := 'pnlAtualizacaoAviso';
-    pnl.Parent := Self;
-    pnl.Align := alRight;
-    pnl.Width := pnlCertAviso.Width;
+    pnl.Parent := PainelAvisosLateral(Self);
+    pnl.Align := alNone;
+    pnl.Width := 340;
     pnl.Color := clInfoBk;
     pnl.ParentBackground := False;
     pnl.Visible := False;
@@ -4337,7 +5527,10 @@ begin
   pnl.Caption := '';
 
   if versao_banco = versao then
+  begin
+    AtualizarPainelAvisosLateral(Self);
     Exit;
+  end;
 
   pnl.Visible := True;
   pnl.Height := 66;
@@ -4348,6 +5541,8 @@ begin
   if Assigned(lblMsg) then
     lblMsg.Caption := 'Nova versao disponivel (' + versao_banco + ').' + sLineBreak +
       'Clique para efetuar a atualizacao.';
+
+  AtualizarPainelAvisosLateral(Self);
 end;
 
 procedure TFRPRI.AvisoAtualizacaoClick(Sender: TObject);
@@ -4356,7 +5551,10 @@ var
 begin
   pnl := TsPanel(FindComponent('pnlAtualizacaoAviso'));
   if Assigned(pnl) then
+  begin
     pnl.Visible := False;
+    AtualizarPainelAvisosLateral(Self);
+  end;
 
   DesabilitaTimers;
   Atualizacao;
@@ -6347,6 +7545,25 @@ end;
 procedure TFRPRI.FormCreate(Sender: TObject);
 begin
   Screen.OnActiveControlChange := ChangeControl;
+  tsVendas.TabVisible := False;
+  tsClientesNaoAtendidos.TabVisible := False;
+  tsTotais.TabVisible := False;
+  tsFinanceiro.TabVisible := False;
+
+  if Assigned(DashCbMes) then
+    DashCbMes.OnChange := DashboardVendasFiltroChange;
+  if Assigned(DashCbStatus) then
+    DashCbStatus.OnChange := DashboardVendasFiltroChange;
+  if Assigned(DashTotaisCbMes) then
+    DashTotaisCbMes.OnChange := DashboardTotaisFiltroChange;
+  if Assigned(DashBtnAtualizar) then
+    DashBtnAtualizar.OnClick := DashboardVendasAtualizarClick;
+  if Assigned(CliNaoCbMes) then
+    CliNaoCbMes.OnChange := ClientesNaoAtendidosFiltroChange;
+  if Assigned(CliNaoEdBusca) then
+    CliNaoEdBusca.OnChange := ClientesNaoAtendidosFiltroChange;
+  if Assigned(CliNaoBtnAtualizar) then
+    CliNaoBtnAtualizar.OnClick := ClientesNaoAtendidosAtualizarClick;
 end;
 
 procedure TFRPRI.V1Click(Sender: TObject);
@@ -6665,7 +7882,10 @@ begin
   lblTit := TsLabel(FindComponent('lblCertAvisoTitulo'));
 
   if Assigned(pnl) then
+  begin
+    pnl.Width := 340;
     pnl.Visible := False;
+  end;
 
   if TipUsu >= '2' then
   begin
@@ -6757,6 +7977,78 @@ begin
   end;
 end;
 
+function PainelAvisosLateral(AForm: TFRPRI): TsPanel;
+begin
+  Result := TsPanel(AForm.FindComponent('pnlAvisosLateral'));
+  if not Assigned(Result) then
+  begin
+    Result := TsPanel.Create(AForm);
+    Result.Name := 'pnlAvisosLateral';
+    Result.Parent := AForm;
+    Result.Align := alRight;
+    Result.Width := 340;
+    Result.Caption := '';
+    Result.BevelOuter := bvNone;
+    Result.Color := clInfoBk;
+    Result.ParentBackground := False;
+    Result.Visible := True;
+    Result.TabOrder := 9;
+    Result.SkinData.SkinSection := 'PANEL';
+  end;
+
+  Result.Width := 340;
+  Result.Visible := True;
+end;
+
+procedure AtualizarPainelAvisosLateral(AForm: TFRPRI);
+var
+  pnlColuna, pnlAtualizacao, pnlPedidos, pnlEstoque: TsPanel;
+  TopAviso: Integer;
+begin
+  pnlColuna := TsPanel(AForm.FindComponent('pnlAvisosLateral'));
+  if not Assigned(pnlColuna) then
+    Exit;
+
+  pnlAtualizacao := TsPanel(AForm.FindComponent('pnlAtualizacaoAviso'));
+  pnlPedidos := TsPanel(AForm.FindComponent('pnlPedidosAviso'));
+  pnlEstoque := TsPanel(AForm.FindComponent('pnlEstoqueAviso'));
+  pnlColuna.Visible := (Assigned(pnlAtualizacao) and pnlAtualizacao.Visible) or
+    (Assigned(pnlPedidos) and pnlPedidos.Visible) or
+    (Assigned(pnlEstoque) and pnlEstoque.Visible);
+
+  if not pnlColuna.Visible then
+    Exit;
+
+  pnlColuna.Width := 340;
+  TopAviso := 0;
+
+  if Assigned(pnlAtualizacao) then
+  begin
+    pnlAtualizacao.Parent := pnlColuna;
+    pnlAtualizacao.Align := alNone;
+    pnlAtualizacao.SetBounds(0, TopAviso, pnlColuna.ClientWidth, 66);
+    if pnlAtualizacao.Visible then
+      Inc(TopAviso, pnlAtualizacao.Height);
+  end;
+
+  if Assigned(pnlPedidos) then
+  begin
+    pnlPedidos.Parent := pnlColuna;
+    pnlPedidos.Align := alNone;
+    pnlPedidos.SetBounds(0, TopAviso, pnlColuna.ClientWidth, 92);
+    if pnlPedidos.Visible then
+      Inc(TopAviso, pnlPedidos.Height);
+  end;
+
+  if Assigned(pnlEstoque) then
+  begin
+    pnlEstoque.Parent := pnlColuna;
+    pnlEstoque.Align := alNone;
+    pnlEstoque.SetBounds(0, TopAviso, pnlColuna.ClientWidth,
+      pnlColuna.ClientHeight - TopAviso);
+  end;
+end;
+
 procedure TFRPRI.ChecarEstoqueMinimo;
 var
   QEst: TFDQuery;
@@ -6774,9 +8066,9 @@ begin
   begin
     pnl := TsPanel.Create(Self);
     pnl.Name := 'pnlEstoqueAviso';
-    pnl.Parent := Self;
-    pnl.Align := alRight;
-    pnl.Width := pnlCertAviso.Width;
+    pnl.Parent := PainelAvisosLateral(Self);
+    pnl.Align := alClient;
+    pnl.Width := 340;
     pnl.Color := clInfoBk;
     pnl.ParentBackground := False;
     pnl.Visible := False;
@@ -6840,6 +8132,9 @@ begin
   mmMsg := nil;
   if Assigned(pnl) then
   begin
+    pnl.Parent := PainelAvisosLateral(Self);
+    pnl.Align := alClient;
+    pnl.Width := 340;
     lblMsg := TsLabel(pnl.FindComponent('lblEstoqueAvisoMsg'));
     lblTit := TsLabel(pnl.FindComponent('lblEstoqueAvisoTitulo'));
     mmMsg := TMemo(pnl.FindComponent('mmEstoqueAviso'));
@@ -6939,9 +8234,10 @@ begin
   begin
     pnl := TsPanel.Create(Self);
     pnl.Name := 'pnlPedidosAviso';
-    pnl.Parent := Self;
-    pnl.Align := alRight;
-    pnl.Width := pnlCertAviso.Width;
+    pnl.Parent := PainelAvisosLateral(Self);
+    pnl.Align := alTop;
+    pnl.Width := 340;
+    pnl.Height := 92;
     pnl.Color := clInfoBk;
     pnl.ParentBackground := False;
     pnl.Visible := False;
@@ -7013,6 +8309,11 @@ begin
   mmMsg := nil;
   if Assigned(pnl) then
   begin
+    pnl.Parent := PainelAvisosLateral(Self);
+    pnl.Align := alTop;
+    pnl.Top := 0;
+    pnl.Width := 340;
+    pnl.Height := 92;
     lblMsg := TsLabel(pnl.FindComponent('lblPedidosAvisoMsg'));
     lblTit := TsLabel(pnl.FindComponent('lblPedidosAvisoTitulo'));
     mmMsg := TMemo(pnl.FindComponent('mmPedidosAviso'));
@@ -7154,8 +8455,9 @@ begin
   TmAlertas.Enabled := False;
 
   ChecarCertificado;
-  ChecarEstoqueMinimo;
   ChecarAvisoPedidosExternos;
+  ChecarEstoqueMinimo;
+  AtualizarPainelAvisosLateral(Self);
   ChecarRevisaoVeiculo;
 
   TmAlertas.Interval := 30000;
@@ -7346,52 +8648,3 @@ begin
 end;
 
 end.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

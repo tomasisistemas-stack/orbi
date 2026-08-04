@@ -112,7 +112,7 @@ var
 implementation
 
 uses Un_dao, Un_localizar, unpri, UnFun, Un_dm, FireDAC.Comp.Client, un_splash,
-  Un_BB_Cobrancas, Un_BB_Cobrancas_Api, Un_CEF_Cobrancas, Un_CEF_Cobrancas_Api, System.JSON;
+  Un_BB_Cobrancas, Un_BB_Cobrancas_Api, Un_CEF_Cobrancas, Un_CEF_Cobrancas_Api, System.JSON, Un_Error_Logger;
 
 {$R *.dfm}
 
@@ -520,6 +520,29 @@ begin
   BBLogApi('Update CR1 boleto registrado - id=' + IntToStr(AIdCR1) +
     ', pagamento=' + BoolToStr((ADataPagamento > 0) and (AValorPago > 0), True));
 end;
+procedure ConfigurarEncargosBB(ABoleto: TBBRegistroBoleto; AVencimento: TDateTime; AValor: Double);
+begin
+  ABoleto.JurosMora.Tipo := 1;
+  ABoleto.JurosMora.Porcentagem := 0;
+  ABoleto.JurosMora.Valor := AValor * 0.0017;
+
+  ABoleto.Multa.Tipo := 2;
+  ABoleto.Multa.Data := BBDate(AVencimento + 1);
+  ABoleto.Multa.Porcentagem := 2;
+  ABoleto.Multa.Valor := 0;
+end;
+
+procedure ConfigurarEncargosCEF(ABoleto: TCEFOperacaoBoleto; AVencimento: TDateTime; AValor: Double);
+begin
+  ABoleto.Titulo.JurosMora.Tipo := 'VALOR_POR_DIA';
+  ABoleto.Titulo.JurosMora.Data := CEFDataApi(AVencimento + 1);
+  ABoleto.Titulo.JurosMora.Valor := AValor * 0.0017;
+  ABoleto.Titulo.JurosMora.Percentual := 0;
+
+  ABoleto.Titulo.Multa.Data := CEFDataApi(AVencimento + 1);
+  ABoleto.Titulo.Multa.Valor := 0;
+  ABoleto.Titulo.Multa.Percentual := 2;
+end;
 procedure BBMessageDlgErroApi(const APrefixo: string; E: Exception);
 var
   Msg: string;
@@ -527,6 +550,7 @@ begin
   Msg := BBMensagemErroApi(E);
   if Trim(APrefixo) <> '' then
     Msg := APrefixo + #13 + Msg;
+  RegistrarErroAplicacao(E, 'BBMessageDlgErroApi', '', Msg);
   MessageDlg(Msg, mtError, [mbOK], 0);
 end;
 procedure Tfrm_remessa_boleto.CarregaRemessa;
@@ -784,9 +808,17 @@ begin
       fmfun.ACBrBoleto1.Cedente.ContaDigito :=
         copy(dao.Q2.fieldbyname('nr_conta').AsString,
         pos('-', dao.Q2.fieldbyname('nr_conta').AsString) + 1, 2);
-      fmfun.ACBrBoleto1.Cedente.CodigoCedente :=
-        dao.Q2.fieldbyname('codigo_cedente').AsString;
-      fmfun.ACBrBoleto1.Cedente.Convenio := dao.Q2.fieldbyname('convenio').AsString;
+
+      if fmfun.ACBrBoleto1.Banco.TipoCobranca <> cobCaixaEconomica then
+      begin
+        fmfun.ACBrBoleto1.Cedente.CodigoCedente := dao.Q2.fieldbyname('codigo_cedente').AsString;
+        fmfun.ACBrBoleto1.Cedente.Convenio := dao.Q2.fieldbyname('convenio').AsString;
+      end
+      else begin
+        fmfun.ACBrBoleto1.Cedente.CodigoCedente := FMFUN.enchezero(IntToStr(StrToIntDef(dao.Q2.fieldbyname('codigo_cedente').AsString, 0)), 6);
+        fmfun.ACBrBoleto1.Cedente.Convenio := FMFUN.enchezero(IntToStr(StrToIntDef(dao.Q2.fieldbyname('convenio').AsString, 0)), 6);
+      end;
+
       fmfun.ACBrBoleto1.Cedente.Nome :=
         dao.Q2.fieldbyname('NOME_CORRENTISTA').AsString;
       fmfun.ACBrBoleto1.Cedente.Logradouro := dao.Q2.fieldbyname('ENDERECO').AsString;
@@ -1201,6 +1233,7 @@ begin
           Boleto.DataEmissao := BBDate(Date);
           Boleto.DataVencimento := BBDate(BBFieldDate(Q, 'dtaven'));
           Boleto.ValorOriginal := BBFieldFloat(Q, 'valor');
+          ConfigurarEncargosBB(Boleto, BBFieldDate(Q, 'dtaven'), Boleto.ValorOriginal);
           Boleto.CodigoAceite := 'N';
           Boleto.CodigoTipoTitulo := 2;
           Boleto.DescricaoTipoTitulo := 'DM';
@@ -1265,8 +1298,8 @@ begin
               BBMarcarBoletoRegistrado(Q.FieldByName('id').AsInteger, LDataPagamento, LValorPago);
               CEFLogApi('Registrar boleto ignorado, ja registrado - ambiente=' + CEFAmbienteNome(AmbienteCEF) +
                 ', cr1_id=' + Q.FieldByName('id').AsString + ', nosso_numero=' + NossoNumeroCEF);
-            end
-            else
+            end;
+          except
             begin
               BoletoCEF := TCEFOperacaoBoleto.Create;
               HeaderCEF := nil;
@@ -1278,10 +1311,10 @@ begin
                 BoletoCEF.Titulo.NumeroDocumento := BBNumeroTituloBeneficiario(Q);
                 BoletoCEF.Titulo.DataVencimento := CEFDataApi(BBFieldDate(Q, 'dtaven'));
                 BoletoCEF.Titulo.Valor := BBFieldFloat(Q, 'valor');
+                ConfigurarEncargosCEF(BoletoCEF, BBFieldDate(Q, 'dtaven'), BoletoCEF.Titulo.Valor);
                 BoletoCEF.Titulo.TipoEspecie := '99';
                 BoletoCEF.Titulo.FlagAceite := 'N';
                 BoletoCEF.Titulo.DataEmissao := CEFDataApi(Date);
-                BoletoCEF.Titulo.CodigoMoeda := '9';
                 if UpperCase(Trim(BBFieldStr(Q, 'tip_pessoa', ''))) = 'J' then
                 begin
                   BoletoCEF.Titulo.Pagador.CNPJ := BBOnlyNumbers(BBFieldStr(Q, 'cnpj', ''));
@@ -1314,13 +1347,6 @@ begin
                 HeaderCEF.Free;
                 BoletoCEF.Free;
               end;
-            end;
-          except
-            on E: Exception do
-            begin
-              CEFLogApi('Registrar boleto ERRO - ambiente=' + CEFAmbienteNome(AmbienteCEF) +
-                ', cr1_id=' + Q.FieldByName('id').AsString + ', nosso_numero=' + NossoNumeroCEF + ', erro=' + E.Message);
-              raise;
             end;
           end;
         end;
@@ -1711,25 +1737,3 @@ begin
 end;
 
 end.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

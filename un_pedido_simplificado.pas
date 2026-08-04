@@ -88,9 +88,6 @@ type
     LbComissaoPerc: TLabel;
     LbComissaoValor: TLabel;
     qItenssub_total_bruto: TFMTBCDField;
-    lbSupervisor: TLabel;
-    LbNomSupervisor: TLabel;
-    Prcod_supervisor: TsComboEdit;
     procedure FormCreate(Sender: TObject);
     procedure btCarregarClick(Sender: TObject);
     procedure btNovoClick(Sender: TObject);
@@ -108,12 +105,10 @@ type
     procedure MeCodProdutoButtonClick(Sender: TObject);
     procedure Prcod_representanteButtonClick(Sender: TObject);
     procedure Prcod_clienteButtonClick(Sender: TObject);
-    procedure Prcod_supervisorButtonClick(Sender: TObject);
     procedure Prcod_fopButtonClick(Sender: TObject);
     procedure Prcod_prazo_pgtoButtonClick(Sender: TObject);
     procedure MeQtdChange(Sender: TObject);
     procedure Prcod_clienteExit(Sender: TObject);
-    procedure Prcod_supervisorExit(Sender: TObject);
     procedure Prcod_representanteExit(Sender: TObject);
     procedure Prcod_fopExit(Sender: TObject);
     procedure Prcod_prazo_pgtoExit(Sender: TObject);
@@ -162,7 +157,6 @@ type
     function BuscarCodigoLocalizar(const APesquisa, ATitulo: string): string;
     procedure CarregarNomeCliente;
     procedure CarregarNomeRepresentante;
-    procedure CarregarNomeSupervisor;
     procedure CarregarNomeFop;
     procedure CarregarNomePrazo;
     procedure CarregaFoto(const AProduto: string);
@@ -362,12 +356,10 @@ procedure TFr_pedido_simplificado.LimparTela;
 begin
   Prcod_cliente.Clear;
   Prcod_representante.Clear;
-  Prcod_supervisor.Clear;
   Prcod_fop.Clear;
   Prcod_prazo_pgto.Clear;
   LbNomCliente.Caption := '';
   LbNomRepresentante.Caption := '';
-  LbNomSupervisor.Caption := '';
   LbNomFop.Caption := '';
   LbNomPrazo.Caption := '';
   Prorcamento.ItemIndex := 0;
@@ -940,7 +932,6 @@ begin
 
   Prcod_cliente.Text := qPedido.FieldByName('cod_cliente').AsString;
   Prcod_representante.Text := qPedido.FieldByName('cod_representante').AsString;
-  Prcod_supervisor.Text := qPedido.FieldByName('cod_supervisor').AsString;
   Prcod_fop.Text := qPedido.FieldByName('cod_fop').AsString;
   Prcod_prazo_pgto.Text := qPedido.FieldByName('cod_prazo_pgto').AsString;
   if qPedido.FieldByName('orcamento').AsString = '1' then
@@ -951,7 +942,6 @@ begin
 
   CarregarNomeCliente;
   CarregarNomeRepresentante;
-  CarregarNomeSupervisor;
   CarregarNomeFop;
   CarregarNomePrazo;
 
@@ -1048,11 +1038,10 @@ begin
   HabilitarEdicao(True);
   AtualizarBotoes;
 
-  if (FRPRI.TipUsu = '0') then
-  begin
-    Prcod_representante.ReadOnly := true;
-    Prcod_supervisor.ReadOnly := true;
-  end;
+  if (FRPRI.TipUsu < '9') then
+    Prcod_representante.ReadOnly := true
+  else
+    Prcod_representante.ReadOnly := false;
 end;
 
 procedure TFr_pedido_simplificado.btGravarClick(Sender: TObject);
@@ -1114,11 +1103,6 @@ begin
     Exit;
   end;
 
-  if Trim(Prcod_supervisor.Text) = '' then
-    SupervisorSql := 'null'
-  else
-    SupervisorSql := QuotedStr(Trim(Prcod_supervisor.Text));
-
   Q := TFDQuery.Create(nil);
   try
     Q.Connection := dao.CN;
@@ -1127,12 +1111,12 @@ begin
     try
       if FNovo then
       begin
-        Q.SQL.Text := 'insert into vendas1 (numdoc, cod_empresa, cod_usuario, dtadoc, dta_emissao, dta_saida, empresa_faturar, cod_cliente, cod_representante, cod_supervisor, cod_fop, cod_prazo_pgto, orcamento, '+
+        Q.SQL.Text := 'insert into vendas1 (numdoc, cod_empresa, cod_usuario, dtadoc, dta_emissao, dta_saida, empresa_faturar, cod_cliente, cod_representante, cod_fop, cod_prazo_pgto, orcamento, '+
                       ' faturado, tot_bruto, tot_liquido, desconto, pedido_vendedor) values (' +
           QuotedStr(NumDoc) + ',' + QuotedStr('0') + ',' + QuotedStr(cod_usuario) + ',' +
           QuotedStr(FormatDateTime('dd.mm.yyyy', dao.DtaSerDt)) + ',' + QuotedStr(FormatDateTime('dd.mm.yyyy', dao.DtaSerDt)) + ',' +
           QuotedStr(FormatDateTime('dd.mm.yyyy', dao.DtaSerDt)) + ',' + QuotedStr('0') + ',' + QuotedStr(Trim(Prcod_cliente.Text)) + ',' +
-          QuotedStr(Trim(Prcod_representante.Text)) + ',' + SupervisorSql + ',' + QuotedStr(Trim(Prcod_fop.Text)) + ',' + QuotedStr(Trim(Prcod_prazo_pgto.Text)) + ',' +
+          QuotedStr(Trim(Prcod_representante.Text)) + ',' + QuotedStr(Trim(Prcod_fop.Text)) + ',' + QuotedStr(Trim(Prcod_prazo_pgto.Text)) + ',' +
           QuotedStr(IntToStr(Prorcamento.ItemIndex)) + ',' + QuotedStr('0') + ',' +
           StringReplace(FloatToStr(FTotalBruto), ',', '.', [rfReplaceAll]) + ',' +
           StringReplace(FloatToStr(FTotalLiquido), ',', '.', [rfReplaceAll])+ ',' +
@@ -1143,7 +1127,6 @@ begin
       begin
         Q.SQL.Text := 'update vendas1 set cod_cliente = ' + QuotedStr(Trim(Prcod_cliente.Text)) +
           ', cod_representante = ' + QuotedStr(Trim(Prcod_representante.Text)) +
-          ', cod_supervisor = ' + SupervisorSql +
           ', cod_fop = ' + QuotedStr(Trim(Prcod_fop.Text)) +
           ', cod_prazo_pgto = ' + QuotedStr(Trim(Prcod_prazo_pgto.Text)) +
           ', orcamento = ' + QuotedStr(IntToStr(Prorcamento.ItemIndex)) +
@@ -1595,59 +1578,6 @@ begin
   CarregarNomeRepresentante;
 end;
 
-procedure TFr_pedido_simplificado.Prcod_supervisorButtonClick(Sender: TObject);
-var
-  Campos_combo: array of string;
-  I: Integer;
-  ChamouFormOld, ChamouPesquisaOld, ChamouCadastroOld: string;
-begin
-  Application.CreateForm(TFr_localizar, Fr_localizar);
-  try
-    ChamouFormOld := chamou_form;
-    ChamouPesquisaOld := chamou_pesquisa;
-    ChamouCadastroOld := chamou_cadastro;
-    Fr_localizar.Caption := 'Localizar Supervisor';
-    chamou_pesquisa := 'fr_supervisor';
-    chamou_form := 'fr_pedido_simplificado_supervisor';
-    chamou_cadastro := 'fr_supervisor';
-    Fr_localizar.BT_cadastro.Caption := 'Cadastro de' + #13 + 'Supervisor';
-    Fr_localizar.BT_cadastro.Visible := True;
-    Fr_localizar.CBcampos.Items.Clear;
-    SetLength(Campos_combo, 5);
-    Campos_combo[0] := 'Codigo';
-    Campos_combo[1] := 'Nome';
-    Campos_combo[2] := 'Empresa';
-    Campos_combo[3] := 'CNPJ';
-    Campos_combo[4] := 'CPF';
-    for I := 0 to High(Campos_combo) do
-      Fr_localizar.CBcampos.Items.Add(Campos_combo[I]);
-    Fr_localizar.CBcampos.ItemIndex := 1;
-    Fr_localizar.loc_representante('');
-    Fr_localizar.ShowModal;
-    if not Fr_localizar.mmLocalizar.IsEmpty then
-    begin
-      Prcod_supervisor.Text := Fr_localizar.mmLocalizar.FieldByName('id').AsString;
-      LbNomSupervisor.Caption := Fr_localizar.mmLocalizar.FieldByName('nom_representante').AsString;
-    end;
-  finally
-    Fr_localizar.Free;
-    chamou_form := ChamouFormOld;
-    chamou_pesquisa := ChamouPesquisaOld;
-    chamou_cadastro := ChamouCadastroOld;
-  end;
-  CarregarNomeSupervisor;
-end;
-procedure TFr_pedido_simplificado.Prcod_supervisorExit(Sender: TObject);
-begin
-  if (Trim(Prcod_supervisor.Text) <> '') and (not FMFUN.verificaNumerico(Prcod_supervisor.Text)) then
-  begin
-    ShowMessage('Dado tem que ser sempre Numerico!');
-    Prcod_supervisor.SetFocus;
-    Exit;
-  end;
-  CarregarNomeSupervisor;
-end;
-
 procedure TFr_pedido_simplificado.qItensAfterScroll(DataSet: TDataSet);
 begin
   if DataSet <> mmItens then
@@ -2001,12 +1931,30 @@ begin
 end;
 
 procedure TFr_pedido_simplificado.CarregarNomeCliente;
+var
+  FiltroRepresentante: string;
 begin
   LbNomCliente.Caption := '';
   if Trim(Prcod_cliente.Text) = '' then Exit;
-  dao.Geral1('select nom_cliente from cliente where id_representante = '+QuotedStr(Trim(Prcod_representante.Text))+' and cod_cliente = ' + QuotedStr(Trim(Prcod_cliente.Text)));
+
+  dao.Geral1('select nom_cliente, id_representante from cliente where cod_cliente = ' + QuotedStr(Trim(Prcod_cliente.Text)));
   if not dao.q1.IsEmpty then
-    LbNomCliente.Caption := dao.q1.FieldByName('nom_cliente').AsString
+  begin
+    LbNomCliente.Caption := dao.q1.FieldByName('nom_cliente').AsString;
+    if FNovo then
+    begin
+      if not dao.q1.fieldbyname('id_representante').IsNull then
+      begin
+        if Prcod_representante.Text <> dao.q1.fieldbyname('id_representante').AsString then
+        begin
+          Prcod_representante.Text := dao.q1.fieldbyname('id_representante').AsString;
+          Prcod_representanteExit(Self);
+          if tipo_usuario < '9' then
+            Prcod_representante.ReadOnly := True;
+        end;
+      end;
+    end;
+  end
   else begin
     dao.msg('Registro nao Encontrado!');
     Prcod_cliente.Clear;
@@ -2025,21 +1973,6 @@ begin
     dao.msg('Registro nao Encontrado!');
     Prcod_representante.Clear;
     Prcod_representante.SetFocus;
-  end;
-end;
-
-procedure TFr_pedido_simplificado.CarregarNomeSupervisor;
-begin
-  LbNomSupervisor.Caption := '';
-  if Trim(Prcod_supervisor.Text) = '' then Exit;
-  dao.Geral1('select nom_representante from representante where ativo = ''S'' and funcionario in (''4'') and id = ' + QuotedStr(Trim(Prcod_supervisor.Text)));
-  if not dao.q1.IsEmpty then
-    LbNomSupervisor.Caption := dao.q1.FieldByName('nom_representante').AsString
-  else
-  begin
-    dao.msg('Registro nao Encontrado!');
-    Prcod_supervisor.Clear;
-    Prcod_supervisor.SetFocus;
   end;
 end;
 
@@ -2107,7 +2040,7 @@ begin
       begin
         FProcessoIdAtual := Trim(dao.q1.FieldByName('processo_id').AsString);
 
-        if FProcessoIdAtual = '' then
+        if (FProcessoIdAtual = '') or (FProcessoIdAtual = '0') then
         begin
           FProcessoIdAtual := FMFUN.GerarProcessoPedido;
 

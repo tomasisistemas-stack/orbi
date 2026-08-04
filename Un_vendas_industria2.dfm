@@ -224,19 +224,6 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       Font.Name = 'Tahoma'
       Font.Style = []
     end
-    object lbSupervisor: TsLabel
-      Left = 657
-      Top = 9
-      Width = 104
-      Height = 13
-      Caption = 'Vendedor Supervisor:'
-      ParentFont = False
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clBlack
-      Font.Height = -11
-      Font.Name = 'Tahoma'
-      Font.Style = []
-    end
     object LbNom_fornecedor: TsLabel
       Left = 80
       Top = 224
@@ -397,77 +384,6 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       ParentFont = False
       OnClick = btAltRepClick
     end
-    object btAltSup: TSpeedButton
-      Left = 589
-      Top = 19
-      Width = 66
-      Height = 25
-      Caption = 'Alterar'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      Glyph.Data = {
-        F6060000424DF606000000000000360000002800000018000000180000000100
-        180000000000C0060000120B0000120B00000000000000000000FF00FFFF00FF
-        FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
-        FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
-        00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
-        FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
-        FFFF00FFFF00FFFF00FF95320999320899320899320899320899320899320899
-        320899320899320899320899320899320899320899330A953209FF00FFFF00FF
-        FF00FFFF00FFFF00FFFF00FFFF00FFFF00FF953209953209993106B8370BE043
-        28F24833F74B36F75039F85B40FA5D43F7533EFB4A37F44B35D041289D340D98
-        3209953209FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF953209953209
-        9A3107C03910E2452AF04C37F85C41FA6D4AFA6E48FA7E60FAA093F66B5AF444
-        2FE6462FB73D2098330A953209FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
-        00FF9532099532099F320AC93B14E7492EF76444FB7751FB724BF8603FFA9682
-        FEFCFFF8B1A5F04B34D94027AF3B1C96340D953209FF00FFFF00FFFF00FFFF00
-        FFFF00FFFF00FFFF00FFFF00FF953209A3340DD13F19F25A3CFE7652FB744DFB
-        6641FB6E50FCC6BCFFFFFFFFD1C7FA694ED54327A5361796340D953209FF00FF
-        FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF953209A03511CC421FFC68
-        47FF7B56FF6F46FF6D48FFAB98FFFEFCFFFFFFFFD1C7FF7D5DE65937A63A1893
-        310C953209FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
-        9E350FBF4622E05B35F87041EF643ECC6C58C1B8B7CCDCDEE2E6E2F7B09DFE75
-        52F76E49B2441F96310AFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
-        00FFFF00FFFF00FFFF00FFC54A25C04622813425602D41302F5B28396E33406D
-        5156768C534CD1532CD8592EA53A12FF00FFFF00FFFF00FFFF00FFFF00FFFF00
-        FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF070C5900157300
-        167A001172000E6B000E650F114A5E2930FF00FFFF00FFFF00FF000000000000
-        000000000000000000FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF1117
-        500224AA042C9E082C98092D98072A97032392001A8409176CFF00FFFF00FFFF
-        00FF000109FF00FF0126FFFF00FF000316FF00FFFF00FFFF00FFFF00FFFF00FF
-        FF00FF01030C03227A0D43C20D37A30C37A30C38A40D36A30D36A00B35A10223
-        92001384FF00FFFF00FF0004210125FFFF00FF0126FF00107EFF00FFFF00FFFF
-        00FFFF00FFFF00FFFF00FF020A1D0D3CA60F47C50D3DAA0D40B20D41B40E41B5
-        0E41B20F44B70D3EAF092384FF00FFFF00FF00031DFF00FFFF00FFFF00FF0122
-        F4FF00FFFF00FFFF00FFFF00FFFF00FF01010105183F145AE91156E01152D310
-        4ECA0F4AC1104CC5104BC4114FC91150CA0C35A1FF00FFFF00FF000000000104
-        000000000003000E6B0122FEFF00FFFF00FFFF00FFFF00FF000001051C40186C
-        FE1869F31358CF1356CC1152CA0C38A41150C6135AD5145AD50F41B0FF00FFFF
-        00FFFF00FFFF00FFFF00FFFF00FFFF00FF001CDE0120FFFF00FFFF00FFFF00FF
-        01000101060D07234C09234E071F41124DA70C38A41762D90C38A4186AE61865
-        DD0F3BA4FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
-        00FFFF00FFFF00FF0303030707060403030000010719311D78D8208EFF1C78F6
-        1C78F31F86FE1B78F00C3497FF00FFFF00FF0000000000000000000000000000
-        00FF00FFFF00FFFF00FFFF00FFFF00FFFF00FF1E1C1B252624080705000F2218
-        73D326A0FF2395FF249AFF2396FF1553C5FF00FFFF00FFFF00FF000109FF00FF
-        0126FFFF00FF000316FF00FFFF00FFFF00FFFF00FFFF00FFFF00FF1F1C1B4547
-        465A5957262729051326092F63114C901356A00C3E81091A5AFF00FFFF00FFFF
-        00FF0004210125FFFF00FF0126FF00107EFF00FFFF00FFFF00FFFF00FFFF00FF
-        FF00FFFF00FF3938375758586A696758534E2F2B280B0C0D030202090708FF00
-        FFFF00FFFF00FFFF00FF00031DFF00FFFF00FFFF00FF0122F4FF00FFFF00FFFF
-        00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF6C6C6B77777663605F3B3B3C
-        FF00FFFF00FFFF00FFFF00FFFF00FFFF00FF000000000104000000000003000E
-        6B0122FEFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
-        00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
-        FF00FFFF00FFFF00FF001CDE0120FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
-        FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
-        00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF}
-      ParentFont = False
-      OnClick = btAltSupClick
-    end
     object status: TsLabel
       Left = 1260
       Top = 56
@@ -568,7 +484,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
-      TabOrder = 9
+      TabOrder = 8
       Zoom = 100
       BoundLabel.Indent = 0
       BoundLabel.Font.Charset = DEFAULT_CHARSET
@@ -588,7 +504,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       Height = 21
       Anchors = [akTop, akRight]
       ItemIndex = 0
-      TabOrder = 11
+      TabOrder = 10
       Text = 'N'#227'o'
       OnKeyPress = PrdtadocKeyPress
       Items.Strings = (
@@ -602,7 +518,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       Height = 21
       Anchors = [akTop, akRight]
       ItemIndex = 0
-      TabOrder = 12
+      TabOrder = 11
       Text = 'N'#227'o'
       OnKeyPress = PrdtadocKeyPress
       Items.Strings = (
@@ -622,7 +538,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
-      TabOrder = 13
+      TabOrder = 12
       Visible = False
       OnKeyPress = PrdtadocKeyPress
       SkinData.SkinSection = 'EDIT'
@@ -648,7 +564,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
-      TabOrder = 15
+      TabOrder = 14
       Visible = False
       OnKeyPress = PrdtadocKeyPress
       SkinData.SkinSection = 'EDIT'
@@ -674,7 +590,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
-      TabOrder = 16
+      TabOrder = 15
       Text = 'O'
       Visible = False
       OnKeyPress = PrdtadocKeyPress
@@ -704,7 +620,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       Font.Style = []
       ParentFont = False
       ReadOnly = True
-      TabOrder = 17
+      TabOrder = 16
       Visible = False
       BoundLabel.Indent = 0
       BoundLabel.Font.Charset = DEFAULT_CHARSET
@@ -734,7 +650,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       Font.Style = [fsBold]
       ParentColor = False
       ParentFont = False
-      TabOrder = 14
+      TabOrder = 13
       SkinData.SkinSection = 'GROUPBOX'
       DesignSize = (
         888
@@ -1273,38 +1189,6 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         DisplayFormat = 'R$ ,0.00;-R$ ,0.00'
       end
     end
-    object Prcod_supervisor: TsComboEdit
-      Left = 657
-      Top = 22
-      Width = 80
-      Height = 21
-      AutoSize = False
-      Color = clWhite
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clBlack
-      Font.Height = -11
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
-      TabOrder = 3
-      Text = ''
-      OnExit = Prcod_supervisorExit
-      OnKeyPress = Prcod_supervisorKeyPress
-      CheckOnExit = True
-      BoundLabel.Indent = 0
-      BoundLabel.Font.Charset = DEFAULT_CHARSET
-      BoundLabel.Font.Color = clWindowText
-      BoundLabel.Font.Height = -11
-      BoundLabel.Font.Name = 'Tahoma'
-      BoundLabel.Font.Style = []
-      BoundLabel.Layout = sclLeft
-      BoundLabel.MaxWidth = 0
-      BoundLabel.UseSkinColor = True
-      SkinData.SkinSection = 'EDIT'
-      OnButtonClick = Prcod_supervisorButtonClick
-      GlyphMode.Blend = 0
-      GlyphMode.Grayed = False
-    end
     object Prcod_fornecedor: TsComboEdit
       Left = 8
       Top = 216
@@ -1318,7 +1202,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
-      TabOrder = 10
+      TabOrder = 9
       Text = ''
       OnExit = Prcod_fornecedorExit
       CheckOnExit = True
@@ -1373,7 +1257,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       Width = 105
       Height = 38
       Caption = 'Pedido '#224' Associar'
-      TabOrder = 19
+      TabOrder = 18
       Visible = False
       SkinData.SkinSection = 'GROUPBOX'
       object PrNUMDOC_DESTINO: TComboBox
@@ -1399,7 +1283,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       Width = 196
       Height = 44
       Caption = 'Desconto Geral'
-      TabOrder = 8
+      TabOrder = 7
       TabStop = True
       SkinData.SkinSection = 'GROUPBOX'
       object PrDESCONTO_GERAL: TsCurrencyEdit
@@ -1468,7 +1352,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       Height = 38
       Anchors = [akTop, akRight]
       Caption = 'N'#186' Processo'
-      TabOrder = 18
+      TabOrder = 17
       SkinData.SkinSection = 'GROUPBOX'
       object btHistorico: TSpeedButton
         Left = 77
@@ -1539,7 +1423,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
-      TabOrder = 4
+      TabOrder = 3
       Text = ''
       OnChange = Prcod_clienteChange
       OnExit = Prcod_clienteExit
@@ -1572,7 +1456,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
-      TabOrder = 5
+      TabOrder = 4
       Text = ''
       OnExit = Prcod_fopExit
       OnKeyPress = Prcod_fopKeyPress
@@ -1604,7 +1488,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
-      TabOrder = 6
+      TabOrder = 5
       Text = ''
       OnExit = Prcod_prazo_pgtoExit
       OnKeyPress = Prcod_prazo_pgtoKeyPress
@@ -1636,7 +1520,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
-      TabOrder = 7
+      TabOrder = 6
       Text = ''
       OnExit = PrCONTA_BOLETOExit
       CheckOnExit = True
@@ -1660,7 +1544,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       Width = 105
       Height = 38
       Caption = 'N'#186' Ordem Compra'
-      TabOrder = 20
+      TabOrder = 19
       TabStop = True
       SkinData.SkinSection = 'GROUPBOX'
       object Prnum_oc: TEdit
@@ -4097,7 +3981,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       end
       object gbFaturamento: TsGroupBox
         Left = 3
-        Top = 182
+        Top = 189
         Width = 457
         Height = 143
         Caption = 'Faturamento'
@@ -4424,9 +4308,9 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       end
       object gbTransp: TsGroupBox
         Left = 3
-        Top = -4
+        Top = 0
         Width = 457
-        Height = 189
+        Height = 191
         Caption = 'Transporte'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -4438,7 +4322,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         SkinData.SkinSection = 'GROUPBOX'
         object Label38: TsLabel
           Left = 8
-          Top = 46
+          Top = 48
           Width = 79
           Height = 13
           Caption = 'Transportadora:'
@@ -4450,8 +4334,8 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           Font.Style = []
         end
         object LbNom_transportadora: TsLabel
-          Left = 147
-          Top = 64
+          Left = 150
+          Top = 66
           Width = 3
           Height = 13
           ParentFont = False
@@ -4459,11 +4343,11 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           Font.Color = clBlack
           Font.Height = -11
           Font.Name = 'Tahoma'
-          Font.Style = [fsBold]
+          Font.Style = []
         end
         object Label39: TsLabel
           Left = 8
-          Top = 83
+          Top = 85
           Width = 81
           Height = 13
           Caption = 'Frete por Conta:'
@@ -4476,7 +4360,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         end
         object Label41: TsLabel
           Left = 8
-          Top = 116
+          Top = 118
           Width = 64
           Height = 13
           Caption = 'Volume Nota:'
@@ -4489,7 +4373,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         end
         object Label42: TsLabel
           Left = 203
-          Top = 117
+          Top = 119
           Width = 53
           Height = 13
           Caption = 'Peso Nota:'
@@ -4502,7 +4386,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         end
         object Label44: TsLabel
           Left = 123
-          Top = 150
+          Top = 152
           Width = 43
           Height = 13
           Caption = 'Contato:'
@@ -4515,7 +4399,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         end
         object Label43: TsLabel
           Left = 12
-          Top = 149
+          Top = 151
           Width = 57
           Height = 13
           Caption = 'Valor Frete:'
@@ -4528,7 +4412,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         end
         object sLabel4: TsLabel
           Left = 79
-          Top = 117
+          Top = 119
           Width = 54
           Height = 13
           Caption = 'Peso Total:'
@@ -4541,7 +4425,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         end
         object sLabel5: TsLabel
           Left = 149
-          Top = 117
+          Top = 119
           Width = 37
           Height = 13
           Caption = 'Decr'#233's.'
@@ -4554,7 +4438,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         end
         object BtAltTransp: TSpeedButton
           Left = 5
-          Top = 60
+          Top = 61
           Width = 66
           Height = 25
           Caption = 'Alterar'
@@ -4623,6 +4507,77 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           ParentFont = False
           OnClick = BtAltTranspClick
         end
+        object BtAltCarga: TSpeedButton
+          Left = 5
+          Top = 25
+          Width = 66
+          Height = 25
+          Caption = 'Alterar'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = []
+          Glyph.Data = {
+            F6060000424DF606000000000000360000002800000018000000180000000100
+            180000000000C0060000120B0000120B00000000000000000000FF00FFFF00FF
+            FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
+            FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
+            00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
+            FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
+            FFFF00FFFF00FFFF00FF95320999320899320899320899320899320899320899
+            320899320899320899320899320899320899320899330A953209FF00FFFF00FF
+            FF00FFFF00FFFF00FFFF00FFFF00FFFF00FF953209953209993106B8370BE043
+            28F24833F74B36F75039F85B40FA5D43F7533EFB4A37F44B35D041289D340D98
+            3209953209FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF953209953209
+            9A3107C03910E2452AF04C37F85C41FA6D4AFA6E48FA7E60FAA093F66B5AF444
+            2FE6462FB73D2098330A953209FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
+            00FF9532099532099F320AC93B14E7492EF76444FB7751FB724BF8603FFA9682
+            FEFCFFF8B1A5F04B34D94027AF3B1C96340D953209FF00FFFF00FFFF00FFFF00
+            FFFF00FFFF00FFFF00FFFF00FF953209A3340DD13F19F25A3CFE7652FB744DFB
+            6641FB6E50FCC6BCFFFFFFFFD1C7FA694ED54327A5361796340D953209FF00FF
+            FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF953209A03511CC421FFC68
+            47FF7B56FF6F46FF6D48FFAB98FFFEFCFFFFFFFFD1C7FF7D5DE65937A63A1893
+            310C953209FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
+            9E350FBF4622E05B35F87041EF643ECC6C58C1B8B7CCDCDEE2E6E2F7B09DFE75
+            52F76E49B2441F96310AFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
+            00FFFF00FFFF00FFFF00FFC54A25C04622813425602D41302F5B28396E33406D
+            5156768C534CD1532CD8592EA53A12FF00FFFF00FFFF00FFFF00FFFF00FFFF00
+            FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF070C5900157300
+            167A001172000E6B000E650F114A5E2930FF00FFFF00FFFF00FF000000000000
+            000000000000000000FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF1117
+            500224AA042C9E082C98092D98072A97032392001A8409176CFF00FFFF00FFFF
+            00FF000109FF00FF0126FFFF00FF000316FF00FFFF00FFFF00FFFF00FFFF00FF
+            FF00FF01030C03227A0D43C20D37A30C37A30C38A40D36A30D36A00B35A10223
+            92001384FF00FFFF00FF0004210125FFFF00FF0126FF00107EFF00FFFF00FFFF
+            00FFFF00FFFF00FFFF00FF020A1D0D3CA60F47C50D3DAA0D40B20D41B40E41B5
+            0E41B20F44B70D3EAF092384FF00FFFF00FF00031DFF00FFFF00FFFF00FF0122
+            F4FF00FFFF00FFFF00FFFF00FFFF00FF01010105183F145AE91156E01152D310
+            4ECA0F4AC1104CC5104BC4114FC91150CA0C35A1FF00FFFF00FF000000000104
+            000000000003000E6B0122FEFF00FFFF00FFFF00FFFF00FF000001051C40186C
+            FE1869F31358CF1356CC1152CA0C38A41150C6135AD5145AD50F41B0FF00FFFF
+            00FFFF00FFFF00FFFF00FFFF00FFFF00FF001CDE0120FFFF00FFFF00FFFF00FF
+            01000101060D07234C09234E071F41124DA70C38A41762D90C38A4186AE61865
+            DD0F3BA4FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
+            00FFFF00FFFF00FF0303030707060403030000010719311D78D8208EFF1C78F6
+            1C78F31F86FE1B78F00C3497FF00FFFF00FF0000000000000000000000000000
+            00FF00FFFF00FFFF00FFFF00FFFF00FFFF00FF1E1C1B252624080705000F2218
+            73D326A0FF2395FF249AFF2396FF1553C5FF00FFFF00FFFF00FF000109FF00FF
+            0126FFFF00FF000316FF00FFFF00FFFF00FFFF00FFFF00FFFF00FF1F1C1B4547
+            465A5957262729051326092F63114C901356A00C3E81091A5AFF00FFFF00FFFF
+            00FF0004210125FFFF00FF0126FF00107EFF00FFFF00FFFF00FFFF00FFFF00FF
+            FF00FFFF00FF3938375758586A696758534E2F2B280B0C0D030202090708FF00
+            FFFF00FFFF00FFFF00FF00031DFF00FFFF00FFFF00FF0122F4FF00FFFF00FFFF
+            00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF6C6C6B77777663605F3B3B3C
+            FF00FFFF00FFFF00FFFF00FFFF00FFFF00FF000000000104000000000003000E
+            6B0122FEFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
+            00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
+            FF00FFFF00FFFF00FF001CDE0120FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
+            FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
+            00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF}
+          ParentFont = False
+          OnClick = BtAltCargaClick
+        end
         object sLabel14: TsLabel
           Left = 9
           Top = 12
@@ -4637,7 +4592,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           Font.Style = []
         end
         object lbDescCarga: TsLabel
-          Left = 68
+          Left = 150
           Top = 31
           Width = 3
           Height = 13
@@ -4650,7 +4605,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         end
         object Prcod_transportadora: TsComboEdit
           Left = 77
-          Top = 61
+          Top = 63
           Width = 66
           Height = 21
           AutoSize = False
@@ -4682,7 +4637,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         end
         object Prpeso_nota: TsCurrencyEdit
           Left = 203
-          Top = 130
+          Top = 132
           Width = 64
           Height = 21
           AutoSize = False
@@ -4709,11 +4664,12 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           GlyphMode.Grayed = False
           DisplayFormat = '0.00;'
         end
-        object Prcod_carga: TsEdit
-          Left = 8
+        object Prcod_carga: TsComboEdit
+          Left = 77
           Top = 27
-          Width = 56
+          Width = 66
           Height = 21
+          AutoSize = False
           Color = clWhite
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
@@ -4722,9 +4678,10 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           Font.Style = [fsBold]
           ParentFont = False
           TabOrder = 0
+          Text = ''
           OnExit = Prcod_cargaExit
           OnKeyPress = PrdtadocKeyPress
-          SkinData.SkinSection = 'EDIT'
+          CheckOnExit = True
           BoundLabel.Indent = 0
           BoundLabel.Font.Charset = DEFAULT_CHARSET
           BoundLabel.Font.Color = clWindowText
@@ -4734,10 +4691,14 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           BoundLabel.Layout = sclLeft
           BoundLabel.MaxWidth = 0
           BoundLabel.UseSkinColor = True
+          SkinData.SkinSection = 'EDIT'
+          OnButtonClick = Prcod_cargaButtonClick
+          GlyphMode.Blend = 0
+          GlyphMode.Grayed = False
         end
         object Prcontato_frete: TsEdit
           Left = 124
-          Top = 163
+          Top = 165
           Width = 245
           Height = 21
           Color = clWhite
@@ -4763,7 +4724,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         end
         object Prvl_frete: TsCurrencyEdit
           Left = 8
-          Top = 163
+          Top = 165
           Width = 99
           Height = 21
           AutoSize = False
@@ -4791,7 +4752,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         end
         object Prvolume_nota: TsCurrencyEdit
           Left = 8
-          Top = 130
+          Top = 132
           Width = 64
           Height = 21
           AutoSize = False
@@ -4820,7 +4781,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         end
         object Prtipo_frete: TComboBox
           Left = 8
-          Top = 97
+          Top = 99
           Width = 78
           Height = 21
           Style = csDropDownList
@@ -4836,7 +4797,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         end
         object edPesoTotal: TsCurrencyEdit
           Left = 79
-          Top = 130
+          Top = 132
           Width = 64
           Height = 21
           AutoSize = False
@@ -4866,7 +4827,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         end
         object edDecTransp: TsCurrencyEdit
           Left = 149
-          Top = 130
+          Top = 132
           Width = 48
           Height = 21
           AutoSize = False
@@ -10129,7 +10090,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
     Left = 152
     Top = 160
     Bitmap = {
-      494C01010100C809C80910001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010100E009E00910001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -11412,8 +11373,8 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         ' as valor_recebido, cr.BOLETO_REMESSA_ORDEM, fp.conta_padrao fro' +
         'm cr1 cr left join fop fp on fp.cod_fop=cr.cod_fop where cr.nr_d' +
         'ocumento ='#39'43398'#39' order by cr.dtaven')
-    Left = 408
-    Top = 288
+    Left = 376
+    Top = 240
     object q_cr1id: TIntegerField
       FieldName = 'id'
       Origin = 'id'
@@ -11655,8 +11616,8 @@ object Fr_vendas_industria2: TFr_vendas_industria2
     Configuracoes.WebServices.QuebradeLinha = '|'
     Configuracoes.RespTec.IdCSRT = 0
     DANFE = ACBrNFeDANFEFR1
-    Left = 372
-    Top = 401
+    Left = 388
+    Top = 273
   end
   object qrGravaXmlCCe: TFDQuery
     Connection = dao.CN
@@ -11688,8 +11649,8 @@ object Fr_vendas_industria2: TFr_vendas_industria2
     EspessuraBorda = 1
     BorderIcon = [biSystemMenu, biMinimize, biMaximize]
     ThreadSafe = False
-    Left = 399
-    Top = 380
+    Left = 415
+    Top = 236
   end
   object qrGravaXml: TFDQuery
     Connection = dao.CN

@@ -1905,7 +1905,7 @@ object FmOrdemCompra: TFmOrdemCompra
     PrintOptions.Printer = 'Default'
     PrintOptions.PrintOnSheet = 0
     ReportOptions.CreateDate = 40180.423318680600000000
-    ReportOptions.LastChange = 46216.725058634260000000
+    ReportOptions.LastChange = 46226.401539502320000000
     ScriptLanguage = 'PascalScript'
     ScriptText.Strings = (
       'var ZebraFlag: Integer;'
@@ -2301,7 +2301,7 @@ object FmOrdemCompra: TFmOrdemCompra
           AllowVectorExport = True
           Left = 66.031540000000000000
           Top = 22.677165350000000000
-          Width = 346.960629920000000000
+          Width = 517.039479920000000000
           Height = 13.228346460000000000
           DisplayFormat.DecimalSeparator = ','
           Font.Charset = DEFAULT_CHARSET
@@ -2314,45 +2314,9 @@ object FmOrdemCompra: TFmOrdemCompra
             'Produto')
           ParentFont = False
         end
-        object Memo5: TfrxMemoView
-          AllowVectorExport = True
-          Left = 625.929500000000000000
-          Top = 22.677165350000000000
-          Width = 52.913420000000000000
-          Height = 13.228346460000000000
-          DisplayFormat.DecimalSeparator = ','
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
-          Font.Style = [fsBold]
-          Frame.Typ = [ftBottom]
-          HAlign = haRight
-          Memo.UTF8W = (
-            'Custo')
-          ParentFont = False
-        end
-        object Memo33: TfrxMemoView
-          AllowVectorExport = True
-          Left = 679.976810000000000000
-          Top = 22.677165350000000000
-          Width = 71.811021180000000000
-          Height = 13.228346460000000000
-          DisplayFormat.DecimalSeparator = ','
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
-          Font.Style = [fsBold]
-          Frame.Typ = [ftBottom]
-          HAlign = haRight
-          Memo.UTF8W = (
-            'SubTotal')
-          ParentFont = False
-        end
         object Memo6: TfrxMemoView
           AllowVectorExport = True
-          Left = 498.882190000000000000
+          Left = 625.386210000000000000
           Top = 22.677165350000000000
           Width = 41.574830000000000000
           Height = 13.228346460000000000
@@ -2369,7 +2333,7 @@ object FmOrdemCompra: TFmOrdemCompra
         end
         object Memo3: TfrxMemoView
           AllowVectorExport = True
-          Left = 413.858267716535400000
+          Left = 584.362287720000000000
           Top = 22.677165350000000000
           Width = 41.574830000000000000
           Height = 13.228346460000000000
@@ -2487,7 +2451,7 @@ object FmOrdemCompra: TFmOrdemCompra
         end
         object Memo23: TfrxMemoView
           AllowVectorExport = True
-          Left = 583.559055120000000000
+          Left = 710.063075120000000000
           Top = 22.677180000000000000
           Width = 41.574830000000000000
           Height = 13.228346460000000000
@@ -2502,26 +2466,9 @@ object FmOrdemCompra: TFmOrdemCompra
             'Peso')
           ParentFont = False
         end
-        object Memo25: TfrxMemoView
-          AllowVectorExport = True
-          Left = 456.268090000000000000
-          Top = 22.677180000000000000
-          Width = 41.574830000000000000
-          Height = 13.228346460000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
-          Font.Style = [fsBold]
-          Frame.Typ = [ftBottom]
-          HAlign = haRight
-          Memo.UTF8W = (
-            'Qtd.Mul.')
-          ParentFont = False
-        end
         object Memo29: TfrxMemoView
           AllowVectorExport = True
-          Left = 541.228346460000000000
+          Left = 667.732366460000000000
           Top = 22.677180000000000000
           Width = 41.574830000000000000
           Height = 13.228346460000000000
@@ -2551,7 +2498,7 @@ object FmOrdemCompra: TFmOrdemCompra
         object dst_vendas1NOM_CLIENTE: TfrxMemoView
           AllowVectorExport = True
           Left = 66.031540000000000000
-          Width = 346.960629920000000000
+          Width = 517.039479920000000000
           Height = 15.118120000000000000
           DataField = 'PRODUTO'
           DataSet = Dm.dst_ordem_compra
@@ -2567,53 +2514,9 @@ object FmOrdemCompra: TFmOrdemCompra
             '[dst_ordem_compra."PRODUTO"]')
           ParentFont = False
         end
-        object dst_vendas1TOT_LIQUIDO: TfrxMemoView
-          AllowVectorExport = True
-          Left = 625.929500000000000000
-          Width = 52.913420000000000000
-          Height = 15.118120000000000000
-          DataField = 'CUSTO'
-          DataSet = Dm.dst_ordem_compra
-          DataSetName = 'dst_ordem_compra'
-          DisplayFormat.DecimalSeparator = '.'
-          DisplayFormat.FormatStr = '%2.2m'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
-          Font.Style = []
-          Frame.Typ = []
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[dst_ordem_compra."CUSTO"]')
-          ParentFont = False
-        end
-        object Memo34: TfrxMemoView
-          AllowVectorExport = True
-          Left = 679.976810000000000000
-          Width = 71.810989450000000000
-          Height = 15.118120000000000000
-          DataField = 'SUB_TOTAL'
-          DataSet = Dm.dst_ordem_compra
-          DataSetName = 'dst_ordem_compra'
-          DisplayFormat.DecimalSeparator = '.'
-          DisplayFormat.FormatStr = '%2.2m'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
-          Font.Style = []
-          Frame.Typ = []
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[dst_ordem_compra."SUB_TOTAL"]')
-          ParentFont = False
-        end
         object Memo15: TfrxMemoView
           AllowVectorExport = True
-          Left = 498.882190000000000000
+          Left = 625.386210000000000000
           Width = 41.574830000000000000
           Height = 15.118120000000000000
           DataField = 'QTD_ENTRADA'
@@ -2635,7 +2538,7 @@ object FmOrdemCompra: TFmOrdemCompra
         end
         object Memo7: TfrxMemoView
           AllowVectorExport = True
-          Left = 413.858267716535400000
+          Left = 584.362287720000000000
           Width = 41.574830000000000000
           Height = 15.118120000000000000
           DataField = 'UNIDADE'
@@ -2676,7 +2579,7 @@ object FmOrdemCompra: TFmOrdemCompra
         end
         object Memo26: TfrxMemoView
           AllowVectorExport = True
-          Left = 583.559055120000000000
+          Left = 710.063075120000000000
           Width = 41.574830000000000000
           Height = 15.118120000000000000
           DataSet = Dm.dst_ordem_compra
@@ -2695,31 +2598,9 @@ object FmOrdemCompra: TFmOrdemCompra
             '[(<dst_ordem_compra."QTD_ENTRADA">*<dst_ordem_compra."PESO">)]')
           ParentFont = False
         end
-        object Memo27: TfrxMemoView
-          AllowVectorExport = True
-          Left = 456.268090000000000000
-          Width = 41.574830000000000000
-          Height = 15.118120000000000000
-          DataField = 'qtd_multipla'
-          DataSet = Dm.dst_ordem_compra
-          DataSetName = 'dst_ordem_compra'
-          DisplayFormat.DecimalSeparator = '.'
-          DisplayFormat.FormatStr = '%2.2n'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
-          Font.Style = []
-          Frame.Typ = []
-          HAlign = haRight
-          Memo.UTF8W = (
-            '[dst_ordem_compra."qtd_multipla"]')
-          ParentFont = False
-        end
         object Memo30: TfrxMemoView
           AllowVectorExport = True
-          Left = 541.228346460000000000
+          Left = 667.732366460000000000
           Width = 41.574830000000000000
           Height = 15.118120000000000000
           DataSet = Dm.dst_ordem_compra
@@ -2745,25 +2626,6 @@ object FmOrdemCompra: TFmOrdemCompra
         Height = 170.078850000000000000
         Top = 389.291590000000000000
         Width = 755.906000000000000000
-        object Memo13: TfrxMemoView
-          AllowVectorExport = True
-          Left = 680.315400000000000000
-          Width = 71.811070000000000000
-          Height = 15.118120000000000000
-          DisplayFormat.DecimalSeparator = '.'
-          DisplayFormat.FormatStr = '%2.2m'
-          DisplayFormat.Kind = fkNumeric
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlack
-          Font.Height = -9
-          Font.Name = 'Arial'
-          Font.Style = [fsBold, fsItalic]
-          Frame.Typ = [ftTop]
-          HAlign = haRight
-          Memo.UTF8W = (
-            ' [SUM(<dst_ordem_compra."SUB_TOTAL">,DetailData1)]')
-          ParentFont = False
-        end
         object Memo11: TfrxMemoView
           AllowVectorExport = True
           Left = 11.338590000000000000
@@ -2785,9 +2647,9 @@ object FmOrdemCompra: TFmOrdemCompra
         end
         object Memo12: TfrxMemoView
           AllowVectorExport = True
-          Left = 15.118120000000000000
+          Left = 12.118120000000000000
           Top = 45.354360000000000000
-          Width = 695.433520000000000000
+          Width = 740.787880000000000000
           Height = 117.165430000000000000
           DataSet = Dm.dst_ordem_compra
           DataSetName = 'dst_ordem_compra'
@@ -2804,7 +2666,7 @@ object FmOrdemCompra: TFmOrdemCompra
         end
         object Memo28: TfrxMemoView
           AllowVectorExport = True
-          Left = 583.559055120000000000
+          Left = 710.063075120000000000
           Width = 41.574830000000000000
           Height = 15.118120000000000000
           DisplayFormat.DecimalSeparator = '.'
@@ -2825,7 +2687,7 @@ object FmOrdemCompra: TFmOrdemCompra
         end
         object Memo31: TfrxMemoView
           AllowVectorExport = True
-          Left = 541.228346460000000000
+          Left = 667.732366460000000000
           Width = 41.574830000000000000
           Height = 15.118120000000000000
           DisplayFormat.DecimalSeparator = '.'
