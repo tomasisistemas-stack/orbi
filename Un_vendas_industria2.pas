@@ -891,6 +891,7 @@ type
     campo_pesquisado, dado_pesquisado: string;
     busca_qualquer_posicao_pesquisada, transferencia, troca: boolean;
     itens_repetidos: boolean;
+    imprimindo_pedido, imprimindo_boleto: boolean;
     procedure insere_sgpro(tipo: string);
     procedure CalculaSubTotais;
     procedure ativa_vendas1(id: string);
@@ -938,7 +939,7 @@ const
 
 var
   Fr_vendas_industria2: TFr_vendas_industria2;
-  localizar_acionado, carregando_item, cliente_alterado, cliente_bloqueado, cliente_com_pendencia, habilita_faturamento, cliente_isento_icms, cliente_consumidor_final, cliente_sem_ie, Mostra, produto_alterado, cliente_pre_cadastrado, representante_funcionario, GravarPedido, aviso_conta_boleto, promocao_desconto: boolean;
+  localizar_acionado, carregando_item, cliente_alterado, cliente_bloqueado, cliente_com_pendencia, habilita_faturamento, cliente_isento_icms, cliente_consumidor_final, cliente_sem_ie, Mostra, produto_alterado, cliente_pre_cadastrado, representante_funcionario, GravarPedido, aviso_conta_boleto, promocao_desconto, validando_conta_boleto, validando_empresa_faturar, validando_cfoptroca: boolean;
   cliente_anterior, produto_anterior, cst, cesta_basica, supervisor, id, id_item, perc_comissao, pedido_tablet, vlr_comissao, id_remessa, sql_vendas2, carteira_conta, conta_boleto, empresa_faturar, usuario_liberou_desconto, situacaoTm, statusTm, nome_logo: string;
   origem_tipo, dias_protesto, dias_baixar: integer;
   WindowList: Pointer;
@@ -1483,7 +1484,7 @@ begin
 
   if Prcod_carga.Text <> '' then
   begin
-    dao.Geral2('select c.id, c.nom_carga||'' - ''||v.nom_veiculo||'' - ''||m.nome as desc '+
+    dao.Geral2('select c.id, concat_ws('' - '', c.nom_carga, v.nom_veiculo, m.nome) as desc '+
                'from carga1 c '+
                'left outer join veiculos v on v.id = c.id_veiculo '+
                'left outer join motorista m on m.id = c.id_motorista '+
@@ -1514,6 +1515,9 @@ var
   valor_combo: string;
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   chamou_form_old := chamou_form;
@@ -1539,7 +1543,11 @@ begin
   Fr_localizar.CBcampos.ItemIndex := 1;
 
   Fr_localizar.ShowModal;
-  Fr_localizar.Free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -1552,6 +1560,9 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -1582,7 +1593,11 @@ begin
   Fr_localizar.CBcampos.ItemIndex := 1;
 
   Fr_localizar.ShowModal;
-  Fr_localizar.Free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -1621,6 +1636,9 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -1657,7 +1675,11 @@ begin
   Fr_localizar.CBcampos.ItemIndex := 1;
 
   Fr_localizar.ShowModal;
-  Fr_localizar.Free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -1682,6 +1704,9 @@ begin
   begin
     if (Prcod_representante.Text = '') then
     begin
+      if Assigned(Fr_localizar) and Fr_localizar.Visible then
+        Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -1718,7 +1743,11 @@ begin
       Fr_localizar.CBcampos.ItemIndex := 1;
 
       Fr_localizar.ShowModal;
-      Fr_localizar.Free;
+      if Assigned(Fr_localizar) then
+      begin
+        Fr_localizar.Free;
+        Fr_localizar := nil;
+      end;
 
       chamou_form := chamou_form_old;
       chamou_pesquisa := chamou_pesquisa_old;
@@ -1736,6 +1765,9 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -1762,7 +1794,11 @@ begin
   Fr_localizar.CBcampos.ItemIndex := 1;
 
   Fr_localizar.ShowModal;
-  Fr_localizar.Free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -1792,6 +1828,9 @@ begin
   begin
     if (Prempresa_faturar.Text = '') then
     begin
+      if Assigned(Fr_localizar) and Fr_localizar.Visible then
+        Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -1818,7 +1857,11 @@ begin
       Fr_localizar.CBcampos.ItemIndex := 1;
 
       Fr_localizar.ShowModal;
-      Fr_localizar.Free;
+      if Assigned(Fr_localizar) then
+      begin
+        Fr_localizar.Free;
+        Fr_localizar := nil;
+      end;
 
       chamou_form := chamou_form_old;
       chamou_pesquisa := chamou_pesquisa_old;
@@ -1837,6 +1880,9 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -1864,7 +1910,11 @@ begin
   Fr_localizar.CBcampos.ItemIndex := 1;
 
   Fr_localizar.ShowModal;
-  Fr_localizar.Free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -1907,12 +1957,15 @@ end;
 
 procedure TFr_vendas_industria2.AtualizarCamposDevolucao;
 var
-  Devolucao, Conserto: Boolean;
+  Devolucao, Conserto, Remessa: Boolean;
 begin
+  if PrNfeEntradaSaida.Text = 'Entrada' then Exit;
+
   Devolucao := Lbnom_fop.Caption = 'DEVOLUÇÃO';
   Conserto := Lbnom_fop.Caption = 'CONSERTO';
+  Remessa := Lbnom_fop.Caption = 'REMESSA';
 
-  TabNfeRef.TabVisible := (not venda) or Devolucao;
+  TabNfeRef.TabVisible := (not venda) or Devolucao or Remessa;
 
   Label11.Visible := not Devolucao;
   Prcod_cliente.Visible := not Devolucao;
@@ -2014,7 +2067,9 @@ begin
       Prcod_fiscal.Text := '5202';
     Prcod_fiscalExit(Self);
     CarregaChaveNfeDev;
-  end;
+  end
+  else if Remessa then
+    CarregaChaveNfeDev;
 end;
 
 procedure TFr_vendas_industria2.Prcod_transportadoraKeyPress(Sender: TObject; var Key: Char);
@@ -2036,6 +2091,9 @@ begin
   begin
     if (Prcod_transportadora.Text = '') then
     begin
+      if Assigned(Fr_localizar) and Fr_localizar.Visible then
+        Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -2063,7 +2121,11 @@ begin
       Fr_localizar.CBcampos.ItemIndex := 1;
 
       Fr_localizar.ShowModal;
-      Fr_localizar.Free;
+      if Assigned(Fr_localizar) then
+      begin
+        Fr_localizar.Free;
+        Fr_localizar := nil;
+      end;
 
       chamou_form := chamou_form_old;
       chamou_pesquisa := chamou_pesquisa_old;
@@ -2078,8 +2140,13 @@ procedure TFr_vendas_industria2.readonly_false(prefixo: ShortString);
 var
   i: integer;
 begin
+  if csDestroying in ComponentState then
+    Exit;
+
   for i := 0 to ComponentCount - 1 do
   begin
+    if (csDestroying in Components[i].ComponentState) then
+      Continue;
     if copy(Components[i].Name, 1, 2) = prefixo then
     begin
       if Components[i] is TRxDBComboEdit then
@@ -2090,7 +2157,6 @@ begin
       begin
         TsDBCalcEdit(Components[i]).ReadOnly := false;
         TsDBCalcEdit(Components[i]).Enabled := true;
-        TsDBCalcEdit(Components[i]).Button.Enabled := true;
       end
       else if Components[i] is TsEdit then
         TsEdit(Components[i]).Enabled := true
@@ -2128,8 +2194,13 @@ procedure TFr_vendas_industria2.readonly_true(prefixo: ShortString);
 var
   i: integer;
 begin
+  if csDestroying in ComponentState then
+    Exit;
+
   for i := 0 to ComponentCount - 1 do
   begin
+    if (csDestroying in Components[i].ComponentState) then
+      Continue;
     if copy(Components[i].Name, 1, 2) = prefixo then
     begin
       if Components[i] is TRxDBComboEdit then
@@ -2140,7 +2211,6 @@ begin
       begin
         TsDBCalcEdit(Components[i]).ReadOnly := true;
         TsDBCalcEdit(Components[i]).Enabled := false;
-        TsDBCalcEdit(Components[i]).Button.Enabled := false;
       end
       else if Components[i] is TsEdit then
         TsEdit(Components[i]).Enabled := false
@@ -2173,8 +2243,13 @@ procedure TFr_vendas_industria2.limpa_campos(prefixo: ShortString);
 var
   i: integer;
 begin
+  if csDestroying in ComponentState then
+    Exit;
+
   for i := 0 to ComponentCount - 1 do
   begin
+    if (csDestroying in Components[i].ComponentState) then
+      Continue;
     if copy(Components[i].Name, 1, 2) = prefixo then
     begin
       if Components[i] is TsEdit then
@@ -2300,7 +2375,8 @@ begin
     if (not FMFUN.verificaNumerico(Prcod_representante.Text)) and (length(Prcod_representante.Text) > 0) then
     begin
       showmessage('Dado tem que ser sempre Numérico!');
-      Prcod_representante.SetFocus;
+      if Prcod_representante.CanFocus then
+        Prcod_representante.SetFocus;
       Exit;
     end;
 
@@ -2339,7 +2415,8 @@ begin
     begin
       dao.msg('Registro não Encontrado!');
       Prcod_representante.Text := '';
-      Prcod_representante.SetFocus;
+      if Prcod_representante.CanFocus then
+        Prcod_representante.SetFocus;
       Exit;
     end;
   end;
@@ -2407,7 +2484,8 @@ begin
     if (not FMFUN.verificaNumerico(Prcod_cliente.Text)) and (length(Prcod_cliente.Text) > 0) then
     begin
       showmessage('Dado tem que ser sempre Numérico!');
-      Prcod_cliente.SetFocus;
+      if Prcod_cliente.CanFocus then
+        Prcod_cliente.SetFocus;
       Exit;
     end;
 
@@ -2421,7 +2499,7 @@ begin
     if FRPRI.TipUsu = '0' then
     begin
       if not FRPRI.supervisor then
-        sql_cliente := sql_cliente + ' and ID_REPRESENTANTE = ' + FRPRI.Representante_id
+        sql_cliente := sql_cliente + ' and (ID_REPRESENTANTE = ' + FRPRI.Representante_id + ' OR ID_REPRESENTANTE IS NULL) '
       else
         sql_cliente := sql_cliente + ' and ID_REPRESENTANTE in (select r.ID from REPRESENTANTE r where r.FUNCIONARIO in (0 , 1) and r.ATIVO = ''S'')  and c.cliente_bloqueado = ''N'' ';
     end;
@@ -2456,7 +2534,7 @@ begin
       else
         cliente_pre_cadastrado := false;
 
-      if modo_insert then
+      if modo_insert or (Lbnom_fop.Caption = 'TRANSFERENCIA') then
       begin
         if not dao.q4.fieldbyname('id_representante').IsNull then
         begin
@@ -2464,10 +2542,20 @@ begin
           begin
             Prcod_representante.Text := dao.q4.fieldbyname('id_representante').AsString;
             Prcod_representanteExit(Self);
-            if tipo_usuario < '9' then
+          end;
+        end;
+
+        if tipo_usuario < '9' then
+        begin
+          if Trim(Prcod_representante.Text) <> '' then
+          begin
+            Prcod_representante.ReadOnly := True;
+            btAltRep.Enabled := False;
+            if Representante_usuario <> '' then
             begin
-              Prcod_representante.ReadOnly := True;
-              btAltRep.Enabled := False;
+              Btgraped.Enabled := Trim(Prcod_representante.Text) = Representante_usuario;
+              if Trim(Prcod_representante.Text) <> Representante_usuario then
+                MessageDlg('Não é permitido inserir pedido de cliente de outro representante!', mtWarning, [mbOk], 0);
             end;
           end;
         end;
@@ -2510,7 +2598,8 @@ begin
     begin
       dao.msg('Registro não Encontrado!');
       Prcod_cliente.Text := '';
-      Prcod_cliente.SetFocus;
+      if Prcod_cliente.CanFocus then
+        Prcod_cliente.SetFocus;
       Exit;
     end;
   end;
@@ -2527,6 +2616,9 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -2559,7 +2651,11 @@ begin
 
   Fr_localizar.loc_fop('');
   Fr_localizar.ShowModal;
-  Fr_localizar.Free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -2584,6 +2680,9 @@ begin
   begin
     if (Prcod_fop.Text = '') then
     begin
+      if Assigned(Fr_localizar) and Fr_localizar.Visible then
+        Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -2610,7 +2709,11 @@ begin
       Fr_localizar.CBcampos.ItemIndex := 1;
 
       Fr_localizar.ShowModal;
-      Fr_localizar.Free;
+      if Assigned(Fr_localizar) then
+      begin
+        Fr_localizar.Free;
+        Fr_localizar := nil;
+      end;
 
       chamou_form := chamou_form_old;
       chamou_pesquisa := chamou_pesquisa_old;
@@ -2630,6 +2733,9 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -2656,7 +2762,11 @@ begin
   Fr_localizar.CBcampos.ItemIndex := 1;
   Fr_localizar.loc_prazo_pagamento('');
   Fr_localizar.ShowModal;
-  Fr_localizar.Free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -2681,6 +2791,9 @@ begin
   begin
     if (Prcod_prazo_pgto.Text = '') then
     begin
+      if Assigned(Fr_localizar) and Fr_localizar.Visible then
+        Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -2707,7 +2820,11 @@ begin
       Fr_localizar.CBcampos.ItemIndex := 1;
 
       Fr_localizar.ShowModal;
-      Fr_localizar.Free;
+      if Assigned(Fr_localizar) then
+      begin
+        Fr_localizar.Free;
+        Fr_localizar := nil;
+      end;
 
       chamou_form := chamou_form_old;
       chamou_pesquisa := chamou_pesquisa_old;
@@ -2768,7 +2885,7 @@ end;
 
 procedure TFr_vendas_industria2.Prcod_fopExit(Sender: TObject);
 var
-  prazo_padrao: string;
+  prazo_padrao, nom_fop: string;
 begin
   if trim(Prcod_fop.Text) = '' then
     Lbnom_fop.Caption := '...';
@@ -2785,7 +2902,8 @@ begin
     dao.Geral5('select nom_fop, desconto, avista, prazo_padrao, NAO_GERAR_CR from fop where ATIVO = ''S'' AND cod_fop=' + QuotedStr(Prcod_fop.Text));
     if dao.q5.RecordCount > 0 then
     begin
-      Lbnom_fop.Caption := copy(dao.q5.fieldbyname('nom_fop').AsString, 1, 15);
+      nom_fop := dao.q5.fieldbyname('nom_fop').AsString;
+      Lbnom_fop.Caption := copy(nom_fop, 1, 15);
       prazo_padrao := dao.q5.fieldbyname('prazo_padrao').AsString;
       Pedido_AVista := dao.q5.fieldbyname('avista').AsString = 'S';
 
@@ -2815,15 +2933,56 @@ begin
       else
         Prcod_prazo_pgto.Enabled := true;
 
-      if (dao.q5.fieldbyname('nom_fop').AsString = 'ATIVO IMOBILIZADO') or
-         (dao.q5.fieldbyname('nom_fop').AsString = 'AMOSTRA') or
-         (dao.q5.fieldbyname('nom_fop').AsString = 'TRANSFERENCIA') or
-         (dao.q5.fieldbyname('nom_fop').AsString = 'TROCA') or
-         (dao.q5.fieldbyname('nom_fop').AsString = 'PERMUTA') or
-         (dao.q5.fieldbyname('nom_fop').AsString = 'CONSERTO') or
-         (dao.q5.fieldbyname('nom_fop').AsString = 'DEVOLUÇÃO') or
-         (dao.q5.fieldbyname('nom_fop').AsString = 'CONSIGNAÇÃO') or
-         (dao.q5.fieldbyname('nom_fop').AsString = 'BONIFICAÇÃO') then
+      if Prcod_fop.Text = '59' then
+      begin
+        if Trim(Prcod_transportadora.Text) = '' then
+        begin
+          Prcod_transportadora.Text := '2377';
+          Prcod_transportadoraExit(Self);
+        end;
+        if Trim(Prempresa_faturar.Text) = '' then
+        begin
+          Prempresa_faturar.Text := '16';
+          Prempresa_faturarExit(Self);
+        end;
+      end
+      else if Prcod_fop.Text = '55' then
+      begin
+        if Trim(Prcod_transportadora.Text) = '' then
+        begin
+          Prcod_transportadora.Text := '2417';
+          Prcod_transportadoraExit(Self);
+        end;
+        if Trim(Prempresa_faturar.Text) = '' then
+        begin
+          Prempresa_faturar.Text := '11';
+          Prempresa_faturarExit(Self);
+        end;
+      end
+      else if Prcod_fop.Text = '63' then
+      begin
+        if Trim(Prcod_transportadora.Text) = '' then
+        begin
+          Prcod_transportadora.Text := '6096';
+          Prcod_transportadoraExit(Self);
+        end;
+        if Trim(Prempresa_faturar.Text) = '' then
+        begin
+          Prempresa_faturar.Text := '22';
+          Prempresa_faturarExit(Self);
+        end;
+      end;
+
+      if (nom_fop = 'ATIVO IMOBILIZADO') or
+         (nom_fop = 'AMOSTRA') or
+         (nom_fop = 'TRANSFERENCIA') or
+         (nom_fop = 'TROCA') or
+         (nom_fop = 'PERMUTA') or
+         (nom_fop = 'CONSERTO') or
+         (nom_fop = 'DEVOLUÇÃO') or
+         (nom_fop = 'CONSIGNAÇÃO') or
+         (nom_fop = 'REMESSA') or
+         (nom_fop = 'BONIFICAÇÃO') then
       begin
         ChecaCFOP;
         CFOPTROCA(true);
@@ -2834,7 +2993,7 @@ begin
           ChecaCFOP;
       end;
 
-      if not Prcod_prazo_pgto.Enabled then
+if not Prcod_prazo_pgto.Enabled then
       begin
         if Probservacoes_pedido.Enabled then
           Probservacoes_pedido.SetFocus;
@@ -3137,6 +3296,23 @@ procedure TFr_vendas_industria2.CFOPTROCA(alterar_itens : boolean);
           mmVendas2COD_FISCAL_ITEM.Text := '6551';
       end;
 
+      if (Lbnom_fop.Caption = 'REMESSA') then
+      begin
+        cst := '41';
+        mmVendas2ICMS_ITEM.Value := 0;
+        mmVendas2VLR_BC.Value := 0;
+        mmVendas2VLR_ICMS_ITEM.Value := 0;
+        mmVendas2VLR_BC_ST.Value := 0;
+        mmVendas2VLR_ICMS_ST.Value := 0;
+        mmVendas2VLR_AGR_ITEM.Value := 0;
+        mmVendas2IPI_ITEM.Value := 0;
+        mmVendas2VLR_IPI_ITEM.Value := 0;
+        if UF_Cliente = UF_Emissor then
+          mmVendas2COD_FISCAL_ITEM.Text := '5909'
+        else
+          mmVendas2COD_FISCAL_ITEM.Text := '6909';
+      end;
+
 
       if (Lbnom_fop.Caption = 'DEVOLUÇÃO') then
       begin
@@ -3193,8 +3369,12 @@ procedure TFr_vendas_industria2.CFOPTROCA(alterar_itens : boolean);
   end;
 
 begin
-  if mform = 'vendas_devolucoes' then
+  if validando_cfoptroca then
     Exit;
+  validando_cfoptroca := True;
+  try
+    if mform = 'vendas_devolucoes' then
+      Exit;
 
   if Prcod_fop.Text = '' then
     Exit;
@@ -3267,6 +3447,9 @@ begin
     AtualizarCFOPItens('Alterando CFOP dos Itens...');
     somaTotal;
   end;
+  finally
+    validando_cfoptroca := False;
+  end;
 end;
 
 function TFr_vendas_industria2.ChecaCFOP: boolean;
@@ -3274,28 +3457,38 @@ var
   cfop_st: boolean;
   qtd_st: integer;
 begin
+  Result := False;
   if mform <> 'vendas_industria' then
     Exit;
+
   transferencia := false;
+  qtd_st := 0;
+  cfop_st := False;
+
   if mmVendas2.RecordCount > 0 then
   begin
     mmVendas2.DisableControls;
-    mmVendas2.First;
-    qtd_st := 0;
-    while not mmVendas2.Eof do
-    begin
-      if (mmVendas2COD_FISCAL_ITEM.AsString = '5405') or (mmVendas2COD_FISCAL_ITEM.AsString = '6403') or (mmVendas2COD_FISCAL_ITEM.AsString = '5409') or (mmVendas2COD_FISCAL_ITEM.AsString = '6409') then
-        qtd_st := qtd_st + 1;
+    try
+      mmVendas2.First;
+      while not mmVendas2.Eof do
+      begin
+        if (mmVendas2COD_FISCAL_ITEM.AsString = '5405') or
+           (mmVendas2COD_FISCAL_ITEM.AsString = '6403') or
+           (mmVendas2COD_FISCAL_ITEM.AsString = '5409') or
+           (mmVendas2COD_FISCAL_ITEM.AsString = '6409') then
+          Inc(qtd_st);
 
-      mmVendas2.next;
+        mmVendas2.Next;
+      end;
+    finally
+      mmVendas2.EnableControls;
     end;
-    mmVendas2.EnableControls;
-
     cfop_st := qtd_st > 0;
+  end;
 
-    if not cfop_st then
-    begin
-      if AnsiIndexStr(Lbnom_fop.Caption, ['TROCA', 'PERMUTA', 'CONSERTO', 'TRANSFERENCIA', 'CONSIGNAÇÃO', 'BONIFICAÇÃO', 'ATIVO IMOBILIZA', 'AMOSTRA', 'DEVOLUÇÃO']) = -1 then
+  if not cfop_st then
+  begin
+      if AnsiIndexStr(Lbnom_fop.Caption, ['TROCA', 'PERMUTA', 'CONSERTO', 'TRANSFERENCIA', 'CONSIGNAÇÃO', 'REMESSA', 'BONIFICAÇÃO', 'ATIVO IMOBILIZA', 'AMOSTRA', 'DEVOLUÇÃO']) = -1 then
       begin
         if industria then
         begin
@@ -3365,6 +3558,14 @@ begin
         else
           Prcod_fiscal.Text := '6917';
       end;
+      if (Lbnom_fop.Caption = 'REMESSA') then
+      begin
+        cst := '41';
+        if UF_Cliente = UF_Emissor then
+          Prcod_fiscal.Text := '5909'
+        else
+          Prcod_fiscal.Text := '6909';
+      end;
       if (Lbnom_fop.Caption = 'BONIFICAÇÃO') then
       begin
         if UF_Cliente = UF_Emissor then
@@ -3372,8 +3573,8 @@ begin
         else
           Prcod_fiscal.Text := '6910';
       end
-    end
   end;
+
   Result := cfop_st;
   Prcod_fiscalExit(Self);
   if mmVendas2.RecordCount > 0 then
@@ -3384,6 +3585,10 @@ procedure TFr_vendas_industria2.Prempresa_faturarExit(Sender: TObject);
 var
   bConsumidorFinal : Boolean;
 begin
+  if validando_empresa_faturar then
+    Exit;
+  validando_empresa_faturar := True;
+  try
   empresa_faturar := '';
   if trim(Prempresa_faturar.Text) = '' then
     Lbempresa_faturamento.Caption := '...';
@@ -3393,7 +3598,8 @@ begin
     if (not FMFUN.verificaNumerico(Prempresa_faturar.Text)) and (length(Prempresa_faturar.Text) > 0) then
     begin
       showmessage('Dado tem que ser sempre Numérico!');
-      Prempresa_faturar.SetFocus;
+      if Prempresa_faturar.CanFocus then
+        Prempresa_faturar.SetFocus;
       Exit;
     end;
 
@@ -3418,21 +3624,24 @@ begin
     begin
       dao.msg('Registro não Encontrado!');
       Prempresa_faturar.Text := '';
-      Prempresa_faturar.SetFocus;
+      if Prempresa_faturar.CanFocus then
+        Prempresa_faturar.SetFocus;
       Exit;
     end;
 
     if (Prcod_cliente.Text = '') and (Lbnom_fop.Caption <> 'DEVOLUÇÃO') then
     begin
       dao.msg('Favor Informar o Cliente!');
-      Prcod_cliente.SetFocus;
+      if Prcod_cliente.CanFocus then
+        PostMessage(Handle, WM_NEXTDLGCTL, Prcod_cliente.Handle, 1);
       Exit;
     end;
 
     if Prconsumidor_final.Checked and not bConsumidorFinal then
     begin
       dao.msg('Somente habilitado para Empresas para Consumidor Final!');
-      Prempresa_faturar.SetFocus;
+      if Prempresa_faturar.CanFocus then
+        Prempresa_faturar.SetFocus;
       Exit;
     end;
 
@@ -3446,12 +3655,16 @@ begin
         Prcod_fiscal.Text := '5102'
       else
         Prcod_fiscal.Text := '6102';
-
-        ChecaCFOP;
     end;
-    ChecaCFOP;
-  end;
 
+    ChecaCFOP;
+    Prcod_fiscalExit(Self);
+    if mmVendas2.RecordCount > 0 then
+      CFOPTROCA(True);
+  end;
+  finally
+    validando_empresa_faturar := False;
+  end;
 end;
 
 procedure TFr_vendas_industria2.monta_sgpro;
@@ -3609,6 +3822,17 @@ procedure TFr_vendas_industria2.CalculoIcmsItem;
 begin
   if not (mmVendas2.State in [dsEdit, dsInsert]) then
     Exit;
+
+  if Lbnom_fop.Caption = 'REMESSA' then
+  begin
+    mmVendas2ICMS_ITEM.Value := 0;
+    mmVendas2VLR_BC.Value := 0;
+    mmVendas2VLR_ICMS_ITEM.Value := 0;
+    mmVendas2VLR_BC_ST.Value := 0;
+    mmVendas2VLR_ICMS_ST.Value := 0;
+    mmVendas2VLR_AGR_ITEM.Value := 0;
+    Exit;
+  end;
 
   if (Lbnom_fop.Caption <> 'DEVOLUÇÃO') and (Lbnom_fop.Caption <> 'CONSERTO') then
   begin
@@ -4030,7 +4254,8 @@ begin
        'BONIFICAÇÃO',
        'ATIVO IMOBILIZA',
        'AMOSTRA',
-       'DEVOLUÇÃO']) <> -1 then
+       'DEVOLUÇÃO',
+       'REMESSA']) <> -1 then
       cod_fiscal := Prcod_fiscal.Text;
 
     if (Lbnom_fop.Caption = 'TROCA') or (Lbnom_fop.Caption = 'PERMUTA') then
@@ -4065,6 +4290,23 @@ begin
         cod_fiscal := '5917'
       else
         cod_fiscal := '6917';
+    end;
+
+    if (Lbnom_fop.Caption = 'REMESSA') then
+    begin
+      cst := '41';
+      mmVendas2ICMS_ITEM.Value := 0;
+      mmVendas2VLR_BC.Value := 0;
+      mmVendas2VLR_ICMS_ITEM.Value := 0;
+      mmVendas2VLR_BC_ST.Value := 0;
+      mmVendas2VLR_ICMS_ST.Value := 0;
+      mmVendas2VLR_AGR_ITEM.Value := 0;
+      mmVendas2IPI_ITEM.Value := 0;
+      mmVendas2VLR_IPI_ITEM.Value := 0;
+      if UF_Cliente = UF_Emissor then
+        cod_fiscal := '5909'
+      else
+        cod_fiscal := '6909';
     end;
 
 
@@ -4265,16 +4507,30 @@ end;
 procedure TFr_vendas_industria2.PromocaoPorQuantidade(quantidade: string);
 var
   custo, preco, precoBase: real;
+  QuantidadeValor: Double;
+  CodigoProduto, CodigoRepresentante: Integer;
+  Formato: TFormatSettings;
 begin
-  if (trim(Prcod_representante.Text) = '') then
+  CodigoProduto := StrToIntDef(Trim(Mecod_produto.Text), 0);
+  CodigoRepresentante := StrToIntDef(Trim(Prcod_representante.Text), 0);
+  if (CodigoProduto <= 0) or (CodigoRepresentante <= 0) then
     Exit;
 
-  quantidade := FMFUN.BuscaTroca(quantidade, ',', '.');
-  dao.Geral5(' SELECT a.COD_PRODUTO, a.ID_REPRESENTANTE, a.QTD_PROMOCAO, a.PRECO_PROMOCAO ' +
-             ' FROM PRODUTO_REPRESENTANTE a where a.COD_PRODUTO = ' + Mecod_produto.Text +
-			 ' and a.qtd_promocao >= ' + quantidade + 
-			 ' and a.ID_REPRESENTANTE =' + Prcod_representante.Text + ' limit 1 ');
+  Formato := TFormatSettings.Create;
+  quantidade := StringReplace(Trim(quantidade), '.',
+    string(Formato.DecimalSeparator), [rfReplaceAll]);
+  quantidade := StringReplace(quantidade, ',',
+    string(Formato.DecimalSeparator), [rfReplaceAll]);
+  QuantidadeValor := StrToFloatDef(quantidade, -1, Formato);
+  if QuantidadeValor < 0 then
+    Exit;
+  quantidade := StringReplace(FloatToStr(QuantidadeValor, Formato),
+    string(Formato.DecimalSeparator), '.', [rfReplaceAll]);
 
+  dao.Geral5(' SELECT a.COD_PRODUTO, a.ID_REPRESENTANTE, a.QTD_PROMOCAO, a.PRECO_PROMOCAO ' +
+             ' FROM PRODUTO_REPRESENTANTE a where a.COD_PRODUTO = ' + IntToStr(CodigoProduto) +
+			 ' and a.qtd_promocao >= ' + quantidade +
+			 ' and a.ID_REPRESENTANTE = ' + IntToStr(CodigoRepresentante) + ' limit 1 ');
   preco := dao.q5.fieldbyname('preco_promocao').AsCurrency;
   precoBase := preco / 0.65;
 
@@ -4523,6 +4779,9 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -4550,7 +4809,11 @@ begin
   Fr_localizar.CBcampos.ItemIndex := 1;
 
   Fr_localizar.ShowModal;
-  Fr_localizar.Free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -4586,6 +4849,9 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
   // guardar os valores antigos
   chamou_form_old := chamou_form;
@@ -4612,7 +4878,11 @@ begin
   Fr_localizar.CBcampos.ItemIndex := 1;
 
   Fr_localizar.ShowModal;
-  Fr_localizar.Free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -4913,7 +5183,8 @@ begin
 
   // AtivaJanela;
   Screen.Cursor := crDefault;
-  q_vendas1.Open;
+  if Trim(q_vendas1.SQL.Text) <> '' then
+    q_vendas1.Open;
 
   I1.Enabled := not (q_vendas1.fieldbyname('NR_PEDIDO_PALM').IsNull and q_vendas1.fieldbyname('pedido_origem').IsNull);
   pedido_tablet := q_vendas1.fieldbyname('NR_PEDIDO_PALM').AsString;
@@ -5295,12 +5566,16 @@ begin
   if not modo_insert then
   begin
     ativa_cr1(Prnumdoc.Text);
-    while not q_cr1.Eof do
+    if q_cr1.Active then
     begin
-      ac_total_cr := ac_total_cr + q_cr1.fieldbyname('valor').Value;
-      q_cr1.next;
+      q_cr1.First;
+      while not q_cr1.Eof do
+      begin
+        ac_total_cr := ac_total_cr + q_cr1.fieldbyname('valor').Value;
+        q_cr1.Next;
+      end;
+      q_cr1.First;
     end;
-    q_cr1.First;
   end;
 
   if (UF_Cliente <> UF_Emissor) and Faturado and (trim(PrNFE.Text) <> '') and (not Btgraped.Enabled) then
@@ -5361,6 +5636,15 @@ begin
 
   edPercComissao.Value := CalculoComissaoDesconto;
   edTotComissao.Value := ac_tot_liq * (edPercComissao.Value / 100);
+
+  if Lbnom_fop.Caption = 'REMESSA' then
+  begin
+    ac_tot_bc_icms := 0;
+    ac_tot_icms := 0;
+    ac_tot_bc_st := 0;
+    ac_tot_st := 0;
+    ac_tot_ipi := 0;
+  end;
 
   PrVLR_DESCONTO_GERAL.Value := ac_total_desconto_geral;
   Prvlr_bc_icms.Value := ac_tot_bc_icms;
@@ -5725,22 +6009,40 @@ end;
 procedure TFr_vendas_industria2.btXmlClick(Sender: TObject);
 var
   ArquivoXML : string;
+  IniciouTransacao: Boolean;
 begin
   if SaveFileDlg.Execute then
   begin
     ArquivoXML := SaveFileDlg.FileName;
-    q_xml.close;
-    q_xml.ParamByName('numdoc').value := Prnumdoc.Text;
-    q_xml.Open;
-
-    if not q_xml.fieldbyname('XML').IsNull then
+    IniciouTransacao := False;
+    if not dao.cn.InTransaction then
     begin
-      TBlobField(q_xml.fieldbyname('XML')).SaveToFile(ArquivoXML);
-      dao.msg('XML salvo com sucesso!');
-      ShellExecute(0, 'open', 'iexplore.exe', PChar('file:///' + StringReplace(ArquivoXML, '\', '/', [rfReplaceAll])), nil, SW_SHOWNORMAL);
-    end
-    else
-      dao.msg('XML não existente no Banco de dados.');
+      dao.cn.StartTransaction;
+      IniciouTransacao := True;
+    end;
+    try
+      q_xml.close;
+      q_xml.ParamByName('numdoc').AsInteger := StrToIntDef(Prnumdoc.Text, 0);
+      q_xml.Open;
+      try
+        if not q_xml.fieldbyname('XML').IsNull then
+        begin
+          TBlobField(q_xml.fieldbyname('XML')).SaveToFile(ArquivoXML);
+          dao.msg('XML salvo com sucesso!');
+          ShellExecute(0, 'open', 'iexplore.exe', PChar('file:///' + StringReplace(ArquivoXML, '\', '/', [rfReplaceAll])), nil, SW_SHOWNORMAL);
+        end
+        else
+          dao.msg('XML não existente no Banco de dados.');
+      finally
+        q_xml.Close;
+      end;
+      if IniciouTransacao then
+        dao.cn.Commit;
+    except
+      if IniciouTransacao and dao.cn.InTransaction then
+        dao.cn.Rollback;
+      raise;
+    end;
   end;
 end;
 
@@ -5783,6 +6085,7 @@ begin
       begin
         ;
         dao.msg('O Campo Empresa de Faturamento deve Ser Preenchida');
+        if Prempresa_faturar.CanFocus then
         Prempresa_faturar.SetFocus;
         Exit;
       end;
@@ -6009,7 +6312,8 @@ begin
     if (Prcod_representante.Text = '') and (Lbnom_fop.Caption <> 'DEVOLUÇÃO') then
     begin
       dao.msg('O campo Representante deve ser Preenchido');
-      Prcod_representante.SetFocus;
+      if Prcod_representante.CanFocus then
+        Prcod_representante.SetFocus;
       Exit;
     end;
 
@@ -6018,6 +6322,7 @@ begin
       if Prcod_cliente.Text = '' then
       begin
         dao.msg('Campo Cliente deve ser Preenchido!');
+        if Prcod_cliente.CanFocus then
         Prcod_cliente.SetFocus;
         Exit;
       end;
@@ -6027,6 +6332,7 @@ begin
       if (Prcod_cliente.Text = '') and (Prcod_fornecedor.Text = '') then
       begin
         dao.msg('Campo Cliente ou Fornecedor deve ser Preenchido!');
+        if Prcod_cliente.CanFocus then
         Prcod_cliente.SetFocus;
         Exit;
       end;
@@ -6046,14 +6352,16 @@ begin
       if (Prcod_fop.Text = '') then
       begin
         dao.msg('O campo Forma de Pagamento deve ser Preenchido');
-        Prcod_fop.SetFocus;
+        if Prcod_fop.CanFocus then
+          Prcod_fop.SetFocus;
         Exit;
       end;
 
       if (Prcod_prazo_pgto.Text = '') then
       begin
         dao.msg('O campo Prazo Pagamento deve ser Preenchido');
-        Prcod_prazo_pgto.SetFocus;
+        if Prcod_prazo_pgto.CanFocus then
+          Prcod_prazo_pgto.SetFocus;
         Exit;
       end;
 
@@ -6061,6 +6369,7 @@ begin
       begin
         dao.msg('O campo Empresa deve ser Preenchido');
         Pc_vendas.ActivePage := tab_finalizar;
+        if Prempresa_faturar.CanFocus then
         Prempresa_faturar.SetFocus;
         Exit;
       end;
@@ -6069,7 +6378,8 @@ begin
       begin
         dao.msg('O campo Código Fiscal deve ser Preenchido');
         Pc_vendas.ActivePage := tab_finalizar;
-        Prcod_fiscal.SetFocus;
+        if Prcod_fiscal.CanFocus then
+          Prcod_fiscal.SetFocus;
         Exit;
       end;
 
@@ -6077,7 +6387,8 @@ begin
       begin
         dao.msg('Na forma de pagamento BOLETO. O campo Banco CC Boleto deve ser preenchido.');
         Pc_vendas.ActivePage := tab_mercadorias;
-        PrCONTA_BOLETO.SetFocus;
+        if PrCONTA_BOLETO.CanFocus then
+          PrCONTA_BOLETO.SetFocus;
         Exit;
       end;
     end;
@@ -6560,8 +6871,13 @@ var
   end;
 
 begin
-  if Btgraped.Enabled then
-    BtgrapedClick(Self);
+  if imprimindo_pedido then
+    Exit;
+
+  imprimindo_pedido := true;
+  try
+    if Btgraped.Enabled then
+      BtgrapedClick(Self);
 
   dao.Geral1('select a.NUMDOC, a.HORA, a.DTADOC, a.COD_CLIENTE, a.COD_USUARIO, ' +
              'a.COD_EMPRESA, a.FATURADO, a.CONSIGNACAO, a.ORCAMENTO, a.ENTREGUE, a.TOT_BRUTO, ' +
@@ -6931,7 +7247,17 @@ begin
   // dao.q1.next;
   // end;
 
-  FRPRI.RD.fechar; // Encerra o relatório...
+    try
+      FRPRI.RD.fechar; // Encerra o relatório...
+    except
+      on E: EInvalidPointer do
+      begin
+        // Erro interno do RDPrint ao destruir o preview/metafile.
+      end;
+    end;
+  finally
+    imprimindo_pedido := false;
+  end;
 
 end;
 
@@ -7029,10 +7355,17 @@ begin
     begin
       try
         if BoletoRegistradoNaApi(QApi, LDataPagamento, LValorPago) then
-          BBMarcarBoletoRegistrado(QApi.FieldByName('id').AsInteger, LDataPagamento, LValorPago);
+        begin
+          if QApi.FindField('id') <> nil then
+            BBMarcarBoletoRegistrado(QApi.FieldByName('id').AsInteger,
+              LDataPagamento, LValorPago)
+          else
+            BBLogApi('ativa_cr1 boleto registrado sem campo id na consulta');
+        end;
       except
         on E: Exception do
-          BBLogApi('ativa_cr1 verificar boleto registrado ERRO - cr1_id=' + QApi.FieldByName('id').AsString + ', erro=' + E.Message);
+          BBLogApi('ativa_cr1 verificar boleto registrado ERRO - cr1_id=' +
+            BBFieldStr(QApi, 'id', '?') + ', erro=' + E.Message);
       end;
       QApi.Next;
     end;
@@ -7065,6 +7398,10 @@ begin
 
     if Trim(PrCONTA_BOLETO.Text) <> '' then
     begin
+      PrCONTA_BOLETOExit(Self);
+      if Trim(carteira_conta) = '' then
+        raise Exception.Create('Carteira da conta corrente do boleto nao informada. Verifique o cadastro da conta corrente.');
+
       MontaArquivoCobrancaEnvio;
       BtnBoleto.Enabled := True;
       BtnEmailBoleto.Enabled := True;
@@ -7108,7 +7445,12 @@ begin
     LiberarPedido(Prnumdoc.Text);
 
   localizar_acionado := true;
-  Application.CreateForm(TFr_localizar, Fr_localizar);
+  GarantirFrLocalizar;
+  if Fr_localizar.Visible then
+  begin
+    localizar_acionado := false;
+    Exit;
+  end;
 
   // guardar os valores antigos
   chamou_form_old := chamou_form;
@@ -7167,10 +7509,11 @@ begin
   end;
   Fr_localizar.ShowModal;
 
+  chamou_form := chamou_form_old;
+  chamou_pesquisa := chamou_pesquisa_old;
+
   if Fr_localizar.modalresult = mrOk then
   begin
-    chamou_form := chamou_form_old;
-    chamou_pesquisa := chamou_pesquisa_old;
 
     // if Prcod_cliente.Text <> '' then
     // zzvalor_credito.Text:=  busca_credito(Prcod_cliente.Text);
@@ -7196,9 +7539,20 @@ begin
     PrNF.Text := q_vendas1.fieldbyname('nf').AsString;
     cliente_alterado := false;
     StatusPedido;
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
     HabilitaBotoesPedido(1);
   end;
+
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
+  localizar_acionado := false;
 end;
 
 procedure TFr_vendas_industria2.MontaArquivoEnvio(nom_arquivo: string);
@@ -7850,7 +8204,8 @@ begin
     sbvendas.Panels[2].Text := 'CLIENTE BLOQUEADO!';
     Pc_vendas.TabIndex := 0;
     { if prcod_cliente.Enabled then
-      Prcod_cliente.SetFocus;
+      if Prcod_cliente.CanFocus then
+        Prcod_cliente.SetFocus;
       exit; }
   end;
 
@@ -8000,6 +8355,9 @@ begin
   begin
     if (Prcod_fop.Text = '') then
     begin
+      if Assigned(Fr_localizar) and Fr_localizar.Visible then
+        Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -8026,7 +8384,11 @@ begin
       Fr_localizar.CBcampos.ItemIndex := 1;
 
       Fr_localizar.ShowModal;
-      Fr_localizar.Free;
+      if Assigned(Fr_localizar) then
+      begin
+        Fr_localizar.Free;
+        Fr_localizar := nil;
+      end;
 
       chamou_form := chamou_form_old;
       chamou_pesquisa := chamou_pesquisa_old;
@@ -8046,6 +8408,9 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -8072,7 +8437,11 @@ begin
   Fr_localizar.CBcampos.ItemIndex := 1;
 
   Fr_localizar.ShowModal;
-  Fr_localizar.Free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -8283,7 +8652,23 @@ var
   desativar: boolean;
 begin
   cliente_alterado := false;
-  q_vendas1.Open;
+
+  if Trim(Prnumdoc.Text) = '' then
+  begin
+    dao.msg('Nenhum pedido selecionado para desativar/reativar.');
+    Exit;
+  end;
+
+  if (not q_vendas1.Active) or q_vendas1.IsEmpty or
+     (q_vendas1.FieldByName('numdoc').AsString <> Prnumdoc.Text) then
+    ativa_vendas1(Prnumdoc.Text);
+
+  if q_vendas1.IsEmpty then
+  begin
+    dao.msg('Pedido não encontrado.');
+    Exit;
+  end;
+
   if q_vendas1.fieldbyname('faturado').AsString = '1' then
   begin
     dao.msg('Para Desativar um Pedido você deve Antes Desfatura-lo!');
@@ -8390,7 +8775,8 @@ begin
     Fr_senha_especial.Free;
   end;
 
-  q_vendas1.Open;
+  if Trim(q_vendas1.SQL.Text) <> '' then
+    q_vendas1.Open;
 
   StatusPedido;
 end;
@@ -8750,6 +9136,9 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -8777,7 +9166,11 @@ begin
   Fr_localizar.CBcampos.ItemIndex := 0;
 
   Fr_localizar.ShowModal;
-  Fr_localizar.Free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -8830,6 +9223,9 @@ begin
   begin
     if (Prcod_fiscal.Text = '') and (Btnovped.Enabled = false) then
     begin
+      if Assigned(Fr_localizar) and Fr_localizar.Visible then
+        Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -8857,7 +9253,11 @@ begin
       Fr_localizar.CBcampos.ItemIndex := 0;
 
       Fr_localizar.ShowModal;
-      Fr_localizar.Free;
+      if Assigned(Fr_localizar) then
+      begin
+        Fr_localizar.Free;
+        Fr_localizar := nil;
+      end;
 
       chamou_form := chamou_form_old;
       chamou_pesquisa := chamou_pesquisa_old;
@@ -8881,7 +9281,7 @@ var
   nr_erro: integer;
   XMLDoc, ref, nome, xmlassinado, mensagem: WideString;
   path, slInfCpl, slInfCpl_add, obs_st: string;
-  SimplesICMS, CestaBasica, SubstituicaoTributaria, SubstituicaoTributariaRetida, Cheque, Dinheiro, Deposito: boolean;
+  SimplesICMS, CestaBasica, SubstituicaoTributaria, SubstituicaoTributariaRetida, Cheque, Dinheiro, Deposito, IsRemessaComodato: boolean;
   bDiferimento : Boolean;
   vTotalICMSDif, vTotalICMSOp, vTotalIBS, vTotalCBS : Currency;
   procedure LimpaDirNF;
@@ -8935,6 +9335,7 @@ begin
   // frmmontaXml.Nnumero_nf:= Nnumero_nf; //q_vendas1.fieldbyname('nf').AsString;
 
   Fr_vendas_industria2.ACBrNFe1.NotasFiscais.Clear;
+  IsRemessaComodato := SameText(Trim(Fr_vendas_industria2.Lbnom_fop.Caption), 'REMESSA');
 
   with Fr_vendas_industria2.ACBrNFe1.NotasFiscais.Add.NFe do
   begin
@@ -9011,7 +9412,16 @@ begin
     Ide.gCompraGov.pRedutor := 5;
 
     Fr_vendas_industria2.Prcod_fiscalExit(Self);
-    Ide.natOp := Fr_vendas_industria2.Prcod_fiscal.Text + '-' + copy(Fr_vendas_industria2.Lbnom_cod_fiscal.Caption, 1, 55);
+    if IsRemessaComodato then
+    begin
+      if Fr_vendas_industria2.UF_Cliente = Fr_vendas_industria2.UF_Emissor then
+        Fr_vendas_industria2.Prcod_fiscal.Text := '5909'
+      else
+        Fr_vendas_industria2.Prcod_fiscal.Text := '6909';
+      Ide.natOp := 'Retorno de bem recebido por conta de contrato comodato';
+    end
+    else
+      Ide.natOp := Fr_vendas_industria2.Prcod_fiscal.Text + '-' + copy(Fr_vendas_industria2.Lbnom_cod_fiscal.Caption, 1, 55);
 
     if Ide.tpNF = tnEntrada then
     begin
@@ -9127,6 +9537,9 @@ begin
     if (Fr_vendas_industria2.Prcod_fiscal.Text = '5206') or (Fr_vendas_industria2.Prcod_fiscal.Text = '6206') then
       Ide.finNFe := fnNormal;
 
+    if IsRemessaComodato then
+      Ide.finNFe := fnNormal;
+
     if (Ide.tpNF = tnEntrada) and (not Fr_vendas_industria2.PrEntradaNaoDevolucao.checked) then
     begin
 
@@ -9151,6 +9564,18 @@ begin
           end;
           Fr_vendas_industria2.q_NFe_Ref.next;
         end;
+      end;
+    end;
+
+    if IsRemessaComodato then
+    begin
+      Fr_vendas_industria2.CarregaChaveNfeDev;
+      Fr_vendas_industria2.q_NFe_Ref.First;
+      while not Fr_vendas_industria2.q_NFe_Ref.Eof do
+      begin
+        with Ide.NFref.Add do
+          refNFe := Fr_vendas_industria2.q_NFe_RefCHAVE_NFE.AsString;
+        Fr_vendas_industria2.q_NFe_Ref.Next;
       end;
     end;
     { else if tipo = 1 then
@@ -9504,6 +9929,15 @@ begin
             Prod.cest := FMFUN.TratarCodigoNCM(Fr_vendas_industria2.q_vendas2.fieldbyname('CEST').AsString, 1);
 
           Prod.cfop := Fr_vendas_industria2.q_vendas2.fieldbyname('COD_FISCAL_ITEM').AsString;
+
+
+          if IsRemessaComodato then
+          begin
+            if Fr_vendas_industria2.UF_Cliente = Fr_vendas_industria2.UF_Emissor then
+              Prod.cfop := '5909'
+            else
+              Prod.cfop := '6909';
+          end;
 
           if (Prod.cfop = '5102') or (Prod.cfop = '6102') or (Prod.cfop = '5101') or (Prod.cfop = '6101') then
             SimplesICMS := true
@@ -9870,7 +10304,7 @@ begin
             cDetLista.Imposto.IPI.QSelo := Valor;
           }
           (* TAG IPI.IPITRIB... *)
-          if (Fr_vendas_industria2.q_vendas2.fieldbyname('vlr_ipi_item').AsFloat > 0) { and ((Fr_vendas_industria2.q_vendas2.fieldbyname
+          if (not IsRemessaComodato) and (Fr_vendas_industria2.q_vendas2.fieldbyname('vlr_ipi_item').AsFloat > 0) { and ((Fr_vendas_industria2.q_vendas2.fieldbyname
             ('COD_FISCAL_ITEM').AsString = '5413') or
             (Fr_vendas_industria2.q_vendas2.fieldbyname('COD_FISCAL_ITEM')
             .AsString = '6413')
@@ -9885,6 +10319,23 @@ begin
 
             roundto(Fr_vendas_industria2.q_vendas2.fieldbyname('vlr_bc_st').AsFloat, (CasasDecimais * (-1)));
 
+          end;
+
+          if IsRemessaComodato then
+          begin
+            SubstituicaoTributaria := false;
+            SubstituicaoTributariaRetida := false;
+            Imposto.icms.orig := oeNacional;
+            Imposto.icms.VBC := 0;
+            Imposto.icms.VICMS := 0;
+            Imposto.icms.VBCST := 0;
+            Imposto.icms.vICMSST := 0;
+            Imposto.icms.VBCSTRet := 0;
+            Imposto.icms.VICMSSTRet := 0;
+            if Fr_vendas_industria2.empresa_simples then
+              Imposto.icms.CSOSN := csosn400
+            else
+              Imposto.icms.cst := cst41;
           end;
 
           (* TAG PIS.PISALIQ... *)
@@ -10014,6 +10465,23 @@ begin
             Imposto.ICMSUFDest.vFCPUFDest := 0;
             Imposto.ICMSUFDest.vICMSUFDest := Fr_vendas_industria2.q_vendas2.fieldbyname('VLR_ICMS_ITEM').AsFloat;
 
+          end;
+
+          if IsRemessaComodato then
+          begin
+            SubstituicaoTributaria := false;
+            SubstituicaoTributariaRetida := false;
+            Imposto.icms.orig := oeNacional;
+            Imposto.icms.VBC := 0;
+            Imposto.icms.VICMS := 0;
+            Imposto.icms.VBCST := 0;
+            Imposto.icms.vICMSST := 0;
+            Imposto.icms.VBCSTRet := 0;
+            Imposto.icms.VICMSSTRet := 0;
+            if Fr_vendas_industria2.empresa_simples then
+              Imposto.icms.CSOSN := csosn400
+            else
+              Imposto.icms.cst := cst41;
           end;
 
           (* TAG PIS.PISALIQ... *)
@@ -10149,27 +10617,49 @@ begin
     total.ICMSTot.vDesc := roundto(dao.q1.fieldbyname('VLR_DESCONTO_GERAL').AsFloat, (CasasDecimais * (-1)));
     // total.ICMSTot.vDesc := 0;
     total.ICMSTot.vII := 0;
-    total.ICMSTot.VIPI := roundto(dao.q1.fieldbyname('vlr_ipi').AsFloat, (CasasDecimais * (-1)));
+    if IsRemessaComodato then
+      total.ICMSTot.VIPI := 0
+    else
+      total.ICMSTot.VIPI := roundto(dao.q1.fieldbyname('vlr_ipi').AsFloat, (CasasDecimais * (-1)));
     total.ICMSTot.VPIS := 0;
     total.ICMSTot.VCOFINS := 0;
     total.ICMSTot.vOutro := 0;
-    total.ICMSTot.vNF := roundto(dao.q1.fieldbyname('tot_liquido').AsFloat + dao.q1.fieldbyname('vlr_ipi').AsFloat + total.ICMSTot.vFrete + total.ICMSTot.VST - total.ICMSTot.vDesc, (CasasDecimais * (-1)));
+    if IsRemessaComodato then
+    begin
+      total.ICMSTot.VBC := 0;
+      total.ICMSTot.VICMS := 0;
+      total.ICMSTot.VBCST := 0;
+      total.ICMSTot.VST := 0;
+      total.ICMSTot.vNF := roundto(dao.q1.fieldbyname('tot_liquido').AsFloat + total.ICMSTot.vFrete - total.ICMSTot.vDesc, (CasasDecimais * (-1)));
+    end
+    else
+      total.ICMSTot.vNF := roundto(dao.q1.fieldbyname('tot_liquido').AsFloat + dao.q1.fieldbyname('vlr_ipi').AsFloat + total.ICMSTot.vFrete + total.ICMSTot.VST - total.ICMSTot.vDesc, (CasasDecimais * (-1)));
 
     //////////////////////
-    Total.ISTot.vIS := roundto(dao.q1.fieldbyname('vlr_bc_icms').AsFloat, (CasasDecimais * (-1)));
-    Total.IBSCBSTot.vBCIBSCBS := roundto(dao.q1.fieldbyname('vlr_bc_icms').AsFloat, (CasasDecimais * (-1)));
-    Total.IBSCBSTot.gIBS.gIBSUFTot.vIBSUF := vTotalIBS;
-    Total.IBSCBSTot.gIBS.vIBS := vTotalIBS;
-    Total.IBSCBSTot.gCBS.vCBS := vTotalCBS;
-
-    // Valor total da NF-e com IBS / CBS / IS
-    Total.vNFTot := roundto(dao.q1.fieldbyname('vlr_bc_icms').AsFloat, (CasasDecimais * (-1)));
+    if IsRemessaComodato then
+    begin
+      Total.ISTot.vIS := 0;
+      Total.IBSCBSTot.vBCIBSCBS := 0;
+      Total.IBSCBSTot.gIBS.gIBSUFTot.vIBSUF := 0;
+      Total.IBSCBSTot.gIBS.vIBS := 0;
+      Total.IBSCBSTot.gCBS.vCBS := 0;
+      Total.vNFTot := total.ICMSTot.vNF;
+    end
+    else
+    begin
+      Total.ISTot.vIS := roundto(dao.q1.fieldbyname('vlr_bc_icms').AsFloat, (CasasDecimais * (-1)));
+      Total.IBSCBSTot.vBCIBSCBS := roundto(dao.q1.fieldbyname('vlr_bc_icms').AsFloat, (CasasDecimais * (-1)));
+      Total.IBSCBSTot.gIBS.gIBSUFTot.vIBSUF := vTotalIBS;
+      Total.IBSCBSTot.gIBS.vIBS := vTotalIBS;
+      Total.IBSCBSTot.gCBS.vCBS := vTotalCBS;
+      Total.vNFTot := roundto(dao.q1.fieldbyname('vlr_bc_icms').AsFloat, (CasasDecimais * (-1)));
+    end;
     //////////////////////
 
 
 
 
-    if (Dest.indIEDest = inNaoContribuinte) and (ansiindexstr(Dest.EnderDest.UF, ['AM', 'BA', 'CE', 'GO', 'MG', 'MS', 'MT', 'PE', 'PB', 'RN', 'SE', 'SP']) > 0) then
+    if (not IsRemessaComodato) and (Dest.indIEDest = inNaoContribuinte) and (ansiindexstr(Dest.EnderDest.UF, ['AM', 'BA', 'CE', 'GO', 'MG', 'MS', 'MT', 'PE', 'PB', 'RN', 'SE', 'SP']) > 0) then
     begin
       total.ICMSTot.vICMSUFDest := roundto(dao.q1.fieldbyname('vlr_icms').AsFloat, (CasasDecimais * (-1)));
     end;
@@ -10348,6 +10838,9 @@ begin
 
     if tipo = 1 then
       slInfCpl := slInfCpl + 'NF-e de Entrada ref. a NF-e de Saída ' + Fr_vendas_industria2.PrNFE.Text + ' de ' + Fr_vendas_industria2.Prdta_emissao.Text + '.';
+
+    if IsRemessaComodato then
+      slInfCpl := Trim(slInfCpl + ' Nao incidencia de ICMS conforme sumula 573 do STF e consulta COPAT 04/2012. NF-e de remessa original referenciada neste documento fiscal.');
 
     if Ide.finNFe = fnNormal then
     begin
@@ -11144,6 +11637,8 @@ end;
 
 procedure TFr_vendas_industria2.CarregaFoto(produto: string);
 begin
+  if trim(produto) = '' then Exit;
+
   if not (dao.cn.InTransaction) then
     dao.cn.StartTransaction;
 
@@ -11377,7 +11872,8 @@ begin
       dao.msg('O campo Representante deve ser Preenchido');
       BtaltpedClick(Self);
       Pc_vendas.TabIndex := 0;
-      Prcod_representante.SetFocus;
+      if Prcod_representante.CanFocus then
+        Prcod_representante.SetFocus;
       Exit;
     end;
 
@@ -11388,6 +11884,7 @@ begin
         dao.msg('Campo Cliente deve ser Preenchido!');
         BtaltpedClick(Self);
         Pc_vendas.TabIndex := 0;
+        if Prcod_cliente.CanFocus then
         Prcod_cliente.SetFocus;
         Exit;
       end;
@@ -11399,6 +11896,7 @@ begin
         dao.msg('Campo Cliente ou Fornecedor deve ser Preenchido!');
         BtaltpedClick(Self);
         Pc_vendas.TabIndex := 0;
+        if Prcod_cliente.CanFocus then
         Prcod_cliente.SetFocus;
         Exit;
       end;
@@ -11433,7 +11931,8 @@ begin
       dao.msg('O campo Empresa deve ser Preenchido');
       BtaltpedClick(Self);
       Pc_vendas.TabIndex := 1;
-      Prempresa_faturar.SetFocus;
+      if Prempresa_faturar.CanFocus then
+        Prempresa_faturar.SetFocus;
       Exit;
     end;
 
@@ -11846,7 +12345,10 @@ begin
                 BoletoCEF.Titulo.Pagador.Endereco.Bairro := Copy(BBFieldStr(Q, 'bairro', ''), 1, 15);
                 BoletoCEF.Titulo.Pagador.Endereco.Cidade := Copy(BBFieldStr(Q, 'nom_cidade', ''), 1, 15);
                 BoletoCEF.Titulo.Pagador.Endereco.UF := Copy(BBFieldStr(Q, 'uf', ''), 1, 2);
-                BoletoCEF.Titulo.Pagador.Endereco.CEP := BBOnlyNumbers(BBFieldStr(Q, 'cep', ''));
+                BoletoCEF.Titulo.Pagador.Endereco.CEP := CEFNormalizarCEP(BBFieldStr(Q, 'cep', ''));
+                    if Length(BoletoCEF.Titulo.Pagador.Endereco.CEP) <> 8 then
+                      raise Exception.Create('CEP invalido para registro do boleto CEF: ' +
+                        BoletoCEF.Titulo.Pagador.Endereco.CEP);
                 HeaderCEF := CEFNovoHeaderApi(Q, CodigoBeneficiarioCEF, NossoNumeroCEF,
                   BBFieldDate(Q, 'dtaven'), BBFieldFloat(Q, 'valor'), True);
                 RespostaCEF := ApiCEF.IncluirBoleto(BoletoCEF, HeaderCEF);
@@ -12022,7 +12524,8 @@ begin
   ativa_vendas1(Prnumdoc.Text);
   mostra_campos_vendas1('Pr');
   StatusPedido;
-  q_vendas1.Open;
+  if Trim(q_vendas1.SQL.Text) <> '' then
+    q_vendas1.Open;
   {if (q_vendas1.fieldbyname('status_nfe').AsString <> '539') and not ((q_vendas1.fieldbyname('faturado').AsString = '1') or (q_vendas1.fieldbyname('faturado').AsString = '3')) then
     LimparBoletos;}
 
@@ -12362,23 +12865,41 @@ procedure TNFeCancel.MontarEvento;
 var
   arquivoNFe, pathSaida, Protocolo: string;
   NumeroLote: Int64;
+  IniciouTransacao: Boolean;
 begin
   try
     arquivoNFe := cChaveNfe + '-procNFe.xml';
     pathSaida := ExtractFilePath(Application.ExeName) + 'nf\';
-    Fr_vendas_industria2.q_xml.close;
-    Fr_vendas_industria2.q_xml.ParamByName('numdoc').value := Fr_vendas_industria2.Prnumdoc.Text;
-    Fr_vendas_industria2.q_xml.Open;
-
-    if entrada then
+    IniciouTransacao := False;
+    if not dao.cn.InTransaction then
     begin
-      if not Fr_vendas_industria2.q_xml.FIELDBYNAME('XML_DEV').IsNull then
-        TBlobField(Fr_vendas_industria2.q_xml.FIELDBYNAME('XML_DEV')).SaveToFile(pathSaida + arquivoNFe);
-    end
-    else
-    begin
-      if not Fr_vendas_industria2.q_xml.FIELDBYNAME('XML').IsNull then
-        TBlobField(Fr_vendas_industria2.q_xml.FIELDBYNAME('XML')).SaveToFile(pathSaida + arquivoNFe);
+      dao.cn.StartTransaction;
+      IniciouTransacao := True;
+    end;
+    try
+      Fr_vendas_industria2.q_xml.close;
+      Fr_vendas_industria2.q_xml.ParamByName('numdoc').AsInteger := StrToIntDef(Fr_vendas_industria2.Prnumdoc.Text, 0);
+      Fr_vendas_industria2.q_xml.Open;
+      try
+        if entrada then
+        begin
+          if not Fr_vendas_industria2.q_xml.FIELDBYNAME('XML_DEV').IsNull then
+            TBlobField(Fr_vendas_industria2.q_xml.FIELDBYNAME('XML_DEV')).SaveToFile(pathSaida + arquivoNFe);
+        end
+        else
+        begin
+          if not Fr_vendas_industria2.q_xml.FIELDBYNAME('XML').IsNull then
+            TBlobField(Fr_vendas_industria2.q_xml.FIELDBYNAME('XML')).SaveToFile(pathSaida + arquivoNFe);
+        end;
+      finally
+        Fr_vendas_industria2.q_xml.Close;
+      end;
+      if IniciouTransacao then
+        dao.cn.Commit;
+    except
+      if IniciouTransacao and dao.cn.InTransaction then
+        dao.cn.Rollback;
+      raise;
     end;
 
     Fr_vendas_industria2.ACBrNFe1.NotasFiscais.Clear;
@@ -12720,6 +13241,9 @@ begin
   begin
     if (Prcod_supervisor.Text = '') then
     begin
+      if Assigned(Fr_localizar) and Fr_localizar.Visible then
+        Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -12756,7 +13280,11 @@ begin
       Fr_localizar.CBcampos.ItemIndex := 1;
 
       Fr_localizar.ShowModal;
-      Fr_localizar.Free;
+      if Assigned(Fr_localizar) then
+      begin
+        Fr_localizar.Free;
+        Fr_localizar := nil;
+      end;
 
       chamou_form := chamou_form_old;
       chamou_pesquisa := chamou_pesquisa_old;
@@ -12818,6 +13346,9 @@ var
 begin
   if (Prcod_supervisor.Text = '') then
   begin
+    if Assigned(Fr_localizar) and Fr_localizar.Visible then
+      Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+    if not Assigned(Fr_localizar) then
     Application.CreateForm(TFr_localizar, Fr_localizar);
 
     // guardar os valores antigos
@@ -12849,7 +13380,11 @@ begin
     Fr_localizar.CBcampos.ItemIndex := 1;
 
     Fr_localizar.ShowModal;
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
 
     chamou_form := chamou_form_old;
     chamou_pesquisa := chamou_pesquisa_old;
@@ -12930,6 +13465,9 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -12960,7 +13498,11 @@ begin
   Fr_localizar.CBcampos.ItemIndex := 1;
 
   Fr_localizar.ShowModal;
-  Fr_localizar.Free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -12999,7 +13541,8 @@ begin
     begin
       dao.msg('Campo Cliente deve ser Preenchido!');
       BtaltpedClick(Self);
-      Prcod_cliente.SetFocus;
+      if Prcod_cliente.CanFocus then
+        Prcod_cliente.SetFocus;
       Exit;
     end;
   end
@@ -13009,7 +13552,8 @@ begin
     begin
       dao.msg('Campo Cliente ou Fornecedor deve ser Preenchido!');
       BtaltpedClick(Self);
-      Prcod_cliente.SetFocus;
+      if Prcod_cliente.CanFocus then
+        Prcod_cliente.SetFocus;
       Exit;
     end;
   end;
@@ -13229,6 +13773,9 @@ begin
     end;
     if (Mecod_produto.Text = '') and (btnov.Enabled = false) then
     begin
+      if Assigned(Fr_localizar) and Fr_localizar.Visible then
+        Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -13258,7 +13805,11 @@ begin
       Fr_localizar.CBcampos.ItemIndex := 1;
 
       Fr_localizar.ShowModal;
-      Fr_localizar.Free;
+      if Assigned(Fr_localizar) then
+      begin
+        Fr_localizar.Free;
+        Fr_localizar := nil;
+      end;
 
       chamou_form := chamou_form_old;
       chamou_pesquisa := chamou_pesquisa_old;
@@ -13350,6 +13901,9 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -13377,7 +13931,11 @@ begin
   Fr_localizar.CBcampos.ItemIndex := 0;
 
   Fr_localizar.ShowModal;
-  Fr_localizar.Free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -13387,12 +13945,19 @@ procedure TFr_vendas_industria2.FormKeyPress(Sender: TObject; var Key: Char);
 begin
   if Key = #13 then
   begin
+    if (csDestroying in ComponentState) or (not HandleAllocated) then
+      Exit;
+
+    if (not Assigned(ActiveControl)) or (not (ActiveControl is TWinControl)) then
+      Exit;
+
     // se for, passa o foco para o próximo campo, zerando o valor da variável Key
     if Probservacoes_pedido.Visible and Probservacoes_nota.Visible then
-      if (ActiveControl.Name = 'Probservacoes_pedido') or (ActiveControl.Name = 'Probservacoes_nota') then
+      if SameText(ActiveControl.Name, 'Probservacoes_pedido') or SameText(ActiveControl.Name, 'Probservacoes_nota') then
         Exit;
+
     Key := #0;
-    Perform(Wm_NextDlgCtl, 0, 0);
+    SelectNext(TWinControl(ActiveControl), True, True);
   end;
 end;
 
@@ -13986,11 +14551,16 @@ end;
 
 procedure TFr_vendas_industria2.MedescontoExit(Sender: TObject);
 begin
+  if (csDestroying in ComponentState) or (not mmVendas2.Active) or
+     (not (mmVendas2.State in [dsEdit, dsInsert])) then
+    Exit;
+
   if ValidarDesc then
   begin
     if not ValidarDesconto then
     begin
-      Medesconto.SetFocus;
+      if Medesconto.CanFocus then
+        Medesconto.SetFocus;
       Exit;
     end;
   end;
@@ -14371,11 +14941,15 @@ var
   dia, mes, ano, ord, ext, pathSaida, tempFile, nosso_numero, nosso_numero_div, sql_cliente, dir_remessa: string;
   sequencial_arquivo: integer;
 begin
-  if Trim(Prcod_cliente.Text) = '' then Exit;
+  FMFUN.ACBrBoleto1.ListadeBoletos.Clear;
+
+  if Trim(Prcod_cliente.Text) = '' then
+    Exit;
+  if (not q_cr1.Active) or q_cr1.IsEmpty then
+    Exit;
 
   sequencial_arquivo := 1;
   q_cr1.First;
-  FMFUN.ACBrBoleto1.ListadeBoletos.Clear;
 
   sql_cliente := ' SELECT a.COD_CLIENTE, ' +
                  '   a.NOM_CLIENTE, ' +
@@ -14410,20 +14984,57 @@ begin
 end;
 
 procedure TFr_vendas_industria2.BtnBoletoClick(Sender: TObject);
+var
+  ArquivoRelatorio: string;
 begin
+  if imprimindo_boleto then
+    Exit;
 
-  // fmfun.ACBrBoleto1.GerarRemessa(strtoint(id_remessa));
-  MontaArquivoCobrancaEnvio;
-  FMFUN.ACBrBoletoFCFR1.DirLogo := ExtractFilePath(Application.ExeName) + '\Logos\colorido\';
-  FMFUN.ACBrBoletoFCFR1.FastReportFile := ExtractFilePath(Application.ExeName) + 'Relatorios\Boleto.fr3';
-  if trim(PrCONTA_BOLETO.Text) = '' then
+  if Trim(PrCONTA_BOLETO.Text) = '' then
   begin
-    showmessage('É necessário informar a Conta Corrente do Boleto.');
+    ShowMessage('É necessário informar a Conta Corrente do Boleto.');
     Exit;
   end;
-  if q_cr1.IsEmpty then
+
+  if (not q_cr1.Active) or q_cr1.IsEmpty then
+  begin
+    ShowMessage('Não existem boletos para imprimir.');
     Exit;
-  FMFUN.ACBrBoleto1.Imprimir;
+  end;
+
+  imprimindo_boleto := True;
+  BtnBoleto.Enabled := False;
+  try
+    try
+      MontaArquivoCobrancaEnvio;
+    if FMFUN.ACBrBoleto1.ListadeBoletos.Count = 0 then
+    begin
+      ShowMessage('Não existem boletos em aberto para imprimir.');
+      Exit;
+    end;
+
+    ArquivoRelatorio := ExtractFilePath(Application.ExeName) +
+      'Relatorios\Boleto.fr3';
+    if not FileExists(ArquivoRelatorio) then
+      raise Exception.Create('Relatório de boleto não encontrado: ' +
+        ArquivoRelatorio);
+
+    FMFUN.ACBrBoletoFCFR1.DirLogo := ExtractFilePath(Application.ExeName) +
+      'Logos\colorido\';
+    FMFUN.ACBrBoletoFCFR1.FastReportFile := ArquivoRelatorio;
+      FMFUN.ACBrBoleto1.Imprimir;
+    except
+      on E: Exception do
+      begin
+        RegistrarErroAplicacao(E, 'TFr_vendas_industria2.BtnBoletoClick');
+        dao.msg('Houve um erro ao imprimir o boleto!' + #13 + E.Message);
+      end;
+    end;
+  finally
+    FMFUN.ACBrBoleto1.ListadeBoletos.Clear;
+    imprimindo_boleto := False;
+    BtnBoleto.Enabled := True;
+  end;
 end;
 
 procedure TFr_vendas_industria2.FormCreate(Sender: TObject);
@@ -14577,6 +15188,9 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 begin
   try
+    if Assigned(Fr_localizar) and Fr_localizar.Visible then
+      Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+    if not Assigned(Fr_localizar) then
     Application.CreateForm(TFr_localizar, Fr_localizar);
 
     // guardar os valores antigos
@@ -14611,7 +15225,11 @@ begin
     Fr_localizar.CBcampos.ItemIndex := 1;
 
     Fr_localizar.ShowModal;
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
 
     chamou_form := chamou_form_old;
     chamou_pesquisa := chamou_pesquisa_old;
@@ -14644,7 +15262,7 @@ begin
 
   if ActiveControl <> nil then
   begin
-    if (ActiveControl.Name = 'btgra') or (ActiveControl.Name = 'btcan') then
+    if Assigned(ActiveControl) and (SameText(ActiveControl.Name, 'btgra') or SameText(ActiveControl.Name, 'btcan')) then
       Exit;
   end;
 
@@ -14702,6 +15320,9 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -14733,7 +15354,11 @@ begin
   Fr_localizar.CBcampos.ItemIndex := 1;
 
   Fr_localizar.ShowModal;
-  Fr_localizar.Free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -14744,6 +15369,10 @@ procedure TFr_vendas_industria2.PrCONTA_BOLETOExit(Sender: TObject);
 var
   sql_boleto: string;
 begin
+  if validando_conta_boleto then
+    Exit;
+  validando_conta_boleto := True;
+  try
   if trim(PrCONTA_BOLETO.Text) = '' then
     lbCCBoleto.Caption := '...'
   else
@@ -14754,7 +15383,8 @@ begin
       btaltpedclick(self);
       PrCONTA_BOLETO.Clear;
       pc_vendas.TabIndex := 1;
-      Prempresa_faturar.SetFocus;
+      if Prempresa_faturar.CanFocus then
+        Prempresa_faturar.SetFocus;
       exit;
       end; }
     { else
@@ -14767,7 +15397,7 @@ begin
       Exit;
     end;
 
-    sql_boleto := 'select c.id, e.cod_empresa, C.DIAS_PROTESTO, C.DIAS_BAIXAR, b.NOM_BANCO, b.NR_BANCO, ' + 'b.LAYOUT_REMESSA, c.nr_conta, c.codigo_cedente, c.nr_agencia, c.dta_abertura_conta, ' + 'c.convenio, coalesce(C.NOME_CORRENTISTA, e.NOM_EMPRESA) as nome_correntista, C.CARTEIRA, e.CNPJ, e.ENDERECO, e.NR_ENDERECO, ' + 'e.CEP, cd.NOM_CIDADE, cd.UF, c.tipo_cobranca, c.codigo_transmissao, c.mensagem_padrao ' + 'from conta_corrente c ' + 'inner join banco b on b.ID = c.ID_BANCO ' + 'inner join empresa e on (e.COD_EMPRESA = c.ID_EMPRESA) ' + 'inner join cidades cd on cd.COD_CIDADE = e.COD_CIDADE ' + 'where c.id=' + QuotedStr(PrCONTA_BOLETO.Text);
+    sql_boleto := 'select c.id, e.cod_empresa, C.DIAS_PROTESTO, C.DIAS_BAIXAR, b.NOM_BANCO, b.NR_BANCO, ' + 'b.LAYOUT_REMESSA, c.nr_conta, c.codigo_cedente, c.nr_agencia, c.dta_abertura_conta, ' + 'c.convenio, coalesce(C.NOME_CORRENTISTA, e.NOM_EMPRESA) as nome_correntista, C.CARTEIRA, e.CNPJ, e.ENDERECO, e.NR_ENDERECO, ' + 'e.CEP, cd.NOM_CIDADE, cd.UF, c.tipo_cobranca, c.modalidade, c.codigo_transmissao, c.mensagem_padrao ' + 'from conta_corrente c ' + 'inner join banco b on b.ID = c.ID_BANCO ' + 'inner join empresa e on (e.COD_EMPRESA = c.ID_EMPRESA) ' + 'inner join cidades cd on cd.COD_CIDADE = e.COD_CIDADE ' + 'where c.id=' + QuotedStr(PrCONTA_BOLETO.Text);
 
     if PrCONTA_BOLETO.Enabled then
       sql_boleto := sql_boleto + ' and c.ativo = ''S'' ';
@@ -14857,7 +15487,10 @@ begin
         fmfun.ACBrBoleto1.Cedente.Convenio := dao.Q2.fieldbyname('convenio').AsString;
       end
       else begin
-        fmfun.ACBrBoleto1.Cedente.CodigoCedente := FMFUN.enchezero(IntToStr(StrToIntDef(dao.Q2.fieldbyname('codigo_cedente').AsString, 0)), 6);
+        if Length(Trim(dao.Q2.fieldbyname('convenio').AsString)) >= 7 then
+          fmfun.ACBrBoleto1.Cedente.CodigoCedente := FMFUN.enchezero(IntToStr(StrToIntDef(dao.Q2.fieldbyname('convenio').AsString, 0)), 7)
+        else
+          fmfun.ACBrBoleto1.Cedente.CodigoCedente := FMFUN.enchezero(IntToStr(StrToIntDef(dao.Q2.fieldbyname('codigo_cedente').AsString, 0)), 6);
         fmfun.ACBrBoleto1.Cedente.Convenio := FMFUN.enchezero(IntToStr(StrToIntDef(dao.Q2.fieldbyname('convenio').AsString, 0)), 6);
       end;
 
@@ -14873,6 +15506,10 @@ begin
       dias_baixar := dao.q2.fieldbyname('DIAS_BAIXAR').AsInteger;
       carteira_conta := dao.q2.fieldbyname('CARTEIRA').AsString;
       mensagem_padrao := dao.q2.fieldbyname('mensagem_padrao').AsString;
+      if dao.q2.fieldbyname('nr_banco').AsInteger = 104 then
+      begin
+        FMFUN.ACBrBoleto1.Cedente.Modalidade := FMFUN.enchezero(IntToStr(StrToIntDef(Trim(dao.q2.fieldbyname('MODALIDADE').AsString), 1)), 2);
+      end;
       if dao.q2.fieldbyname('nr_banco').AsInteger = 33 then
       begin
         FMFUN.ACBrBoleto1.Cedente.CodigoTransmissao := dao.q2.fieldbyname('codigo_transmissao').AsString;
@@ -14900,6 +15537,46 @@ begin
         Prempresa_faturarExit(Self);
       end;
 
+      if PrCONTA_BOLETO.Text = '51' then
+      begin
+        if Trim(Prcod_transportadora.Text) = '' then
+        begin
+          Prcod_transportadora.Text := '2377';
+          Prcod_transportadoraExit(Self);
+        end;
+        if Trim(Prempresa_faturar.Text) = '' then
+        begin
+          Prempresa_faturar.Text := '16';
+          Prempresa_faturarExit(Self);
+        end;
+      end
+      else if PrCONTA_BOLETO.Text = '40' then
+      begin
+        if Trim(Prcod_transportadora.Text) = '' then
+        begin
+          Prcod_transportadora.Text := '2417';
+          Prcod_transportadoraExit(Self);
+        end;
+        if Trim(Prempresa_faturar.Text) = '' then
+        begin
+          Prempresa_faturar.Text := '11';
+          Prempresa_faturarExit(Self);
+        end;
+      end
+      else if PrCONTA_BOLETO.Text = '50' then
+      begin
+        if Trim(Prcod_transportadora.Text) = '' then
+        begin
+          Prcod_transportadora.Text := '6096';
+          Prcod_transportadoraExit(Self);
+        end;
+        if Trim(Prempresa_faturar.Text) = '' then
+        begin
+          Prempresa_faturar.Text := '22';
+          Prempresa_faturarExit(Self);
+        end;
+      end;
+
       Prcod_fopExit(Self);
     end
     else
@@ -14910,7 +15587,9 @@ begin
       Exit;
     end;
   end;
-
+  finally
+    validando_conta_boleto := False;
+  end;
 end;
 
 procedure TFr_vendas_industria2.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -14934,23 +15613,28 @@ end;
 function TFr_vendas_industria2.ChecarEmailCliente(cliente, tipo: string): boolean;
 var
   ajustar_cliente: boolean;
-  mensagem, emailEndNfe, nfeEmail: string;
+  mensagem, emailEndNfe, nfeEmail, tipPessoa: string;
 begin
-  if trim(Prcod_cliente.Text) = '' then exit;
-
   Result := false;
+  if trim(cliente) = '' then exit;
   ajustar_cliente := false;
   emailEndNfe := '';
   nfeEmail := '';
+  tipPessoa := '';
 
+  if (dao = nil) or (dao.cn = nil) then
+    Exit;
+  if not dao.cn.Connected then
+    Exit;
   if dao.cn.InTransaction then
     dao.cn.Rollback;
 
   try
     dao.cn.StartTransaction;
-    dao.Geral4('SELECT EMAIL, EMAIL_END_NFE, NFE_EMAIL FROM CLIENTE WHERE COD_CLIENTE = ' + Prcod_cliente.Text);
+    dao.Geral4('SELECT TIP_PESSOA, EMAIL, EMAIL_END_NFE, NFE_EMAIL FROM CLIENTE WHERE COD_CLIENTE = ' + cliente);
     if not dao.q4.IsEmpty then
     begin
+      tipPessoa := dao.q4.fieldbyname('TIP_PESSOA').AsString;
       emailEndNfe := dao.q4.fieldbyname('EMAIL_END_NFE').AsString;
       nfeEmail := dao.q4.fieldbyname('NFE_EMAIL').AsString;
     end;
@@ -14961,6 +15645,9 @@ begin
       dao.cn.Rollback;
     raise;
   end;
+
+  if UpperCase(Trim(tipPessoa)) <> 'J' then
+    Exit;
 
   if Trim(emailEndNfe) = '' then
   begin
@@ -15031,7 +15718,9 @@ end;
 
 procedure TFr_vendas_industria2.MeqtdExit(Sender: TObject);
 begin
-  if ActiveControl.Name = 'btcan' then
+  if (csDestroying in ComponentState) or
+     (not Assigned(ActiveControl)) or
+     SameText(ActiveControl.Name, 'btcan') then
     Exit;
 
   if mmVendas2.State in [dsBrowse] then
@@ -15119,6 +15808,9 @@ end;
 
 procedure TFr_vendas_industria2.Mesub_totalExit(Sender: TObject);
 begin
+  if (not mmVendas2.Active) or not (mmVendas2.State in dsEditModes) then
+    Exit;
+
   Mevlr_bc_icms.Value := Mesub_total.Value;
   btgraClick(Self);
 end;
@@ -16106,6 +16798,9 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -16134,7 +16829,11 @@ begin
   Fr_localizar.CBcampos.ItemIndex := 1;
 
   Fr_localizar.ShowModal;
-  Fr_localizar.Free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -16326,6 +17025,7 @@ begin
 
       { dao.msg('O campo Empresa deve ser Preenchido');
         pc_vendas.ActivePage := tab_finalizar;
+        if Prempresa_faturar.CanFocus then
         Prempresa_faturar.SetFocus;
         exit; }
     end;
@@ -16361,7 +17061,8 @@ begin
     begin
       dao.msg('Campo Cliente deve ser Preenchido!');
       readonly_false('Pr');
-      Prcod_cliente.SetFocus;
+      if Prcod_cliente.CanFocus then
+        Prcod_cliente.SetFocus;
       Exit;
     end;
   end
@@ -16371,7 +17072,8 @@ begin
     begin
       dao.msg('Campo Cliente ou Fornecedor deve ser Preenchido!');
       readonly_false('Pr');
-      Prcod_cliente.SetFocus;
+      if Prcod_cliente.CanFocus then
+        Prcod_cliente.SetFocus;
       Exit;
     end;
   end;
@@ -16467,23 +17169,44 @@ end;
 procedure TFr_vendas_industria2.ImprimirDanfe(chave: string; entrada: boolean = false);
 var
   arquivoNFe, pathSaida, Protocolo: string;
+  IniciouTransacao: Boolean;
 begin
+  if Trim(Prnumdoc.Text) = '' then exit;
+
+
   arquivoNFe := chave + '-procNFe.xml';
   pathSaida := ExtractFilePath(Application.ExeName) + 'nf\';
 
-  q_xml.close;
-  q_xml.ParamByName('numdoc').value := Prnumdoc.Text;
-  q_xml.Open;
-
-  if entrada then
+  IniciouTransacao := False;
+  if not dao.cn.InTransaction then
   begin
-    if not q_xml.fieldbyname('XML_DEV').IsNull then
-      TBlobField(q_xml.fieldbyname('XML_DEV')).SaveToFile(pathSaida + arquivoNFe);
-  end
-  else
-  begin
-    if not q_xml.fieldbyname('XML').IsNull then
-      TBlobField(q_xml.fieldbyname('XML')).SaveToFile(pathSaida + arquivoNFe);
+    dao.cn.StartTransaction;
+    IniciouTransacao := True;
+  end;
+  try
+    q_xml.close;
+    q_xml.ParamByName('numdoc').AsInteger := StrToIntDef(Prnumdoc.Text, 0);
+    q_xml.Open;
+    try
+      if entrada then
+      begin
+        if not q_xml.fieldbyname('XML_DEV').IsNull then
+          TBlobField(q_xml.fieldbyname('XML_DEV')).SaveToFile(pathSaida + arquivoNFe);
+      end
+      else
+      begin
+        if not q_xml.fieldbyname('XML').IsNull then
+          TBlobField(q_xml.fieldbyname('XML')).SaveToFile(pathSaida + arquivoNFe);
+      end;
+    finally
+      q_xml.Close;
+    end;
+    if IniciouTransacao then
+      dao.cn.Commit;
+  except
+    if IniciouTransacao and dao.cn.InTransaction then
+      dao.cn.Rollback;
+    raise;
   end;
   {
     if not FilesExists(pathSaida + arquivoNFe) then
@@ -16663,8 +17386,20 @@ procedure TFr_vendas_industria2.sbDANFCeClick(Sender: TObject);
 var
   arquivoNFe, pathSaida, Protocolo: string;
 begin
+  if (not q_cce.Active) or q_cce.IsEmpty then
+  begin
+    MessageDlg('Nenhum evento da NFe foi localizado.', mtWarning, [mbOK], 0);
+    Exit;
+  end;
+
   arquivoNFe := PrChave_NFe.Text + '-' + q_cce.fieldbyname('ID').AsString + '-ProcEventoNFe.xml';
   pathSaida := ExtractFilePath(Application.ExeName) + 'nf\';
+
+  if not ForceDirectories(pathSaida) then
+  begin
+    MessageDlg('Nao foi possivel criar a pasta dos arquivos XML.', mtError, [mbOK], 0);
+    Exit;
+  end;
 
   if not q_cce.fieldbyname('XML').IsNull then
     TBlobField(q_cce.fieldbyname('XML')).SaveToFile(pathSaida + arquivoNFe);
@@ -16689,6 +17424,12 @@ begin
     end;
   end;
  }
+  if not FileExists(pathSaida + arquivoNFe) then
+  begin
+    MessageDlg('Arquivo XML do evento nao foi encontrado.', mtWarning, [mbOK], 0);
+    Exit;
+  end;
+
   ACBrNFe1.EventoNFe.Evento.Clear;
   ACBrNFe1.EventoNFe.LerXML(pathSaida + arquivoNFe);
   ACBrNFe1.DANFE.Logo := ExtractFilePath(Application.ExeName) + nome_logo;
@@ -17475,6 +18216,9 @@ var
     end;
   end;
 begin
+  if (not mmVendas2.Active) or not (mmVendas2.State in dsEditModes) then
+    Exit;
+
   readonly_false('Pr');
   produto_alterado := false;
   if (Mecod_produto.Text = '') and (Mecod_produto.Enabled) then
@@ -17620,7 +18364,8 @@ begin
   if mmVendas2DESCONTO.AsString = '' then
     mmVendas2DESCONTO.AsString := '0';
 
-  mmVendas2.post;
+  if mmVendas2.State in dsEditModes then
+    mmVendas2.Post;
 
   if ProdutoJaIncluidoNoPedido(produto) then
   begin
@@ -17902,6 +18647,9 @@ var
   contador: integer;
   lucro: real;
 begin
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   Fr_localizar.Caption := 'Localizar Vendas';
@@ -17953,7 +18701,11 @@ begin
     Prcod_transportadoraExit(self);
     PrNumdoc_RefExit(self);
   end;
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 end;
 
@@ -18203,3 +18955,6 @@ begin
 end;
 
 end.
+
+
+

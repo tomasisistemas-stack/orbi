@@ -215,14 +215,23 @@ end;
 procedure Tfr_plano_contas.CarregaDados;
 var
   sql_consulta: string;
+
+  function CamposPlano(const AliasPlano: string): string;
+  begin
+    Result :=
+      '   ' + AliasPlano + '.descricao, ' +
+      '   ' + AliasPlano + '.id, ' +
+      '   ' + AliasPlano + '.operacao, ' +
+      '   ' + AliasPlano + '.id_pai, ' +
+      '   ' + AliasPlano + '.nivel, ' +
+      '   ' + AliasPlano + '.nr_conta, ' +
+      '   (select max(px.nr_conta) from plano_contas px where px.id_pai = ' + AliasPlano + '.id_pai) as nova_nr_conta, ' +
+      '   trim(' + AliasPlano + '.nr_conta)||''-''||' + AliasPlano + '.descricao as conta ';
+  end;
 begin
   Q_Plano_Contas.Close;
   sql_consulta := ' select ' +
-    '   P1.id, ' +
-    '   P1.id_pai, ' +
-    '   P1.descricao, ' +
-    '   P1.nr_conta, ' +
-    '   trim(P1.nr_conta)||''-''||P1.descricao as conta ' +
+    CamposPlano('P1') +
     ' from ' +
     '   PLANO_CONTAS P4 ' +
     ' INNER JOIN PLANO_CONTAS P3 ON (P3.ID = P4.ID_PAI) ' +
@@ -237,11 +246,7 @@ begin
   sql_consulta := sql_consulta +
     ' UNION ' +
     ' select ' +
-    '   P2.id, ' +
-    '   P2.id_pai, ' +
-    '   P2.descricao, ' +
-    '   P2.nr_conta, ' +
-    '   trim(P2.nr_conta)||''-''||P2.descricao as conta ' +
+    CamposPlano('P2') +
     ' from ' +
     '   PLANO_CONTAS P4 ' +
     ' INNER JOIN PLANO_CONTAS P3 ON (P3.ID = P4.ID_PAI) ' +
@@ -255,11 +260,7 @@ begin
   sql_consulta := sql_consulta +
     ' UNION ' +
     ' select ' +
-    '   P3.id, ' +
-    '   P3.id_pai, ' +
-    '   P3.descricao, ' +
-    '   P3.nr_conta, ' +
-    '   trim(P3.nr_conta)||''-''||P3.descricao as conta ' +
+    CamposPlano('P3') +
     ' from ' +
     '   PLANO_CONTAS P4 ' +
     ' INNER JOIN PLANO_CONTAS P3 ON (P3.ID = P4.ID_PAI) ';
@@ -272,11 +273,7 @@ begin
   sql_consulta := sql_consulta +
     ' UNION ' +
     ' select ' +
-    '   P4.id, ' +
-    '   P4.id_pai, ' +
-    '   P4.descricao, ' +
-    '   P4.nr_conta, ' +
-    '   trim(P4.nr_conta)||''-''||P4.descricao as conta ' +
+    CamposPlano('P4') +
     ' from ' +
     '   PLANO_CONTAS P4 ';
 

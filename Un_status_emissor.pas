@@ -94,6 +94,13 @@ begin
   FWaitMode := False;
   FStatusFinalizado := False;
   FClosing := False;
+  { O GIF usa um timer em thread. Esta tela nao precisa de animacao e
+    deixa-lo ativo durante o fechamento pode pintar um controle destruido. }
+  if Assigned(RxGIFAnimator1) then
+  begin
+    RxGIFAnimator1.Animate := False;
+    RxGIFAnimator1.AsyncDrawing := False;
+  end;
   ConfigureQuery;
   RefreshData;
   PanelWait.Visible := False;
@@ -107,6 +114,11 @@ procedure TFr_status_emissor.FormClose(Sender: TObject; var Action: TCloseAction
 begin
   FClosing := True;
   FStatusFinalizado := True;
+  if Assigned(RxGIFAnimator1) then
+  begin
+    RxGIFAnimator1.Animate := False;
+    RxGIFAnimator1.AsyncDrawing := False;
+  end;
   Timer1.Enabled := False;
   Timer1.OnTimer := nil;
   if qStatus.Active then
@@ -116,12 +128,17 @@ end;
 
 procedure TFr_status_emissor.FormDestroy(Sender: TObject);
 begin
-{  FClosing := True;
+  FClosing := True;
+  FStatusFinalizado := True;
+  if Assigned(RxGIFAnimator1) then
+  begin
+    RxGIFAnimator1.Animate := False;
+    RxGIFAnimator1.AsyncDrawing := False;
+  end;
   Timer1.Enabled := False;
   Timer1.OnTimer := nil;
   if qStatus.Active then
     qStatus.Close;
-  Fr_status_emissor := nil;}
 end;
 
 procedure TFr_status_emissor.btnAtualizarClick(Sender: TObject);

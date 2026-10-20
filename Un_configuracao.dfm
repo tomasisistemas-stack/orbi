@@ -4,7 +4,7 @@ object Fr_configuracao: TFr_configuracao
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'Configura'#231#245'es do Sistema'
-  ClientHeight = 516
+  ClientHeight = 627
   ClientWidth = 683
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -22,7 +22,7 @@ object Fr_configuracao: TFr_configuracao
   TextHeight = 13
   object Panel1: TsPanel
     Left = 0
-    Top = 475
+    Top = 586
     Width = 683
     Height = 41
     Align = alBottom
@@ -44,7 +44,7 @@ object Fr_configuracao: TFr_configuracao
     Left = 0
     Top = 0
     Width = 683
-    Height = 475
+    Height = 586
     ActivePage = TabSheet1
     Align = alClient
     TabOrder = 1
@@ -57,7 +57,7 @@ object Fr_configuracao: TFr_configuracao
         Left = 0
         Top = 0
         Width = 675
-        Height = 447
+        Height = 558
         Align = alClient
         BevelInner = bvLowered
         TabOrder = 0
@@ -1022,6 +1022,33 @@ object Fr_configuracao: TFr_configuracao
               '4')
           end
         end
+        object gbImpressoraCupom: TsGroupBox
+          Left = 5
+          Top = 453
+          Width = 445
+          Height = 42
+          Caption = 'Impressora NFC-e / Cupom'
+          TabOrder = 28
+          SkinData.SkinSection = 'GROUPBOX'
+          object PrCaminho_Impressora_Cupom: TsEdit
+            Left = 6
+            Top = 15
+            Width = 433
+            Height = 21
+            Color = clWhite
+            TabOrder = 0
+            SkinData.SkinSection = 'EDIT'
+            BoundLabel.Indent = 0
+            BoundLabel.Font.Charset = DEFAULT_CHARSET
+            BoundLabel.Font.Color = clWindowText
+            BoundLabel.Font.Height = -11
+            BoundLabel.Font.Name = 'Tahoma'
+            BoundLabel.Font.Style = []
+            BoundLabel.Layout = sclLeft
+            BoundLabel.MaxWidth = 0
+            BoundLabel.UseSkinColor = True
+          end
+        end
         object gbMalaDireta: TsGroupBox
           Left = 3
           Top = 181
@@ -1200,7 +1227,7 @@ object Fr_configuracao: TFr_configuracao
         Left = 0
         Top = 0
         Width = 675
-        Height = 447
+        Height = 558
         Align = alClient
         BevelInner = bvLowered
         TabOrder = 0
@@ -1370,7 +1397,7 @@ object Fr_configuracao: TFr_configuracao
         Left = 0
         Top = 0
         Width = 675
-        Height = 447
+        Height = 558
         Align = alClient
         BevelInner = bvLowered
         TabOrder = 0
@@ -1539,7 +1566,7 @@ object Fr_configuracao: TFr_configuracao
         Left = 0
         Top = 0
         Width = 675
-        Height = 447
+        Height = 558
         Align = alClient
         BevelInner = bvLowered
         TabOrder = 0
@@ -1708,7 +1735,7 @@ object Fr_configuracao: TFr_configuracao
         Left = 0
         Top = 0
         Width = 675
-        Height = 447
+        Height = 558
         Align = alClient
         BevelInner = bvLowered
         TabOrder = 0
@@ -2027,28 +2054,19 @@ object Fr_configuracao: TFr_configuracao
         end
       end
     end
-    object sTabSheet3: TsTabSheet
+    object tsIntegracoes: TsTabSheet
       Caption = 'Integra'#231#245'es'
       SkinData.CustomColor = False
       SkinData.CustomFont = False
-      object PrFRENTE_CAIXA_UTILIZA: TsCheckBox
-        Left = 8
-        Top = 6
-        Width = 189
-        Height = 20
-        Caption = 'Utilizar Sistema de Frente de Caixa?'
-        TabOrder = 0
-        SkinData.SkinSection = 'CHECKBOX'
-        ImgChecked = 0
-        ImgUnchecked = 0
-      end
+      ExplicitLeft = 0
+      ExplicitTop = 8
       object sGroupBox5: TsGroupBox
         Left = 7
         Top = 29
         Width = 194
         Height = 42
         Caption = 'Servidor'
-        TabOrder = 1
+        TabOrder = 0
         SkinData.SkinSection = 'GROUPBOX'
         object PrFRENTE_CAIXA_SERVIDOR_BD: TsEdit
           Left = 6
@@ -2082,7 +2100,7 @@ object Fr_configuracao: TFr_configuracao
         Width = 460
         Height = 42
         Caption = 'Local do Banco de Dados'
-        TabOrder = 2
+        TabOrder = 1
         SkinData.SkinSection = 'GROUPBOX'
         object PrFRENTE_CAIXA_BD: TsEdit
           Left = 6
@@ -2112,22 +2130,22 @@ object Fr_configuracao: TFr_configuracao
       end
       object PrMODULO_VENDOR: TsCheckBox
         Left = 8
-        Top = 118
+        Top = 78
         Width = 125
         Height = 20
         Caption = 'M'#243'dulo de Vendedor?'
-        TabOrder = 3
+        TabOrder = 2
         SkinData.SkinSection = 'CHECKBOX'
         ImgChecked = 0
         ImgUnchecked = 0
       end
       object gbVendorHostExterno: TsGroupBox
         Left = 7
-        Top = 141
+        Top = 101
         Width = 127
         Height = 42
         Caption = 'Servidor Externo'
-        TabOrder = 4
+        TabOrder = 3
         SkinData.SkinSection = 'GROUPBOX'
         object PrVENDOR_SERVIDOR_BD_EXTERNO: TsEdit
           Left = 6
@@ -2157,11 +2175,11 @@ object Fr_configuracao: TFr_configuracao
       end
       object gbVendorLocalBD: TsGroupBox
         Left = 263
-        Top = 141
+        Top = 101
         Width = 403
         Height = 42
         Caption = 'Local do Banco de Dados'
-        TabOrder = 6
+        TabOrder = 5
         SkinData.SkinSection = 'GROUPBOX'
         object PrVENDOR_BD: TsEdit
           Left = 6
@@ -2191,11 +2209,11 @@ object Fr_configuracao: TFr_configuracao
       end
       object gbVendorHostInterno: TsGroupBox
         Left = 135
-        Top = 141
+        Top = 101
         Width = 127
         Height = 42
         Caption = 'Servidor Interno'
-        TabOrder = 5
+        TabOrder = 4
         SkinData.SkinSection = 'GROUPBOX'
         object PrVENDOR_SERVIDOR_BD_INTERNO: TsEdit
           Left = 6
@@ -2225,11 +2243,11 @@ object Fr_configuracao: TFr_configuracao
       end
       object gbVendorFTPHostInterno: TsGroupBox
         Left = 191
-        Top = 185
+        Top = 145
         Width = 169
         Height = 42
         Caption = 'FTP Host Interno'
-        TabOrder = 8
+        TabOrder = 7
         SkinData.SkinSection = 'GROUPBOX'
         object PrVENDOR_FTP_HOST: TsEdit
           Left = 6
@@ -2260,11 +2278,11 @@ object Fr_configuracao: TFr_configuracao
       end
       object gbVendorFTPUsuario: TsGroupBox
         Left = 361
-        Top = 185
+        Top = 145
         Width = 153
         Height = 42
         Caption = 'FTP Usu'#225'rio'
-        TabOrder = 9
+        TabOrder = 8
         SkinData.SkinSection = 'GROUPBOX'
         object PrVENDOR_FTP_USUARIO: TsEdit
           Left = 6
@@ -2294,11 +2312,11 @@ object Fr_configuracao: TFr_configuracao
       end
       object gbVendorFTPSenha: TsGroupBox
         Left = 516
-        Top = 185
+        Top = 145
         Width = 150
         Height = 42
         Caption = 'FTP Senha'
-        TabOrder = 10
+        TabOrder = 9
         SkinData.SkinSection = 'GROUPBOX'
         object PrVENDOR_FTP_SENHA: TsEdit
           Left = 6
@@ -2329,11 +2347,11 @@ object Fr_configuracao: TFr_configuracao
       end
       object gbVendorFTPHostExterno: TsGroupBox
         Left = 7
-        Top = 185
+        Top = 145
         Width = 183
         Height = 42
         Caption = 'FTP Host Externo'
-        TabOrder = 7
+        TabOrder = 6
         SkinData.SkinSection = 'GROUPBOX'
         object PrVENDOR_FTP_HOST_EXTERNO: TsEdit
           Left = 6
@@ -2363,16 +2381,16 @@ object Fr_configuracao: TFr_configuracao
         end
       end
       object sGroupBox9: TsGroupBox
-        Left = 7
-        Top = 72
+        Left = 3
+        Top = 237
         Width = 658
-        Height = 42
-        Caption = 'Empresa Padr'#227'o'
-        TabOrder = 11
+        Height = 164
+        Caption = 'Configura'#231#227'o padr'#227'o do PDV'
+        TabOrder = 10
         SkinData.SkinSection = 'GROUPBOX'
         object Lbempresa_padrao: TsLabel
           Left = 77
-          Top = 23
+          Top = 58
           Width = 9
           Height = 13
           Caption = '...'
@@ -2383,9 +2401,44 @@ object Fr_configuracao: TFr_configuracao
           Font.Name = 'MS Sans Serif'
           Font.Style = []
         end
+        object Lbrotulo_cliente_pdv: TsLabel
+          Left = 6
+          Top = 76
+          Width = 35
+          Height = 13
+          Caption = 'Cliente:'
+        end
+        object Lbrotulo_representante_pdv: TsLabel
+          Left = 6
+          Top = 118
+          Width = 73
+          Height = 13
+          Caption = 'Representante:'
+        end
+        object Lbcliente_pdv: TsLabel
+          Left = 77
+          Top = 99
+          Width = 9
+          Height = 13
+          Caption = '...'
+        end
+        object Lbrepresentante_pdv: TsLabel
+          Left = 77
+          Top = 141
+          Width = 9
+          Height = 13
+          Caption = '...'
+        end
+        object sLabel1: TsLabel
+          Left = 6
+          Top = 35
+          Width = 44
+          Height = 13
+          Caption = 'Empresa:'
+        end
         object PrFRENTE_CAIXA_EMPRESA_PADRAO: TsComboEdit
           Left = 6
-          Top = 15
+          Top = 50
           Width = 66
           Height = 21
           AutoSize = False
@@ -2414,14 +2467,75 @@ object Fr_configuracao: TFr_configuracao
           GlyphMode.Blend = 0
           GlyphMode.Grayed = False
         end
+        object PrFRENTE_CAIXA_CLIENTE_PADRAO: TsComboEdit
+          Left = 6
+          Top = 91
+          Width = 66
+          Height = 21
+          AutoSize = False
+          Color = clWhite
+          TabOrder = 1
+          Text = ''
+          OnExit = PrFRENTE_CAIXA_CLIENTE_PADRAOExit
+          CheckOnExit = True
+          BoundLabel.Indent = 0
+          BoundLabel.Font.Charset = DEFAULT_CHARSET
+          BoundLabel.Font.Color = clWindowText
+          BoundLabel.Font.Height = -11
+          BoundLabel.Font.Name = 'Tahoma'
+          BoundLabel.Font.Style = []
+          BoundLabel.Layout = sclLeft
+          BoundLabel.MaxWidth = 0
+          BoundLabel.UseSkinColor = True
+          SkinData.SkinSection = 'EDIT'
+          OnButtonClick = PrFRENTE_CAIXA_CLIENTE_PADRAOButtonClick
+          GlyphMode.Blend = 0
+          GlyphMode.Grayed = False
+        end
+        object PrFRENTE_CAIXA_REPRESENTANTE_PADRAO: TsComboEdit
+          Left = 6
+          Top = 133
+          Width = 66
+          Height = 21
+          AutoSize = False
+          Color = clWhite
+          TabOrder = 2
+          Text = ''
+          OnExit = PrFRENTE_CAIXA_REPRESENTANTE_PADRAOExit
+          CheckOnExit = True
+          BoundLabel.Indent = 0
+          BoundLabel.Font.Charset = DEFAULT_CHARSET
+          BoundLabel.Font.Color = clWindowText
+          BoundLabel.Font.Height = -11
+          BoundLabel.Font.Name = 'Tahoma'
+          BoundLabel.Font.Style = []
+          BoundLabel.Layout = sclLeft
+          BoundLabel.MaxWidth = 0
+          BoundLabel.UseSkinColor = True
+          SkinData.SkinSection = 'EDIT'
+          OnButtonClick = PrFRENTE_CAIXA_REPRESENTANTE_PADRAOButtonClick
+          GlyphMode.Blend = 0
+          GlyphMode.Grayed = False
+        end
+        object PrFRENTE_CAIXA_UTILIZA: TsCheckBox
+          Left = 6
+          Top = 16
+          Width = 189
+          Height = 20
+          Caption = 'Utilizar Sistema de Frente de Caixa?'
+          TabOrder = 3
+          SkinData.SkinSection = 'CHECKBOX'
+          ImgChecked = 0
+          ImgUnchecked = 0
+        end
       end
       object sGroupBox10: TsGroupBox
         Left = 7
-        Top = 229
+        Top = 189
         Width = 127
         Height = 42
         Caption = 'Servidor Clientes'
-        TabOrder = 12
+        TabOrder = 11
         SkinData.SkinSection = 'GROUPBOX'
         object sEdit1: TsEdit
           Left = 6
@@ -2451,11 +2565,11 @@ object Fr_configuracao: TFr_configuracao
       end
       object sGroupBox11: TsGroupBox
         Left = 135
-        Top = 229
+        Top = 189
         Width = 530
         Height = 42
         Caption = 'Local do Banco de Dados Clientes'
-        TabOrder = 13
+        TabOrder = 12
         SkinData.SkinSection = 'GROUPBOX'
         object sEdit2: TsEdit
           Left = 6

@@ -12,6 +12,7 @@ object fr_ultimas_vendas: Tfr_ultimas_vendas
   Font.Style = []
   KeyPreview = True
   OldCreateOrder = False
+  OnClose = FormClose
   Position = poScreenCenter
   OnKeyPress = FormKeyPress
   OnShow = FormShow
@@ -455,6 +456,7 @@ object fr_ultimas_vendas: Tfr_ultimas_vendas
       Kind = bkCancel
       NumGlyphs = 2
       TabOrder = 0
+      OnClick = sBitBtn1Click
       SkinData.SkinSection = 'BUTTON'
     end
   end
@@ -562,6 +564,7 @@ object fr_ultimas_vendas: Tfr_ultimas_vendas
       TabOrder = 1
       Text = '        '
       OnExit = Prcod_produtoExit
+      OnKeyPress = Prcod_produtoKeyPress
       CheckOnExit = True
       BoundLabel.Indent = 0
       BoundLabel.Font.Charset = DEFAULT_CHARSET

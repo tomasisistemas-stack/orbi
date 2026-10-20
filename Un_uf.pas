@@ -277,6 +277,7 @@ var
   chamou_form_old, chamou_pesquisa_old : String;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   //guardar os valores antigos

@@ -68,6 +68,7 @@ var
   //variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   //guardar os valores antigos
@@ -106,7 +107,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -115,13 +120,21 @@ begin
 end;
 
 procedure Tfm_produto_fornecedor.Emcod_produtoExit(Sender: TObject);
+var
+  CodigoProduto: Integer;
 begin
   if trim(Emcod_produto.Text) = '' then
     Lbnom_produto.Caption := '...';
 
   if Emcod_produto.Text <> '' then
   begin
-    dao.Geral1('select nom_produto from produto p where p.cod_produto =' + Emcod_produto.text);
+    if not TryStrToInt(Trim(Emcod_produto.Text), CodigoProduto) then
+    begin
+      dao.msg('Informe somente um codigo numerico de produto.');
+      Emcod_produto.SetFocus;
+      Exit;
+    end;
+    dao.Geral1('select nom_produto from produto p where p.cod_produto =' + IntToStr(CodigoProduto));
     if not dao.q1.IsEmpty then
       Lbnom_produto.Caption := dao.q1.fieldbyname('nom_produto').asstring;
   end;
@@ -150,4 +163,3 @@ begin
 end;
 
 end.
-

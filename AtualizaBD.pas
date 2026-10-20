@@ -911,6 +911,13 @@ begin
     ExecuteSQL;
     SetaVersao;
   end;
+  if versao_banco < '2.01.03' then
+  begin
+    script.Add('ALTER TABLE CONFIGURACAO ADD COLUMN IF NOT EXISTS CAMINHO_IMPRESSORA_CUPOM VARCHAR(255);');
+
+    ExecuteSQL;
+    SetaVersao;
+  end;
   script.Free;
 
 end;

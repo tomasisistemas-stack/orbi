@@ -49,6 +49,8 @@ type
     q_produtopreco_venda: TBCDField;
     q_produtounidade: TStringField;
     q_produtocodigo_barra: TStringField;
+    procedure sBitBtn1Click(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure q_produtoAfterOpen(DataSet: TDataSet);
     procedure sbLimparClick(Sender: TObject);
     procedure btEtiquetasClick(Sender: TObject);
@@ -70,6 +72,17 @@ implementation
 uses UnFun, UnPri, Un_localizar, un_escolhe_impressora_termica, Un_dao, Un_dm;
 
 {$R *.dfm}
+
+procedure Tfr_produtos_detalhes.sBitBtn1Click(Sender: TObject);
+begin
+  Close;
+end;
+
+procedure Tfr_produtos_detalhes.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Action := caFree;
+  fr_produtos_detalhes := nil;
+end;
 
 procedure Tfr_produtos_detalhes.q_produtoAfterOpen(DataSet: TDataSet);
 begin
@@ -105,23 +118,46 @@ end;
 
 procedure Tfr_produtos_detalhes.btEtiquetasClick(Sender: TObject);
 var
-  x: integer;
+  X: Integer;
 begin
-  Application.CreateForm(Tfr_escolhe_impressora_termica, fr_escolhe_impressora_termica);
-  fr_escolhe_impressora_termica.ShowModal;
-  if fr_escolhe_impressora_termica.ModalResult = mrok then
-    caminho_imp_cod_barras := fr_escolhe_impressora_termica.impressora_termica
-  else
-    exit;
-    
-  for x := 1 to edQtde.asinteger do
-    Fmfun.ImprimeEtiqueta(q_produtoCOD_PRODUTO.AsString, q_produtoNOM_PRODUTO.AsString, q_produtoQTD_EMBALAGEM.AsString, q_produtoUNIDADE.AsString, q_produtoCODIGO_BARRA.AsString, FRPRI.Tipo_Etiqueta, true, true);
-end;
+  Application.CreateForm(Tfr_escolhe_impressora_termica,
+    fr_escolhe_impressora_termica);
+  try
+    if fr_escolhe_impressora_termica.ShowModal <> mrOk then
+      Exit;
+    caminho_imp_cod_barras :=
+      Trim(fr_escolhe_impressora_termica.impressora_termica);
+  finally
+    FreeAndNil(fr_escolhe_impressora_termica);
+  end;
 
+  if caminho_imp_cod_barras = '' then
+  begin
+    ShowMessage('Selecione uma impressora de etiquetas válida.');
+    Exit;
+  end;
+
+  try
+    for X := 1 to edQtde.AsInteger do
+      FMFUN.ImprimeEtiqueta(q_produtoCOD_PRODUTO.AsString,
+        q_produtoNOM_PRODUTO.AsString, q_produtoQTD_EMBALAGEM.AsString,
+        q_produtoUNIDADE.AsString, q_produtoCODIGO_BARRA.AsString,
+        FRPRI.Tipo_Etiqueta, True, True);
+  except
+    on E: Exception do
+      dao.msg('Houve um erro ao imprimir a etiqueta!' + #13 + E.Message);
+  end;
+end;
 procedure Tfr_produtos_detalhes.Prcod_produtoExit(Sender: TObject);
 begin
   if trim(Prcod_produto.text) <> '' then
   begin
+    if not FMFUN.verificaNumerico(Trim(Prcod_produto.Text)) then
+    begin
+      dao.msg('Informe somente um codigo numerico de produto.');
+      Prcod_produto.SetFocus;
+      Exit;
+    end;
     q_produto.Close;
     q_produto.sql.Text := 'SELECT a.cod_produto, a.promocao, a.nom_produto, a.qtd_embalagem, a.COD_PRODUTO||''-''||a.NOM_PRODUTO as produto, s.IMAGEM_BD, a.qtd_estoque, a.preco_venda, a.unidade, a.codigo_barra ' +
       'FROM PRODUTO a left outer join SUBCATEGORIA s on s.ID = a.SUBCATEGORIA where a.cod_produto  = ' + quotedstr(trim(Prcod_produto.text));
@@ -139,14 +175,16 @@ end;
 procedure Tfr_produtos_detalhes.Prcod_produtoButtonClick(Sender: TObject);
 var
   Campos_combo: array of string;
-  i: integer;
+  i: Integer;
   valor_combo: string;
-  //variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
+  FrLocalizarAnterior: TFr_localizar;
 begin
+  { A entrada pode manter outro Fr_localizar modal aberto. }
+  FrLocalizarAnterior := Fr_localizar;
+  Fr_localizar := nil;
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
-  //guardar os valores antigos
   chamou_form_old := chamou_form;
   chamou_pesquisa_old := chamou_pesquisa;
 
@@ -157,17 +195,16 @@ begin
   revenda := 'S';
 
   Fr_localizar.BT_cadastro.Caption := 'Cadastro de' + #13 + 'Produto';
-  Fr_localizar.BT_cadastro.Visible := false;
+  Fr_localizar.BT_cadastro.Visible := False;
 
-  //preenchendo o combo box com os campos desejados para pesquisar.
   SetLength(Campos_combo, 3);
   Campos_combo[0] := 'Codigo';
   Campos_combo[1] := 'Nome';
   Campos_combo[2] := 'Marca';
 
-  for i := 0 to 2 do
+  for i := 0 to High(Campos_combo) do
   begin
-    valor_combo := campos_combo[i];
+    valor_combo := Campos_combo[i];
     Fr_localizar.CBcampos.Items.Add(valor_combo);
   end;
   Fr_localizar.CBcampos.ItemIndex := 1;
@@ -175,7 +212,12 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
+    Fr_localizar := FrLocalizarAnterior;
   end;
 
   chamou_form := chamou_form_old;
@@ -231,4 +273,3 @@ begin
 end;
 
 end.
-

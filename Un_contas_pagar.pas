@@ -311,6 +311,20 @@ uses Un_localizar, Un_dao, UnPri, UnFun, Un_dados_fornecedor, Un_grupo,
 
 {$R *.dfm}
 
+procedure SetRxTextSafe(AField: TStringField; const AValue: string);
+var
+  LValue: string;
+begin
+  if not Assigned(AField) then
+    Exit;
+
+  LValue := AValue;
+  if (AField.Size > 0) and (Length(LValue) > AField.Size) then
+    LValue := Copy(LValue, 1, AField.Size);
+
+  AField.AsString := LValue;
+end;
+
 procedure TFr_contas_pagar.Zzcod_fornecedor1ButtonClick(Sender: TObject);
 var
   Campos_combo: array of string;
@@ -320,6 +334,7 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -352,7 +367,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -374,6 +393,7 @@ begin
   begin
     if (Zzcod_fornecedor1.Text = '') then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -406,7 +426,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -425,6 +449,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -455,7 +480,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -464,30 +493,39 @@ begin
 end;
 
 procedure TFr_contas_pagar.Zzcod_fop1Exit(Sender: TObject);
+var
+  QFop: TFDQuery;
+  CodigoFop: string;
 begin
-  if trim(Zzcod_fop1.Text) = '' then
-    Lbnom_fop1.Caption := '...';
-
-  if Zzcod_fop1.Text <> '' then
+  Lbnom_fop1.Caption := '...';
+  if Trim(Zzcod_fop1.Text) <> '' then
   begin
-    dao.Geral2('select nom_fop from fop where cod_fop=' +
-      QuotedStr(Zzcod_fop1.Text));
-    if dao.q2.RecordCount > 0 then
-    begin
-      Lbnom_fop1.Caption := dao.q2.fieldbyname('nom_fop').AsString;
-    end
-    else
-    begin
-      dao.msg('Registro não Encontrado!');
-      Zzcod_fop1.Text := '';
-      Zzcod_fop1.SetFocus;
-      Exit;
+    QFop := TFDQuery.Create(nil);
+    try
+      QFop.Connection := dao.CN;
+      QFop.SQL.Text :=
+        'select nom_fop from fop where cod_fop = :cod_fop';
+      CodigoFop := Trim(Zzcod_fop1.Text);
+      if Pos(',', CodigoFop) > 0 then
+        CodigoFop := Copy(CodigoFop, 1, Pos(',', CodigoFop) - 1);
+      if Pos('.', CodigoFop) > 0 then
+        CodigoFop := Copy(CodigoFop, 1, Pos('.', CodigoFop) - 1);
+      QFop.ParamByName('cod_fop').AsInteger := StrToIntDef(CodigoFop, 0);
+      QFop.Open;
+      if not QFop.IsEmpty then
+        Lbnom_fop1.Caption := QFop.FieldByName('nom_fop').AsString
+      else
+      begin
+        dao.msg('Registro nao Encontrado!');
+        Zzcod_fop1.Clear;
+        if Zzcod_fop1.CanFocus then
+          Zzcod_fop1.SetFocus;
+      end;
+    finally
+      QFop.Free;
     end;
-
   end;
-
 end;
-
 procedure TFr_contas_pagar.Zzcod_fop1KeyPress(Sender: TObject; var Key: Char);
 var
   Campos_combo: array of string;
@@ -500,6 +538,7 @@ begin
   begin
     if (Prcod_fop.Text = '') then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -530,7 +569,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -578,6 +621,7 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -606,7 +650,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -627,6 +675,7 @@ begin
   begin
     if (Zzcod_empresa.Text = '') then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -655,7 +704,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -851,15 +904,15 @@ begin
   begin
     mmContasPagar.Append;
     mmContasPagarID.AsString := Q_resultado.fieldbyname('ID').AsString;
-    mmContasPagarREPRESENTANTE.AsString :=
-      Q_resultado.fieldbyname('nom_representante').AsString;
-    mmContasPagarTITULO.AsString := Q_resultado.fieldbyname('titulo').AsString;
+    SetRxTextSafe(mmContasPagarREPRESENTANTE,
+      Q_resultado.fieldbyname('nom_representante').AsString);
+    SetRxTextSafe(mmContasPagarTITULO, Q_resultado.fieldbyname('titulo').AsString);
     mmContasPagarSEQUENCIA.AsString := Q_resultado.fieldbyname
       ('sequencia').AsString;
-    mmContasPagarRAZAO_SOCIAL.AsString :=
-      Q_resultado.fieldbyname('razao_social').AsString;
-    mmContasPagarHISTORICO.AsString := Q_resultado.fieldbyname
-      ('historico1').AsString;
+    SetRxTextSafe(mmContasPagarRAZAO_SOCIAL,
+      Q_resultado.fieldbyname('razao_social').AsString);
+    SetRxTextSafe(mmContasPagarHISTORICO, Q_resultado.fieldbyname
+      ('historico1').AsString);
     mmContasPagarDTAVEN.AsString := Q_resultado.fieldbyname('dtaven').AsString;
     mmContasPagarVALOR.AsString := Q_resultado.fieldbyname('valor').AsString;
     mmContasPagarDTAPAG.AsString := Q_resultado.fieldbyname('dtapag').AsString;
@@ -868,8 +921,8 @@ begin
     mmContasPagarVALOR_CORRIGIDO.AsString :=
       Q_resultado.fieldbyname('vlr_corrigido').AsString;
 
-    mmContasPagarNOM_FOP.AsString := Q_resultado.fieldbyname('nom_fop')
-      .AsString;
+    SetRxTextSafe(mmContasPagarNOM_FOP, Q_resultado.fieldbyname('nom_fop')
+      .AsString);
     mmContasPagarEXTRATO.AsString := Q_resultado.fieldbyname('EXTRATO')
       .AsString;
     mmContasPagarCHEQUE.AsString := Q_resultado.fieldbyname('CHEQUE').AsString;
@@ -943,6 +996,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -973,7 +1027,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -982,30 +1040,39 @@ begin
 end;
 
 procedure TFr_contas_pagar.Prcod_fopExit(Sender: TObject);
+var
+  QFop: TFDQuery;
+  CodigoFop: string;
 begin
-  if trim(Prcod_fop.Text) = '' then
-    Lbnom_fop.Caption := '...';
-
-  if Prcod_fop.Text <> '' then
+  Lbnom_fop.Caption := '...';
+  if Trim(Prcod_fop.Text) <> '' then
   begin
-    dao.Geral2('select nom_fop from fop where cod_fop=' +
-      QuotedStr(Prcod_fop.Text));
-    if dao.q2.RecordCount > 0 then
-    begin
-      Lbnom_fop.Caption := dao.q2.fieldbyname('nom_fop').AsString;
-    end
-    else
-    begin
-      dao.msg('Registro não Encontrado!');
-      Prcod_fop.Text := '';
-      Prcod_fop.SetFocus;
-      Exit;
+    QFop := TFDQuery.Create(nil);
+    try
+      QFop.Connection := dao.CN;
+      QFop.SQL.Text :=
+        'select nom_fop from fop where cod_fop = :cod_fop';
+      CodigoFop := Trim(Prcod_fop.Text);
+      if Pos(',', CodigoFop) > 0 then
+        CodigoFop := Copy(CodigoFop, 1, Pos(',', CodigoFop) - 1);
+      if Pos('.', CodigoFop) > 0 then
+        CodigoFop := Copy(CodigoFop, 1, Pos('.', CodigoFop) - 1);
+      QFop.ParamByName('cod_fop').AsInteger := StrToIntDef(CodigoFop, 0);
+      QFop.Open;
+      if not QFop.IsEmpty then
+        Lbnom_fop.Caption := QFop.FieldByName('nom_fop').AsString
+      else
+      begin
+        dao.msg('Registro nao Encontrado!');
+        Prcod_fop.Clear;
+        if Prcod_fop.CanFocus then
+          Prcod_fop.SetFocus;
+      end;
+    finally
+      QFop.Free;
     end;
-
   end;
-
 end;
-
 procedure TFr_contas_pagar.Prcod_fopKeyPress(Sender: TObject; var Key: Char);
 var
   Campos_combo: array of string;
@@ -1018,6 +1085,7 @@ begin
   begin
     if (Prcod_fop.Text = '') then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -1048,7 +1116,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -1068,6 +1140,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -1100,7 +1173,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -1109,6 +1186,8 @@ begin
 end;
 
 procedure TFr_contas_pagar.Prcod_fornecedorExit(Sender: TObject);
+var
+  LCodigo: Integer;
 begin
 
   if trim(Prcod_fornecedor.Text) = '' then
@@ -1116,6 +1195,15 @@ begin
 
   if (Prcod_fornecedor.Text <> '') then
   begin
+    if not TryStrToInt(Trim(Prcod_fornecedor.Text), LCodigo) then
+    begin
+      dao.msg('Informe um codigo de fornecedor valido!');
+      Prcod_fornecedor.Clear;
+      if Prcod_fornecedor.CanFocus then
+        Prcod_fornecedor.SetFocus;
+      Exit;
+    end;
+    Prcod_fornecedor.Text := IntToStr(LCodigo);
     dao.Geral2
       ('select f.razao_social||'' - ''||c.NOM_CIDADE||''-''||c.UF as razao_social  from fornecedor f inner join CIDADES c on c.COD_CIDADE = f.COD_CIDADE where f.cod_fornecedor='
       + QuotedStr(Prcod_fornecedor.Text));
@@ -1149,6 +1237,7 @@ begin
   begin
     if (Prcod_fornecedor.Text = '') then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -1181,7 +1270,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -1355,38 +1448,44 @@ begin
   if Prtitulo.Text = '' then
   begin
     dao.msg('O campo Titulo deve ser preenchido!');
-    Prtitulo.SetFocus;
+    if Prtitulo.CanFocus then
+      Prtitulo.SetFocus;
     Exit;
   end;
   if Prsequencia.Text = '' then
   begin
     dao.msg('O campo Seqüência deve ser preenchido!');
-    Prsequencia.SetFocus;
+    if Prsequencia.CanFocus then
+      Prsequencia.SetFocus;
     Exit;
   end;
 {  if Prid_plano_contas.Text = '' then
   begin
     dao.msg('O campo Plano de Contas deve ser preenchido!');
-    Prid_plano_contas.SetFocus;
+    if Prid_plano_contas.CanFocus then
+      Prid_plano_contas.SetFocus;
     Exit;
   end;}
   if Prcod_fornecedor.Text = '' then
   begin
     dao.msg('O campo Fornecedor deve ser preenchido!');
-    Prcod_fornecedor.SetFocus;
+    if Prcod_fornecedor.CanFocus then
+      Prcod_fornecedor.SetFocus;
     Exit;
   end;
   if Prvalor.Value = 0 then
   begin
     dao.msg('O campo Valor deve ser preenchido!');
-    Prsequencia.SetFocus;
+    if Prsequencia.CanFocus then
+      Prsequencia.SetFocus;
     Exit;
   end;
 
   if Prdtaven.Text = '  /  /    ' then
   begin
     dao.msg('O campo Data Vencimento deve ser preenchido!');
-    Prsequencia.SetFocus;
+    if Prsequencia.CanFocus then
+      Prsequencia.SetFocus;
     Exit;
   end;
 
@@ -1421,7 +1520,8 @@ begin
       id := dao.insert('Pr', 'cp1', 'id', Fr_contas_pagar, 'gen_cp1');
 
       Prid.Text := id;
-      Btnov.SetFocus;
+      if Btnov.CanFocus then
+        Btnov.SetFocus;
     end
     else
       dao.update('cp1', 'id', Prid.Text, 'Pr', Fr_contas_pagar);
@@ -2071,6 +2171,7 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -2099,7 +2200,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -2120,6 +2225,7 @@ begin
   begin
     if (Prcod_empresa.Text = '') and (Btnov.enabled = false) then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -2148,7 +2254,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -2244,6 +2354,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -2274,7 +2385,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -2284,6 +2399,7 @@ end;
 procedure TFr_contas_pagar.Prid_plano_contasExit(Sender: TObject);
 var
   sqlplano: string;
+  LCodigo: Integer;
 begin
   if trim(Prid_plano_contas.Text) = '' then
   begin
@@ -2295,6 +2411,15 @@ begin
 
   if (Prid_plano_contas.Text <> '') then
   begin
+    if not TryStrToInt(Trim(Prid_plano_contas.Text), LCodigo) then
+    begin
+      dao.msg('Informe um codigo de plano de contas valido!');
+      Prid_plano_contas.Clear;
+      if Prid_plano_contas.CanFocus then
+        Prid_plano_contas.SetFocus;
+      Exit;
+    end;
+    Prid_plano_contas.Text := IntToStr(LCodigo);
     sqlplano := 'SELECT ' + '  PC4.ID, ' + '  PC4.NR_CONTA, ' +
       '  TRIM(PC1.NR_CONTA)||''-''||PC1.DESCRICAO DESCRICAO1, ' +
       '  TRIM(PC2.NR_CONTA)||''-''||PC2.DESCRICAO DESCRICAO2, ' +
@@ -2748,12 +2873,12 @@ begin
   begin
     mmParcelas.Append;
     mmParcelasID.AsString := Q_parcela.fieldbyname('id').AsString;
-    mmParcelasTITULO.AsString := Q_parcela.fieldbyname('titulo').AsString;
+    SetRxTextSafe(mmParcelasTITULO, Q_parcela.fieldbyname('titulo').AsString);
     mmParcelasSEQUENCIA.AsString := Q_parcela.fieldbyname('sequencia').AsString;
-    mmParcelasRAZAO_SOCIAL.AsString :=
-      Q_parcela.fieldbyname('razao_social').AsString;
-    mmParcelasHISTORICO.AsString := Q_parcela.fieldbyname('historico1')
-      .AsString;
+    SetRxTextSafe(mmParcelasRAZAO_SOCIAL,
+      Q_parcela.fieldbyname('razao_social').AsString);
+    SetRxTextSafe(mmParcelasHISTORICO, Q_parcela.fieldbyname('historico1')
+      .AsString);
     mmParcelasDTAVEN.AsString := Q_parcela.fieldbyname('dtaven').AsString;
     if DataInicialParc = 0 then
       DataInicialParc := mmParcelasDTAVEN.Value;
@@ -2761,7 +2886,7 @@ begin
     mmParcelasDTAPAG.AsString := Q_parcela.fieldbyname('dtapag').AsString;
     mmParcelasVALOR_PAGO.AsString := Q_parcela.fieldbyname
       ('valor_pago').AsString;
-    mmParcelasNOM_FOP.AsString := Q_parcela.fieldbyname('nom_fop').AsString;
+    SetRxTextSafe(mmParcelasNOM_FOP, Q_parcela.fieldbyname('nom_fop').AsString);
     VlrTotalParc := VlrTotalParc + mmParcelasVALOR.Value;
     mmParcelas.Post;
     Q_parcela.Next;
@@ -3070,7 +3195,11 @@ procedure TFr_contas_pagar.FormKeyPress(Sender: TObject; var Key: Char);
 begin
   if Key = #13 then
   begin
-    if (ActiveControl.Name = 'Prhistorico1') then
+    if (csDestroying in ComponentState) or
+       (not Assigned(ActiveControl)) then
+      Exit;
+
+    if SameText(ActiveControl.Name, 'Prhistorico1') then
       Exit;
     // se for, passa o foco para o próximo campo, zerando o valor da variável Key
     Key := #0;
@@ -3202,53 +3331,57 @@ var
   Campos_combo: array of string;
   i: Integer;
   valor_combo: string;
+  Localizar: TFr_localizar;
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
-  Application.CreateForm(TFr_localizar, Fr_localizar);
-
-  // guardar os valores antigos
-  chamou_form_old := chamou_form;
-  chamou_pesquisa_old := chamou_pesquisa;
-
-  Fr_localizar.Caption := 'Localizar Representante';
-
-  chamou_pesquisa := 'fr_representante';
-  chamou_form := 'fr_cp_representante';
-  chamou_cadastro := 'fr_representante';
-
-  Fr_localizar.BT_cadastro.Caption := 'Cadastro de' + #13 + 'Represenante';
-
-  if Tipo_usuario < '4' then
-    Fr_localizar.BT_cadastro.Visible := false
-  else
-    Fr_localizar.BT_cadastro.Visible := true;
-
-  // preenchendo o combo box com os campos desejados para pesquisar.
-  SetLength(Campos_combo, 5);
-  Campos_combo[0] := 'Codigo';
-  Campos_combo[1] := 'Nome';
-  Campos_combo[2] := 'Empresa';
-  Campos_combo[3] := 'CNPJ';
-  Campos_combo[4] := 'CPF';
-
-  for i := 0 to 4 do
-  begin
-    valor_combo := Campos_combo[i];
-    Fr_localizar.CBcampos.Items.Add(valor_combo);
-  end;
-
-  Fr_localizar.CBcampos.ItemIndex := 1;
-
+  Localizar := TFr_localizar.Create(Application);
+  Fr_localizar := Localizar;
   try
-    Fr_localizar.ShowModal;
+    // guardar os valores antigos
+    chamou_form_old := chamou_form;
+    chamou_pesquisa_old := chamou_pesquisa;
+
+    try
+      Localizar.Caption := 'Localizar Representante';
+
+      chamou_pesquisa := 'fr_representante';
+      chamou_form := 'fr_cp_representante';
+      chamou_cadastro := 'fr_representante';
+
+      Localizar.BT_cadastro.Caption := 'Cadastro de' + #13 + 'Represenante';
+
+      if Tipo_usuario < '4' then
+        Localizar.BT_cadastro.Visible := false
+      else
+        Localizar.BT_cadastro.Visible := true;
+
+      // preenchendo o combo box com os campos desejados para pesquisar.
+      SetLength(Campos_combo, 5);
+      Campos_combo[0] := 'Codigo';
+      Campos_combo[1] := 'Nome';
+      Campos_combo[2] := 'Empresa';
+      Campos_combo[3] := 'CNPJ';
+      Campos_combo[4] := 'CPF';
+
+      Localizar.CBcampos.Items.Clear;
+      for i := 0 to 4 do
+      begin
+        valor_combo := Campos_combo[i];
+        Localizar.CBcampos.Items.Add(valor_combo);
+      end;
+
+      Localizar.CBcampos.ItemIndex := 1;
+      Localizar.ShowModal;
+    finally
+      chamou_form := chamou_form_old;
+      chamou_pesquisa := chamou_pesquisa_old;
+    end;
   finally
-    Fr_localizar.Free;
+    if Fr_localizar = Localizar then
+      Fr_localizar := nil;
+    Localizar.Free;
   end;
-
-  chamou_form := chamou_form_old;
-  chamou_pesquisa := chamou_pesquisa_old;
-
 end;
 
 procedure TFr_contas_pagar.zzRepresentanteButtonClick(Sender: TObject);
@@ -3256,52 +3389,57 @@ var
   Campos_combo: array of string;
   i: Integer;
   valor_combo: string;
+  Localizar: TFr_localizar;
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
-  Application.CreateForm(TFr_localizar, Fr_localizar);
-
-  // guardar os valores antigos
-  chamou_form_old := chamou_form;
-  chamou_pesquisa_old := chamou_pesquisa;
-
-  Fr_localizar.Caption := 'Localizar Representante';
-
-  chamou_pesquisa := 'fr_representante';
-  chamou_form := 'fr_zz_cp_representante';
-  chamou_cadastro := 'fr_representante';
-
-  Fr_localizar.BT_cadastro.Caption := 'Cadastro de' + #13 + 'Represenante';
-
-  if Tipo_usuario < '4' then
-    Fr_localizar.BT_cadastro.Visible := false
-  else
-    Fr_localizar.BT_cadastro.Visible := true;
-
-  // preenchendo o combo box com os campos desejados para pesquisar.
-  SetLength(Campos_combo, 5);
-  Campos_combo[0] := 'Codigo';
-  Campos_combo[1] := 'Nome';
-  Campos_combo[2] := 'Empresa';
-  Campos_combo[3] := 'CNPJ';
-  Campos_combo[4] := 'CPF';
-
-  for i := 0 to 4 do
-  begin
-    valor_combo := Campos_combo[i];
-    Fr_localizar.CBcampos.Items.Add(valor_combo);
-  end;
-
-  Fr_localizar.CBcampos.ItemIndex := 1;
-
+  Localizar := TFr_localizar.Create(Application);
+  Fr_localizar := Localizar;
   try
-    Fr_localizar.ShowModal;
-  finally
-    Fr_localizar.Free;
-  end;
+    // guardar os valores antigos
+    chamou_form_old := chamou_form;
+    chamou_pesquisa_old := chamou_pesquisa;
 
-  chamou_form := chamou_form_old;
-  chamou_pesquisa := chamou_pesquisa_old;
+    try
+      Localizar.Caption := 'Localizar Representante';
+
+      chamou_pesquisa := 'fr_representante';
+      chamou_form := 'fr_zz_cp_representante';
+      chamou_cadastro := 'fr_representante';
+
+      Localizar.BT_cadastro.Caption := 'Cadastro de' + #13 + 'Represenante';
+
+      if Tipo_usuario < '4' then
+        Localizar.BT_cadastro.Visible := false
+      else
+        Localizar.BT_cadastro.Visible := true;
+
+      // preenchendo o combo box com os campos desejados para pesquisar.
+      SetLength(Campos_combo, 5);
+      Campos_combo[0] := 'Codigo';
+      Campos_combo[1] := 'Nome';
+      Campos_combo[2] := 'Empresa';
+      Campos_combo[3] := 'CNPJ';
+      Campos_combo[4] := 'CPF';
+
+      Localizar.CBcampos.Items.Clear;
+      for i := 0 to 4 do
+      begin
+        valor_combo := Campos_combo[i];
+        Localizar.CBcampos.Items.Add(valor_combo);
+      end;
+
+      Localizar.CBcampos.ItemIndex := 1;
+      Localizar.ShowModal;
+    finally
+      chamou_form := chamou_form_old;
+      chamou_pesquisa := chamou_pesquisa_old;
+    end;
+  finally
+    if Fr_localizar = Localizar then
+      Fr_localizar := nil;
+    Localizar.Free;
+  end;
 end;
 
 procedure TFr_contas_pagar.zzRepresentanteExit(Sender: TObject);
@@ -3336,6 +3474,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -3366,7 +3505,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -3376,6 +3519,8 @@ end;
 procedure TFr_contas_pagar.zPrId_Plano_ContasExit(Sender: TObject);
 var
   sqlplano: string;
+  codplano: string;
+  i: Integer;
 begin
   if trim(zPrId_Plano_Contas.Text) = '' then
   begin
@@ -3387,6 +3532,11 @@ begin
 
   if (zPrId_Plano_Contas.Text <> '') then
   begin
+    // mantem so os digitos: evita caracteres invisiveis (NBSP, tab) no campo
+    codplano := '';
+    for i := 1 to Length(zPrId_Plano_Contas.Text) do
+      if CharInSet(zPrId_Plano_Contas.Text[i], ['0'..'9']) then
+        codplano := codplano + zPrId_Plano_Contas.Text[i];
     sqlplano := 'SELECT ' + '  PC4.ID, ' + '  PC4.NR_CONTA, ' +
       '  TRIM(PC1.NR_CONTA)||''-''||PC1.DESCRICAO DESCRICAO1, ' +
       '  TRIM(PC2.NR_CONTA)||''-''||PC2.DESCRICAO DESCRICAO2, ' +
@@ -3397,7 +3547,7 @@ begin
       'INNER JOIN PLANO_CONTAS PC2 ON (PC2.ID = PC3.ID_PAI) ' +
       'INNER JOIN PLANO_CONTAS PC1 ON (PC1.ID = PC2.ID_PAI) ' +
       'WHERE (PC3.ID IN (''43'') or PC3.ID IN (''119'')  OR PC3.ID IN (''120'')  OR PC3.ID IN (''30'') OR PC3.ID IN (''36'') OR PC3.ID IN (''40'') OR PC1.ID IN(''58'')) AND PC4.ID = '
-      + QuotedStr(zPrId_Plano_Contas.Text);
+      + QuotedStr(codplano);
 
     dao.Geral2(sqlplano);
     if dao.q2.RecordCount > 0 then

@@ -165,6 +165,9 @@ begin
   if not trelloEnabled then
     exit;
   trelloSending := true;
+  hInternet := nil;
+  hConnect := nil;
+  hRequest := nil;
   try
     cardName := 'ORBI Exception - ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now);
     postData :=
@@ -175,42 +178,44 @@ begin
       '&desc=' + UrlEncode(S);
     hInternet := InternetOpen('ORBI-ExceptLog', INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
     if hInternet <> nil then
-    begin
       hConnect := InternetConnect(hInternet, 'api.trello.com', INTERNET_DEFAULT_HTTPS_PORT,
         nil, nil, INTERNET_SERVICE_HTTP, 0, 0);
-      if hConnect <> nil then
+    if hConnect <> nil then
+      hRequest := HttpOpenRequest(hConnect, 'POST', '/1/cards', nil, nil, nil,
+        INTERNET_FLAG_SECURE or INTERNET_FLAG_RELOAD or INTERNET_FLAG_NO_CACHE_WRITE, 0);
+    if hRequest <> nil then
+    begin
+      headers := 'Content-Type: application/x-www-form-urlencoded';
+      ok := HttpSendRequest(hRequest, PChar(headers), Length(headers),
+        PChar(postData), Length(postData));
+      if ok then
       begin
-        hRequest := HttpOpenRequest(hConnect, 'POST', '/1/cards', nil, nil, nil,
-          INTERNET_FLAG_SECURE or INTERNET_FLAG_RELOAD or INTERNET_FLAG_NO_CACHE_WRITE, 0);
-        if hRequest <> nil then
+        statusCode := 0;
+        statusLen := SizeOf(statusCode);
+        idx := 0;
+        if HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE or HTTP_QUERY_FLAG_NUMBER,
+          @statusCode, statusLen, idx) then
         begin
-          headers := 'Content-Type: application/x-www-form-urlencoded';
-          ok := HttpSendRequest(hRequest, PChar(headers), Length(headers),
-            PChar(postData), Length(postData));
-          if ok then
-          begin
-            statusCode := 0;
-            statusLen := SizeOf(statusCode);
-            idx := 0;
-            if HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE or HTTP_QUERY_FLAG_NUMBER,
-              @statusCode, statusLen, idx) then
-            begin
-              if statusCode <> 200 then
-                OutputDebugString(PChar('Trello HTTP status: ' + IntToStr(statusCode)));
-            end;
-          end
-          else
-            OutputDebugString(PChar('Trello HttpSendRequest failed. GetLastError=' + IntToStr(GetLastError)));
-          InternetCloseHandle(hRequest);
+          if statusCode <> 200 then
+            OutputDebugString(PChar('Trello HTTP status: ' + IntToStr(statusCode)));
         end;
-        InternetCloseHandle(hConnect);
-      end;
-      InternetCloseHandle(hInternet);
+      end
+      else
+        OutputDebugString(PChar('Trello HttpSendRequest failed. GetLastError=' + IntToStr(GetLastError)));
     end;
   except
     // swallow any errors to avoid recursive exception logging
   end;
-  trelloSending := false;
+  try
+    if hRequest <> nil then
+      InternetCloseHandle(hRequest);
+    if hConnect <> nil then
+      InternetCloseHandle(hConnect);
+    if hInternet <> nil then
+      InternetCloseHandle(hInternet);
+  finally
+    trelloSending := false;
+  end;
 end;
 
 procedure MyRtlUnwind; stdcall;
@@ -257,7 +262,11 @@ var
       end;
     end;
 
-    SendToTrello(s);
+    try
+      SendToTrello(s);
+    except
+      { O logger nunca pode substituir a excecao original. }
+    end;
   end;
 begin
   asm
@@ -265,7 +274,11 @@ begin
     mov PER, eax
   end;
 
-  DoIt;
+  try
+    DoIt;
+  except
+    { Nao deixar o logger interromper o unwind do RTL. }
+  end;
     
   asm
     mov esp, ebp

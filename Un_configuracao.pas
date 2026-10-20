@@ -72,6 +72,8 @@ type
     LbVALE_FORNECEDOR: TsLabel;
     PrVALE_FORNECEDOR: TsComboEdit;
     Panel2: TsPanel;
+    gbImpressoraCupom: TsGroupBox;
+    PrCaminho_Impressora_Cupom: TsEdit;
     gbCaminhoZebra: TsGroupBox;
     PrCaminho_Cod_Barras: TsEdit;
     gbSite: TsGroupBox;
@@ -114,8 +116,7 @@ type
     PrATUALIZAR_PRECO_NA_ENTRADA: TsCheckBox;
     PrOBRIGATORIEDADE_PESO: TsCheckBox;
     Prcodigo_barras: TsCheckBox;
-    sTabSheet3: TsTabSheet;
-    PrFRENTE_CAIXA_UTILIZA: TsCheckBox;
+    tsIntegracoes: TsTabSheet;
     sGroupBox5: TsGroupBox;
     PrFRENTE_CAIXA_SERVIDOR_BD: TsEdit;
     Pr: TsGroupBox;
@@ -166,6 +167,12 @@ type
     sGroupBox9: TsGroupBox;
     PrFRENTE_CAIXA_EMPRESA_PADRAO: TsComboEdit;
     Lbempresa_padrao: TsLabel;
+    PrFRENTE_CAIXA_CLIENTE_PADRAO: TsComboEdit;
+    Lbcliente_pdv: TsLabel;
+    PrFRENTE_CAIXA_REPRESENTANTE_PADRAO: TsComboEdit;
+    Lbrepresentante_pdv: TsLabel;
+    Lbrotulo_cliente_pdv: TsLabel;
+    Lbrotulo_representante_pdv: TsLabel;
     sGroupBox10: TsGroupBox;
     sEdit1: TsEdit;
     sGroupBox11: TsGroupBox;
@@ -179,6 +186,8 @@ type
     gbFTPTabletSenha: TsGroupBox;
     PrFTP_TABLET_SENHA: TsEdit;
     qrGravaLogo: TFDQuery;
+    sLabel1: TsLabel;
+    PrFRENTE_CAIXA_UTILIZA: TsCheckBox;
     procedure Button1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -213,6 +222,10 @@ type
     procedure PrDEC_TERC_PLANO_CONTASExit(Sender: TObject);
     procedure PrFRENTE_CAIXA_EMPRESA_PADRAOButtonClick(Sender: TObject);
     procedure PrFRENTE_CAIXA_EMPRESA_PADRAOExit(Sender: TObject);
+    procedure PrFRENTE_CAIXA_CLIENTE_PADRAOButtonClick(Sender: TObject);
+    procedure PrFRENTE_CAIXA_CLIENTE_PADRAOExit(Sender: TObject);
+    procedure PrFRENTE_CAIXA_REPRESENTANTE_PADRAOButtonClick(Sender: TObject);
+    procedure PrFRENTE_CAIXA_REPRESENTANTE_PADRAOExit(Sender: TObject);
     procedure sSpeedButton2Click(Sender: TObject);
   private
     procedure mostra_campos(prefixo: ShortString);
@@ -587,6 +600,8 @@ begin
   PrDEC_TERC_PLANO_CONTASExit(self);
 
   PrFRENTE_CAIXA_EMPRESA_PADRAOExit(Self);
+  PrFRENTE_CAIXA_CLIENTE_PADRAOExit(Self);
+  PrFRENTE_CAIXA_REPRESENTANTE_PADRAOExit(Self);
 
   pasta := ExtractFilePath(Application.ExeName);
 
@@ -1779,6 +1794,130 @@ begin
       PrFRENTE_CAIXA_EMPRESA_PADRAO.SetFocus;
       Exit;
     end;
+  end;
+end;
+
+procedure TFr_configuracao.PrFRENTE_CAIXA_CLIENTE_PADRAOButtonClick(
+  Sender: TObject);
+var
+  Campos_combo: array of string;
+  I: Integer;
+  ChamouFormOld, ChamouPesquisaOld: string;
+begin
+  if not Assigned(Fr_localizar) then
+    Application.CreateForm(TFr_localizar, Fr_localizar);
+  ChamouFormOld := chamou_form;
+  ChamouPesquisaOld := chamou_pesquisa;
+  Fr_localizar.Caption := 'Localizar Cliente';
+  chamou_pesquisa := 'fr_cliente';
+  chamou_form := 'fr_configuracao_frente_caixa_cliente';
+  chamou_cadastro := 'Fr_Cliente';
+  Fr_localizar.BT_cadastro.Visible := false;
+  SetLength(Campos_combo, 2);
+  Campos_combo[0] := 'Codigo';
+  Campos_combo[1] := 'Nome';
+  for I := 0 to 1 do
+    Fr_localizar.CBcampos.Items.Add(Campos_combo[I]);
+  Fr_localizar.CBcampos.ItemIndex := 1;
+  try
+    Fr_localizar.ShowModal;
+  finally
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
+  end;
+  chamou_form := ChamouFormOld;
+  chamou_pesquisa := ChamouPesquisaOld;
+end;
+
+procedure TFr_configuracao.PrFRENTE_CAIXA_CLIENTE_PADRAOExit(
+  Sender: TObject);
+begin
+  if Trim(PrFRENTE_CAIXA_CLIENTE_PADRAO.Text) = '' then
+  begin
+    Lbcliente_pdv.Caption := '...';
+    Exit;
+  end;
+  if not FMFUN.verificaNumerico(PrFRENTE_CAIXA_CLIENTE_PADRAO.Text) then
+  begin
+    ShowMessage('Dado tem que ser sempre Numérico!');
+    PrFRENTE_CAIXA_CLIENTE_PADRAO.SetFocus;
+    Exit;
+  end;
+  dao.Geral2('select nom_cliente from cliente where cod_cliente = ' +
+    QuotedStr(PrFRENTE_CAIXA_CLIENTE_PADRAO.Text));
+  if dao.q2.RecordCount > 0 then
+    Lbcliente_pdv.Caption := dao.q2.FieldByName('nom_cliente').AsString
+  else
+  begin
+    dao.msg('Cliente não encontrado!');
+    PrFRENTE_CAIXA_CLIENTE_PADRAO.Clear;
+    Lbcliente_pdv.Caption := '...';
+    PrFRENTE_CAIXA_CLIENTE_PADRAO.SetFocus;
+  end;
+end;
+
+procedure TFr_configuracao.PrFRENTE_CAIXA_REPRESENTANTE_PADRAOButtonClick(
+  Sender: TObject);
+var
+  Campos_combo: array of string;
+  I: Integer;
+  ChamouFormOld, ChamouPesquisaOld: string;
+begin
+  if not Assigned(Fr_localizar) then
+    Application.CreateForm(TFr_localizar, Fr_localizar);
+  ChamouFormOld := chamou_form;
+  ChamouPesquisaOld := chamou_pesquisa;
+  Fr_localizar.Caption := 'Localizar Representante';
+  chamou_pesquisa := 'fr_representante';
+  chamou_form := 'fr_configuracao_frente_caixa_representante';
+  chamou_cadastro := 'Fr_representante';
+  Fr_localizar.BT_cadastro.Visible := false;
+  SetLength(Campos_combo, 2);
+  Campos_combo[0] := 'Codigo';
+  Campos_combo[1] := 'Nome';
+  for I := 0 to 1 do
+    Fr_localizar.CBcampos.Items.Add(Campos_combo[I]);
+  Fr_localizar.CBcampos.ItemIndex := 1;
+  try
+    Fr_localizar.ShowModal;
+  finally
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
+  end;
+  chamou_form := ChamouFormOld;
+  chamou_pesquisa := ChamouPesquisaOld;
+end;
+
+procedure TFr_configuracao.PrFRENTE_CAIXA_REPRESENTANTE_PADRAOExit(
+  Sender: TObject);
+begin
+  if Trim(PrFRENTE_CAIXA_REPRESENTANTE_PADRAO.Text) = '' then
+  begin
+    Lbrepresentante_pdv.Caption := '...';
+    Exit;
+  end;
+  if not FMFUN.verificaNumerico(PrFRENTE_CAIXA_REPRESENTANTE_PADRAO.Text) then
+  begin
+    ShowMessage('Dado tem que ser sempre Numérico!');
+    PrFRENTE_CAIXA_REPRESENTANTE_PADRAO.SetFocus;
+    Exit;
+  end;
+  dao.Geral2('select nom_representante from representante where id = ' +
+    QuotedStr(PrFRENTE_CAIXA_REPRESENTANTE_PADRAO.Text));
+  if dao.q2.RecordCount > 0 then
+    Lbrepresentante_pdv.Caption := dao.q2.FieldByName('nom_representante').AsString
+  else
+  begin
+    dao.msg('Representante não encontrado!');
+    PrFRENTE_CAIXA_REPRESENTANTE_PADRAO.Clear;
+    Lbrepresentante_pdv.Caption := '...';
+    PrFRENTE_CAIXA_REPRESENTANTE_PADRAO.SetFocus;
   end;
 end;
 

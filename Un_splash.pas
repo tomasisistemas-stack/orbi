@@ -32,12 +32,12 @@ implementation
 
 procedure Tfm_splash.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  Self.Visible := false;
+  Action := caHide;
 end;
 
 procedure Tfm_splash.FormShow(Sender: TObject);
 begin
-  Self.Visible := true;
+  // A visibilidade e controlada pelo VCL durante OnShow.
 end;
 
 end.

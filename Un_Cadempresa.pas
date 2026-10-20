@@ -113,6 +113,15 @@ type
     BtnBuscarCNPJ: TsBitBtn;
     PrIndustria: TsCheckBox;
     GroupBox3: TGroupBox;
+    GroupBox4: TsGroupBox;
+    sLabel6: TsLabel;
+    sLabel7: TsLabel;
+    sLabel8: TsLabel;
+    sLabel9: TsLabel;
+    PrID_CSC_NFCE_HOMOLOGACAO: TsEdit;
+    PrCSC_NFCE_HOMOLOGACAO: TsEdit;
+    PrID_CSC_NFCE_PRODUCAO: TsEdit;
+    PrCSC_NFCE_PRODUCAO: TsEdit;
     sLabel5: TsLabel;
     PrSERIE_CERTIFICADO: TsEdit;
     PrCERTIFICADO_VCTO: TsDateEdit;
@@ -422,6 +431,7 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   //guardar os valores antigos
@@ -459,7 +469,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -502,7 +516,9 @@ begin
       'a.FTP_SENHA, a.FTP_PORTA, a.FTP_HABILITA_TRANSFERENCIA, a.IP_VALIDO, a.CAMINHO_FTP, ' +
       'a.TITULAR_CERTIFICADO, a.NOM_FANTASIA, a.COMPLEMENTO, a.BAIRRO, a.CNPJ, a.IE, a.IM, a.nfecontigencia, ' +
       'a.SERIE_CERTIFICADO, a.CERTIFICADO_VCTO,  a.NR_ENDERECO, a.PRE_CADASTRO, c.nom_cidade, c.uf, a.logo, '+
-      'a.industria, A.ENQUADRADA_SIMPLES, a.consumidorfinal '+
+      'a.industria, A.ENQUADRADA_SIMPLES, a.consumidorfinal, '+
+      'a.id_csc_nfce_homologacao, a.csc_nfce_homologacao, '+
+      'a.id_csc_nfce_producao, a.csc_nfce_producao '+
       'from empresa a ' +
       'left join cidades c on c.cod_cidade = a.cod_cidade ' +
       'where a.cod_empresa=' + QuotedStr(id));
@@ -713,6 +729,7 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   //guardar os valores antigos
@@ -744,7 +761,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -768,6 +789,7 @@ begin
     if (PrCod_Cidade.Text = '') and (BtNov.Enabled = false) then
     begin
 
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       //guardar os valores antigos
@@ -799,7 +821,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -919,7 +945,6 @@ begin
 end;
 
 end.
-
 
 
 

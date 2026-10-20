@@ -647,6 +647,7 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   //guardar os valores antigos
@@ -714,7 +715,11 @@ begin
     q_giro.FieldByName('giro').DisplayLabel := 'Giro';
   end;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 end;
 
@@ -754,12 +759,21 @@ var
   Campos_combo: array of string;
   i: integer;
   valor_combo: string;
+  LocalizarAnterior: TFr_localizar;
 
   //variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
-  Application.CreateForm(TFr_localizar, Fr_localizar);
+  LocalizarAnterior := nil;
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+  begin
+    LocalizarAnterior := Fr_localizar;
+    Fr_localizar := nil;
+  end;
+
+  if not Assigned(Fr_localizar) then
+    Application.CreateForm(TFr_localizar, Fr_localizar);
 
   //guardar os valores antigos
   chamou_form_old := chamou_form;
@@ -790,11 +804,15 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
+    Fr_localizar := LocalizarAnterior;
+    chamou_form := chamou_form_old;
+    chamou_pesquisa := chamou_pesquisa_old;
   end;
-
-  chamou_form := chamou_form_old;
-  chamou_pesquisa := chamou_pesquisa_old;
 end;
 
 procedure TFr_fornecedor.BtNov_ContClick(Sender: TObject);
@@ -1214,6 +1232,7 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   //guardar os valores antigos
@@ -1244,7 +1263,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -1289,6 +1312,7 @@ begin
   begin
     if (zzcod_colecao.Text = '') then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       //guardar os valores antigos
@@ -1319,7 +1343,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
       chamou_form := chamou_form_old;
       chamou_pesquisa := chamou_pesquisa_old;
@@ -1378,6 +1406,7 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   //guardar os valores antigos
@@ -1406,7 +1435,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -1630,7 +1663,6 @@ begin
 end;
 
 end.
-
 
 
 

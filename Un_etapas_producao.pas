@@ -305,6 +305,7 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -344,7 +345,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;

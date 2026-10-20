@@ -387,28 +387,42 @@ object Fr_representantes_clientes: TFr_representantes_clientes
           Expanded = False
           FieldName = 'CLIENTE'
           Title.Caption = 'Cliente'
-          Width = 350
+          Width = 285
           Visible = True
         end
         item
           Expanded = False
           FieldName = 'REPRESENTANTE'
           Title.Caption = 'Representante'
-          Width = 350
+          Width = 245
           Visible = True
         end
         item
           Expanded = False
           FieldName = 'cidade'
           Title.Caption = 'Cidade'
-          Width = 250
+          Width = 175
           Visible = True
         end
         item
           Expanded = False
           FieldName = 'bairro'
           Title.Caption = 'Bairro'
-          Width = 246
+          Width = 150
+          Visible = True
+        end
+        item
+          Expanded = False
+          FieldName = 'DTA_ULTIMA_VENDA'
+          Title.Caption = 'Ultima venda'
+          Width = 85
+          Visible = True
+        end
+        item
+          Expanded = False
+          FieldName = 'MEDIA_VALOR_PEDIDO'
+          Title.Caption = 'Media por pedido'
+          Width = 105
           Visible = True
         end
         item
@@ -478,7 +492,49 @@ object Fr_representantes_clientes: TFr_representantes_clientes
         Font.Name = 'MS Sans Serif'
         Font.Style = []
       end
-      object Prcod_representante: TsComboEdit
+      object LbUltimaVenda: TsLabel
+        Left = 530
+        Top = 17
+        Width = 97
+        Height = 13
+        Caption = 'Ultima venda desde:'
+      end
+      object LbMediaPedido: TsLabel
+        Left = 743
+        Top = 17
+        Width = 91
+        Height = 13
+        Caption = 'Media por pedido >='
+      end
+      object PrUltimaVenda: TsDateEdit
+        Left = 631
+        Top = 13
+        Width = 89
+        Height = 21
+        AutoSize = False
+        TabOrder = 3
+        SkinData.SkinSection = 'EDIT'
+      end
+      object PrMediaPedido: TsCurrencyEdit
+        Left = 839
+        Top = 13
+        Width = 90
+        Height = 21
+        AutoSize = False
+        DisplayFormat = ',0.00;-,0.00'
+        TabOrder = 4
+        SkinData.SkinSection = 'EDIT'
+      end
+      object BtFiltrarClientes: TsBitBtn
+        Left = 937
+        Top = 11
+        Width = 75
+        Height = 25
+        Caption = 'Filtrar'
+        TabOrder = 5
+        OnClick = BtFiltrarClientesClick
+        SkinData.SkinSection = 'BUTTON'
+      end      object Prcod_representante: TsComboEdit
         Left = 339
         Top = 13
         Width = 66
@@ -1312,22 +1368,17 @@ object Fr_representantes_clientes: TFr_representantes_clientes
   object mmRep: TRxMemoryData
     FieldDefs = <
       item
-        Name = 'Num_Doc'
+        Name = 'ID'
         DataType = ftInteger
       end
       item
-        Name = 'Data_Saida'
-        DataType = ftDateTime
+        Name = 'Nome'
+        DataType = ftString
+        Size = 50
       end
       item
-        Name = 'Cliente'
-        DataType = ftString
-        Size = 100
-      end
-      item
-        Name = 'Chave_NFE'
-        DataType = ftString
-        Size = 44
+        Name = 'Check'
+        DataType = ftBoolean
       end>
     Left = 72
     Top = 184
@@ -1351,22 +1402,13 @@ object Fr_representantes_clientes: TFr_representantes_clientes
   object mmUF: TRxMemoryData
     FieldDefs = <
       item
-        Name = 'Num_Doc'
-        DataType = ftInteger
-      end
-      item
-        Name = 'Data_Saida'
-        DataType = ftDateTime
-      end
-      item
-        Name = 'Cliente'
+        Name = 'UF'
         DataType = ftString
-        Size = 100
+        Size = 2
       end
       item
-        Name = 'Chave_NFE'
-        DataType = ftString
-        Size = 44
+        Name = 'Check'
+        DataType = ftBoolean
       end>
     Left = 248
     Top = 200
@@ -1387,22 +1429,17 @@ object Fr_representantes_clientes: TFr_representantes_clientes
   object mmMeso: TRxMemoryData
     FieldDefs = <
       item
-        Name = 'Num_Doc'
+        Name = 'ID'
         DataType = ftInteger
       end
       item
-        Name = 'Data_Saida'
-        DataType = ftDateTime
+        Name = 'Nome'
+        DataType = ftString
+        Size = 50
       end
       item
-        Name = 'Cliente'
-        DataType = ftString
-        Size = 100
-      end
-      item
-        Name = 'Chave_NFE'
-        DataType = ftString
-        Size = 44
+        Name = 'Check'
+        DataType = ftBoolean
       end>
     Left = 376
     Top = 200
@@ -1426,22 +1463,17 @@ object Fr_representantes_clientes: TFr_representantes_clientes
   object mmMicro: TRxMemoryData
     FieldDefs = <
       item
-        Name = 'Num_Doc'
+        Name = 'ID'
         DataType = ftInteger
       end
       item
-        Name = 'Data_Saida'
-        DataType = ftDateTime
+        Name = 'Nome'
+        DataType = ftString
+        Size = 50
       end
       item
-        Name = 'Cliente'
-        DataType = ftString
-        Size = 100
-      end
-      item
-        Name = 'Chave_NFE'
-        DataType = ftString
-        Size = 44
+        Name = 'Check'
+        DataType = ftBoolean
       end>
     Left = 600
     Top = 216
@@ -1470,22 +1502,17 @@ object Fr_representantes_clientes: TFr_representantes_clientes
   object mmCidades: TRxMemoryData
     FieldDefs = <
       item
-        Name = 'Num_Doc'
+        Name = 'ID'
         DataType = ftInteger
       end
       item
-        Name = 'Data_Saida'
-        DataType = ftDateTime
+        Name = 'Nome'
+        DataType = ftString
+        Size = 50
       end
       item
-        Name = 'Cliente'
-        DataType = ftString
-        Size = 100
-      end
-      item
-        Name = 'Chave_NFE'
-        DataType = ftString
-        Size = 44
+        Name = 'Check'
+        DataType = ftBoolean
       end>
     Left = 832
     Top = 232
@@ -1501,25 +1528,43 @@ object Fr_representantes_clientes: TFr_representantes_clientes
       FieldName = 'Check'
     end
   end
-  object mmClientes: TRxMemoryData
+  object mmClientes: TFDMemTable
     FieldDefs = <
       item
-        Name = 'Num_Doc'
+        Name = 'CLIENTE'
+        DataType = ftString
+        Size = 250
+      end
+      item
+        Name = 'Check'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'REPRESENTANTE'
+        DataType = ftString
+        Size = 250
+      end
+      item
+        Name = 'cod_cliente'
         DataType = ftInteger
       end
       item
-        Name = 'Data_Saida'
-        DataType = ftDateTime
+        Name = 'cidade'
+        DataType = ftString
+        Size = 250
       end
       item
-        Name = 'Cliente'
+        Name = 'bairro'
         DataType = ftString
-        Size = 100
+        Size = 250
       end
       item
-        Name = 'Chave_NFE'
-        DataType = ftString
-        Size = 44
+        Name = 'DTA_ULTIMA_VENDA'
+        DataType = ftDate
+      end
+      item
+        Name = 'MEDIA_VALOR_PEDIDO'
+        DataType = ftCurrency
       end>
     Left = 328
     Top = 360
@@ -1546,6 +1591,16 @@ object Fr_representantes_clientes: TFr_representantes_clientes
       FieldName = 'bairro'
       Size = 250
     end
+    object mmClientesDTA_ULTIMA_VENDA: TDateField
+      DisplayLabel = 'Ultima venda'
+      FieldName = 'DTA_ULTIMA_VENDA'
+      DisplayFormat = 'dd/mm/yyyy'
+    end
+    object mmClientesMEDIA_VALOR_PEDIDO: TCurrencyField
+      DisplayLabel = 'Media por pedido'
+      FieldName = 'MEDIA_VALOR_PEDIDO'
+      DisplayFormat = 'R$ #,##0.00'
+    end
   end
   object dsClientes: TDataSource
     DataSet = mmClientes
@@ -1555,22 +1610,13 @@ object Fr_representantes_clientes: TFr_representantes_clientes
   object mmBairro: TRxMemoryData
     FieldDefs = <
       item
-        Name = 'Num_Doc'
-        DataType = ftInteger
-      end
-      item
-        Name = 'Data_Saida'
-        DataType = ftDateTime
-      end
-      item
-        Name = 'Cliente'
+        Name = 'Nome'
         DataType = ftString
         Size = 100
       end
       item
-        Name = 'Chave_NFE'
-        DataType = ftString
-        Size = 44
+        Name = 'Check'
+        DataType = ftBoolean
       end>
     Left = 824
     Top = 320

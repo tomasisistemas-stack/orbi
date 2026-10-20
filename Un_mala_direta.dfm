@@ -193,8 +193,8 @@ object FmMalaDireta: TFmMalaDireta
       SkinData.SkinSection = 'SPEEDBUTTON'
     end
     object btImpPromo: TsSpeedButton
-      Left = 578
-      Top = 7
+      Left = 574
+      Top = 6
       Width = 86
       Height = 30
       Caption = 'Promo'#231#227'o'
@@ -572,6 +572,7 @@ object FmMalaDireta: TFmMalaDireta
         TitleFont.Height = -11
         TitleFont.Name = 'MS Sans Serif'
         TitleFont.Style = []
+        OnMouseDown = DBGrid1MouseDown
         Columns = <
           item
             Alignment = taCenter
@@ -653,6 +654,7 @@ object FmMalaDireta: TFmMalaDireta
         TitleFont.Height = -11
         TitleFont.Name = 'MS Sans Serif'
         TitleFont.Style = []
+        OnMouseDown = dgPalmMouseDown
         Columns = <
           item
             Alignment = taCenter

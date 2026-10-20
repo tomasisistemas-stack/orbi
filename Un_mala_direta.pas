@@ -10,7 +10,7 @@ uses
   msxmldom, XMLDoc, frxExportPDF, sSpeedButton,
   sPanel, sBitBtn, sLabel, sCheckBox, sGroupBox, acDBGrid, sEdit,
   sTooledit, sMaskEdit, sCustomComboEdit, sCurrEdit, sCurrencyEdit,
-  sComboEdit, frxExportBaseDialog;
+  sComboEdit, frxExportBaseDialog, DBClient;
 
 type
   TFmMalaDireta = class(TForm)
@@ -131,13 +131,22 @@ type
     procedure sbEmailClick(Sender: TObject);
     procedure ImprimirMalaDireta(pdf: boolean);
     procedure btImpPromoClick(Sender: TObject);
+    procedure DBGrid1MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure dgPalmMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   private
     { Private declarations }
+    FProdutosOrdemCampo: string;
+    FMalaOrdemCampo: string;
+    FProdutosOrdemDesc: Boolean;
+    FMalaOrdemDesc: Boolean;
+    FOrdenandoGrid: Boolean;
     procedure CarregaDados(tipo: integer);
     //    procedure CarregaGrid;
     procedure CarregaGridProdutos;
     procedure CarregaGridMala;
     procedure AtualizaProdutoWeb;
+    procedure OrdenarGrid(ADataSet: TRxMemoryData; Column: TColumn; var ACampo: string; var ADesc: Boolean);
+    procedure OrdenarGridMouseDown(AGrid: TDBGrid; ADataSet: TRxMemoryData; X, Y: Integer; var ACampo: string; var ADesc: Boolean);
   public
     { Public declarations }
 
@@ -154,6 +163,106 @@ uses UnFun, Un_dao, Un_localizar,  UnPri, Un_dm, Un_splash,
   un_aviso_representantes;
 
 {$R *.dfm}
+
+procedure TFmMalaDireta.OrdenarGrid(ADataSet: TRxMemoryData; Column: TColumn; var ACampo: string; var ADesc: Boolean);
+var
+  Temp: TClientDataSet;
+  I: Integer;
+begin
+  if (Column = nil) or (Column.Field = nil) or (Column.Field.FieldName = '') then
+    Exit;
+  if (ADataSet = nil) or (not ADataSet.Active) or ADataSet.IsEmpty then
+    Exit;
+
+  if SameText(ACampo, Column.Field.FieldName) then
+    ADesc := not ADesc
+  else
+  begin
+    ACampo := Column.Field.FieldName;
+    ADesc := False;
+  end;
+
+  Temp := TClientDataSet.Create(nil);
+  ADataSet.DisableControls;
+  try
+    for I := 0 to ADataSet.FieldCount - 1 do
+      Temp.FieldDefs.Add(ADataSet.Fields[I].FieldName, ADataSet.Fields[I].DataType, ADataSet.Fields[I].Size, ADataSet.Fields[I].Required);
+    Temp.CreateDataSet;
+
+    ADataSet.First;
+    while not ADataSet.Eof do
+    begin
+      Temp.Append;
+      for I := 0 to ADataSet.FieldCount - 1 do
+        Temp.Fields[I].Value := ADataSet.Fields[I].Value;
+      Temp.Post;
+      ADataSet.Next;
+    end;
+
+    if ADesc then
+    begin
+      Temp.AddIndex('idx_ordem', ACampo, [ixDescending]);
+      Temp.IndexName := 'idx_ordem';
+    end
+    else
+      Temp.IndexFieldNames := ACampo;
+
+    ADataSet.Close;
+    ADataSet.EmptyTable;
+    ADataSet.Open;
+
+    Temp.First;
+    while not Temp.Eof do
+    begin
+      ADataSet.Append;
+      for I := 0 to ADataSet.FieldCount - 1 do
+        ADataSet.Fields[I].Value := Temp.FieldByName(ADataSet.Fields[I].FieldName).Value;
+      ADataSet.Post;
+      Temp.Next;
+    end;
+
+    ADataSet.First;
+  finally
+    ADataSet.EnableControls;
+    Temp.Free;
+  end;
+end;
+
+procedure TFmMalaDireta.OrdenarGridMouseDown(AGrid: TDBGrid; ADataSet: TRxMemoryData; X, Y: Integer; var ACampo: string; var ADesc: Boolean);
+var
+  Ponto: TGridCoord;
+  Coluna: Integer;
+begin
+  if AGrid = nil then
+    Exit;
+
+  Ponto := AGrid.MouseCoord(X, Y);
+  if Ponto.Y <> 0 then
+    Exit;
+
+  Coluna := Ponto.X;
+  if dgIndicator in AGrid.Options then
+    Dec(Coluna);
+
+  if (Coluna < 0) or (Coluna >= AGrid.Columns.Count) then
+    Exit;
+
+  OrdenarGrid(ADataSet, AGrid.Columns[Coluna], ACampo, ADesc);
+  AGrid.Invalidate;
+  AGrid.Refresh;
+end;
+
+procedure TFmMalaDireta.DBGrid1MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if Button = mbLeft then
+    OrdenarGridMouseDown(DBGrid1, mmProdutos, X, Y, FProdutosOrdemCampo, FProdutosOrdemDesc);
+end;
+
+procedure TFmMalaDireta.dgPalmMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if Button = mbLeft then
+    OrdenarGridMouseDown(dgPalm, mmMala, X, Y, FMalaOrdemCampo, FMalaOrdemDesc);
+end;
 
 procedure TFmMalaDireta.CarregaDados(tipo: integer);
 var
@@ -295,6 +404,7 @@ var
   //variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   //guardar os valores antigos
@@ -326,7 +436,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -369,6 +483,7 @@ var
   //variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   //guardar os valores antigos
@@ -401,7 +516,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -447,6 +566,7 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   //guardar os valores antigos
@@ -478,7 +598,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -623,6 +747,10 @@ end;
 
 procedure TFmMalaDireta.FormShow(Sender: TObject);
 begin
+  DBGrid1.OnTitleClick := nil;
+  dgPalm.OnTitleClick := nil;
+  DBGrid1.OnMouseDown := DBGrid1MouseDown;
+  dgPalm.OnMouseDown := dgPalmMouseDown;
   dao.Geral1('select * from configuracao');
   relat_mala_direta := dao.Q1.FieldByName('mala_direta').AsString;
   CarregaDados(0);
@@ -1074,7 +1202,7 @@ begin
     ' from produto pro ' +
     ' inner join grupo g on (g.COD_GRUPO = pro.COD_GRUPO) ' +
     ' left join fornecedor f on f.cod_fornecedor = pro.fornecedor_principal ' +
-    'where pro.promocao = ''S'' ';
+    'where pro.promocao = ''S'' order by f.razao_social, g.nom_grupo, pro.cod_produto  ';
 
   with dm.q_produto_custo do
   begin

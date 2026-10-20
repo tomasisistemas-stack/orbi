@@ -13,6 +13,7 @@ object fr_etiquetas_multiplos_produtos: Tfr_etiquetas_multiplos_produtos
   KeyPreview = True
   OldCreateOrder = False
   Position = poScreenCenter
+  OnClose = FormClose
   OnCreate = FormCreate
   OnKeyPress = FormKeyPress
   PixelsPerInch = 96
@@ -156,6 +157,7 @@ object fr_etiquetas_multiplos_produtos: Tfr_etiquetas_multiplos_produtos
       Caption = 'Fechar'
       ModalResult = 2
       TabOrder = 6
+      OnClick = btFecharClick
     end
   end
   object dbItens: TDBGrid

@@ -309,6 +309,8 @@ type
     q_clientecontato: TStringField;
     q_clientecnpj: TStringField;
     q_clienteie: TStringField;
+    q_clientemedia_valor_pedido: TBCDField;
+    q_clientedta_ultima_venda: TDateField;
     q_entrada_saidas_produtoscod_produto: TIntegerField;
     q_entrada_saidas_produtosnom_produto: TStringField;
     q_entrada_saidas_produtosdata: TDateField;
@@ -1475,6 +1477,7 @@ type
     q_ranking_vendas_completoperc_desconto: TFMTBCDField;
     q_ordem_compraqtd_multipla: TBCDField;
     q_ordem_compram3: TBCDField;
+    q_ranking_vendasid: TIntegerField;
     procedure ftpSiteWorkBegin(Sender: TObject; AWorkMode: TWorkMode;
       const AWorkCountMax: Integer);
     procedure ftpSiteWork(Sender: TObject; AWorkMode: TWorkMode;

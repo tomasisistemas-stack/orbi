@@ -1,8 +1,8 @@
-Ôªøunit Un_entrada;
+unit Un_entrada;
 
 { ********
 
-  -DICA-  FAZER A DEVOLU√á√ÉO DE MERCADORIA DO CLIENTE PARA LOJA DIRETO NO MODULO DE VENDAS PARA
+  -DICA-  FAZER A DEVOLU«√O DE MERCADORIA DO CLIENTE PARA LOJA DIRETO NO MODULO DE VENDAS PARA
   FACILITAR COLOCAR A FATURA QUE O CLIENTE FICARA DEVENDO NO CONTAS A RECEBER.
 
 }
@@ -419,7 +419,7 @@ type
       tipo: string): Boolean;
     function dados_produto(cod_produto: string): Boolean;
 
-    // TRIBUTA√á√ÉO
+    // TRIBUTA«√O
     function verifica_substituicao_tributaria(numdoc, codfor: string): string;
     procedure MontaImpostosNota;
     // gera os impostos da nota e coloca no campo correto.
@@ -433,9 +433,9 @@ type
 
     procedure monta_custo_final(nr_documento, cod_fornecedor: string);
     function Grava_custo(cod_produto: string; custo_atu: string): real;
-    // grava tbm o pre√ßo de venda quando marcado para
+    // grava tbm o preÁo de venda quando marcado para
 
-    // calcula automaticamente o pre√ßo de venda.
+    // calcula automaticamente o preÁo de venda.
     procedure atualiza_preco_venda;
 
     procedure envia_romaneio_mercadoria_lojas(cod_empresa: string);
@@ -443,7 +443,7 @@ type
 
     // procedimentos apenas para o recebimento de registros da tabela de Romaneio
     procedure busca_romaneio_lanca(nr_romaneio: string);
-    // busca o romanei que est√° gravado na tabela romaneio e insere os produtos na
+    // busca o romanei que est· gravado na tabela romaneio e insere os produtos na
     // entrada
     procedure insere_reg_sgPro_romaneio(tipo: string);
     // insere o registro na Stringgrid que vem do romaneio2.
@@ -456,7 +456,7 @@ type
     function busca_produto_unitario(leitor: Boolean;
       cod_barras: string): Boolean;
 
-    // impress√µes
+    // impressıes
     procedure imp_etiqueta(cor, tamanho, cod_produto, colecao, descricao,
       cod_barras, qtd, preco, col_inicia: string);
     procedure Monta_romaneio;
@@ -482,7 +482,7 @@ uses Un_dao, UnPri, Un_localizar, UnFun, Math,
 procedure TFr_entrada.BtAltClick(Sender: TObject);
 begin
   try
-    if PrNr_documento.Text <> '' then // verifica se a entrada n√£o est√° fechada
+    if PrNr_documento.Text <> '' then // verifica se a entrada n„o est· fechada
     begin
       dao.Geral1('select ent_fechada from entrada1 where nr_documento=' +
         QuotedStr(PrNr_documento.Text) + ' and cod_fornecedor=' +
@@ -494,21 +494,21 @@ begin
 
       { if dao.Q1.FieldByName('ent_fechada').AsString = 'S' then
         begin
-        dao.msg('Est√° Entrada est√° fechada, para modifica-la' + #13 +
-        'antes voc√™ deve reabri-la"');
+        dao.msg('Est· Entrada est· fechada, para modifica-la' + #13 +
+        'antes vocÍ deve reabri-la"');
         exit;
         end; }
     end;
 
     if (PrNr_documento.Text = '') or (Prcod_fornecedor.Text = '') then
     begin
-      dao.msg('Selecione uma entrada no bot√£o Localizar!');
+      dao.msg('Selecione uma entrada no bot„o Localizar!');
       Exit;
     end;
 
     modo_insert := false;
     readonly_false('Pr');
-    // habilita bot√µes
+    // habilita botıes
     BtNov.Enabled := false;
     BtAlt.Enabled := false;
     BtGra.Enabled := true;
@@ -554,12 +554,12 @@ begin
   try
     if BtNovEm.Enabled = false then
     begin
-      dao.msg('<ATEN√á√ÉO>O BOT√ÉO NOVO DOS PRODUTOS FOI CLICADO E N√ÉO FOI LAN√áADO NENHUM ITEM'
+      dao.msg('<ATEN«√O>O BOT√O NOVO DOS PRODUTOS FOI CLICADO E N√O FOI LAN«ADO NENHUM ITEM'
         + #13 + 'CLIQUE EM CANCELAR OU LANCE A MERCADORIA!');
       Exit;
     end;
 
-    if MessageDlg('Deseja Cancelar est√° Opera√ß√£o?', mtConfirmation,
+    if MessageDlg('Deseja Cancelar est· OperaÁ„o?', mtConfirmation,
       [mbyes, mbno], 0) = mryes then
       CancelarNota
     else
@@ -582,22 +582,22 @@ begin
   produto_lst := TStringList.Create;
   quant_lst := TStringList.Create;
 
-  if PrNr_documento.Text <> '' then // verifica se a entrada n√£o est√° fechada
+  if PrNr_documento.Text <> '' then // verifica se a entrada n„o est· fechada
   begin
     dao.Geral1('select ent_fechada from entrada1 where nr_documento=' +
       QuotedStr(PrNr_documento.Text) + ' and cod_fornecedor=' +
       QuotedStr(Prcod_fornecedor.Text));
     if dao.Q1.fieldbyname('ent_fechada').AsString = 'S' then
     begin
-      dao.msg('Est√° Entrada est√° fechada, para Excluir a mesma' + #13 +
-        'antes voc√™ deve reabri-la"');
+      dao.msg('Est· Entrada est· fechada, para Excluir a mesma' + #13 +
+        'antes vocÍ deve reabri-la"');
       Exit;
     end;
   end;
 
   if PrNr_documento.Text = '' then
   begin
-    showmessage('N√£o √© possivel excluir esta Entrada por n√£o ter C√≥digo!');
+    showmessage('N„o È possivel excluir esta Entrada por n„o ter CÛdigo!');
     BtNov.SetFocus;
     Exit;
   end;
@@ -676,13 +676,13 @@ begin
   try
     if mmEntradas2.IsEmpty then
     begin
-      dao.msg('Entrada n√£o pode ser salva sem ter alguma mercadoria relacionada!');
+      dao.msg('Entrada n„o pode ser salva sem ter alguma mercadoria relacionada!');
       Exit;
     end;
 
     if BtNovEm.Enabled = false then
     begin
-      dao.msg('<ATEN√á√ÉO>O BOT√ÉO NOVO DOS PRODUTOS FOI CLICADO E N√ÉO FOI LAN√áADO NENHUM ITEM'
+      dao.msg('<ATEN«√O>O BOT√O NOVO DOS PRODUTOS FOI CLICADO E N√O FOI LAN«ADO NENHUM ITEM'
         + #13 + 'CLIQUE EM CANCELAR OU LANCE A MERCADORIA!');
       Exit;
     end;
@@ -691,7 +691,7 @@ begin
     begin
       if Prempresa_destino.Text = '' then
       begin
-        dao.msg('Para uma Transfer√™ncia de Mercadoria deve ser Informado a Loja de Destino');
+        dao.msg('Para uma TransferÍncia de Mercadoria deve ser Informado a Loja de Destino');
         PcEntrada.ActivePageIndex := 0;
         Prempresa_destino.SetFocus;
         Exit;
@@ -716,7 +716,7 @@ begin
       begin
       if Prnr_romaneio.Text = '' then
       begin
-      dao.msg('Deve ser Informado o N√∫mero do Romaneio!');
+      dao.msg('Deve ser Informado o N˙mero do Romaneio!');
       PcEntrada.ActivePageIndex := 0;
       Prnr_romaneio.SetFocus;
       exit;
@@ -725,7 +725,7 @@ begin
 
     if Prtot_itens.Value = 0 then
     begin
-      dao.msg('O campo Qtd de Itens n√£o pode ficar em vazio ou zero!');
+      dao.msg('O campo Qtd de Itens n„o pode ficar em vazio ou zero!');
       PcEntrada.ActivePageIndex := 0;
       Prtot_itens.SetFocus;
       Exit;
@@ -737,7 +737,7 @@ begin
       if (trim(PrQtd_parcelas.Text) = '0') or (trim(PrQtd_parcelas.Text) = '')
       then
       begin
-        dao.msg('O campo Qtd Parcelas n√£o pode ficar em vazio ou zero!');
+        dao.msg('O campo Qtd Parcelas n„o pode ficar em vazio ou zero!');
         PcEntrada.ActivePageIndex := 0;
         PrQtd_parcelas.SetFocus;
         Exit;
@@ -761,7 +761,7 @@ begin
     if (PrNr_documento.Text = '') or
       ((Prcod_fornecedor.Text = '') and (Prcod_cliente.Text = '')) then
     begin
-      dao.msg('O campo N¬∫ Documento ou Fornecedor ou Cliente n√£o est√£o preenchidos!');
+      dao.msg('O campo N∫ Documento ou Fornecedor ou Cliente n„o est„o preenchidos!');
       PcEntrada.ActivePageIndex := 0;
 
       if PrNr_documento.Text = '' then
@@ -889,9 +889,9 @@ begin
         begin
           dao.cn.Rollback;
           dao.msg('Houve um erro no Fechamento desta Entrada!' + #13 +
-            ' as seguintes etapas n√£o puderam ser completadas:' + #13 +
+            ' as seguintes etapas n„o puderam ser completadas:' + #13 +
             '-Gerar a(s) Parcela(s) para o Contas a Pagar.' + #13 +
-            '-Gerar os C√≥digo de Barras Personalizado.' + #13 + #13 +
+            '-Gerar os CÛdigo de Barras Personalizado.' + #13 + #13 +
             e.Message);
 {
           dao.envia_email_suporte(e.Message + #13 + 'Data: ' + dao.DtaSerStr +
@@ -981,6 +981,7 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -997,7 +998,7 @@ begin
 
   // preenchendo o combo box com os campos desejados para pesquisar.
   SetLength(Campos_combo, 4);
-  Campos_combo[0] := 'N¬∫ Documento';
+  Campos_combo[0] := 'N∫ Documento';
   Campos_combo[1] := 'Fornecedor';
   Campos_combo[2] := 'CNPJ';
   Campos_combo[3] := 'Codigo Fiscal';
@@ -1021,7 +1022,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -1057,15 +1062,15 @@ begin
     readonly_false('Pr');
     limpa_campos('Pr');
     lbqtdpecas.Caption := '...';
-    if PrNr_documento.Text <> '' then // verifica se a entrada n√£o est√° fechada
+    if PrNr_documento.Text <> '' then // verifica se a entrada n„o est· fechada
     begin
       dao.Geral1('select ent_fechada from entrada1 where nr_documento=' +
         QuotedStr(PrNr_documento.Text) + ' and cod_fornecedor=' +
         QuotedStr(Prcod_fornecedor.Text));
       if dao.Q1.fieldbyname('ent_fechado').AsString = 'S' then
       begin
-        dao.msg('Est√° Entrada est√° fechada, para modifica-la' + #13 +
-          'antes voc√™ deve reabri-la"');
+        dao.msg('Est· Entrada est· fechada, para modifica-la' + #13 +
+          'antes vocÍ deve reabri-la"');
         Exit;
       end;
     end;
@@ -1075,7 +1080,7 @@ begin
     modo_insert := true;
     PcEntrada.ActivePageIndex := 0;
     PrNr_documento.SetFocus;
-    // habilita bot√µes
+    // habilita botıes
     BtNov.Enabled := false;
     BtAlt.Enabled := false;
     BtGra.Enabled := true;
@@ -1101,7 +1106,7 @@ begin
 
 {      dao.envia_email_suporte(e.Message + #13 + 'Data: ' + dao.DtaSerStr + #13 +
         'Usuario Logado:' + nom_usuario,
-        'Erro ao clicarno bot√£o Novo do entrada1 ', 'claudioplasfan@gmail.com',
+        'Erro ao clicarno bot„o Novo do entrada1 ', 'claudioplasfan@gmail.com',
         '', '', '');
  }
     end;
@@ -1124,7 +1129,7 @@ begin
     }
     if (BtNov.Enabled = true) or (BtAlt.Enabled = true) then
     begin
-      dao.msg('O Bot√£o Novo ou Alterar Geral deve ser pressionado!');
+      dao.msg('O Bot„o Novo ou Alterar Geral deve ser pressionado!');
       PcEntrada.ActivePageIndex := 0;
       BtAlt.SetFocus;
       Exit;
@@ -1132,7 +1137,7 @@ begin
 
     if (PrNr_documento.Text = '') or (Prcod_fornecedor.Text = '') then
     begin
-      dao.msg('O campo N¬∫ Documento ou Fornecedor n√£o est√£o preenchidos!');
+      dao.msg('O campo N∫ Documento ou Fornecedor n„o est„o preenchidos!');
       PcEntrada.ActivePageIndex := 0;
       if PrNr_documento.Text = '' then
         PrNr_documento.SetFocus
@@ -1166,7 +1171,7 @@ begin
     Emcod_produto.Enabled := BtgraEm.Enabled;
 
     Emcod_produto.SetFocus;
-    // habilita bot√µes
+    // habilita botıes
     BtNovEm.Enabled := false;
     BtAltEm.Enabled := false;
     BtcanEm.Enabled := true;
@@ -1184,7 +1189,7 @@ begin
   try
     if (BtNov.Enabled = true) or (BtAlt.Enabled = true) then
     begin
-      dao.msg('O Bot√£o Novo ou Alterar Geral deve ser precionado!');
+      dao.msg('O Bot„o Novo ou Alterar Geral deve ser precionado!');
       PcEntrada.ActivePageIndex := 0;
       BtAlt.SetFocus;
       Exit;
@@ -1205,7 +1210,7 @@ begin
     BtgraEm.Enabled := true;
     Emcod_produto.Enabled := BtgraEm.Enabled;
     Emcod_produto.SetFocus;
-    // habilita bot√µes
+    // habilita botıes
     BtNovEm.Enabled := false;
     BtAltEm.Enabled := false;
 
@@ -1237,8 +1242,8 @@ begin
         QuotedStr(Emid_Tamanho.Text));
       if dao.Q1.RecordCount < 1 then
       begin
-        dao.msg('N√£o foi encontrado esse Atributo neste Produto' + #13 +
-          'N√£o √© Possivel Lan√ßar esse Produto No Romaneio!');
+        dao.msg('N„o foi encontrado esse Atributo neste Produto' + #13 +
+          'N„o È Possivel LanÁar esse Produto No Romaneio!');
         Exit;
       end;
     end;
@@ -1341,7 +1346,7 @@ end;
 procedure TFr_entrada.BtcanEmClick(Sender: TObject);
 begin
   try
-    if MessageDlg('Deseja Cancelar est√° Opera√ß√£o?', mtConfirmation,
+    if MessageDlg('Deseja Cancelar est· OperaÁ„o?', mtConfirmation,
       [mbyes, mbno], 0) = mryes then
       CancelarItem
     else
@@ -1359,7 +1364,7 @@ begin
   try
     if (BtNov.Enabled = true) or (BtAlt.Enabled = true) then
     begin
-      dao.msg('O Bot√£o Novo ou Alterar Geral deve ser precionado!');
+      dao.msg('O Bot„o Novo ou Alterar Geral deve ser precionado!');
       PcEntrada.ActivePageIndex := 0;
       BtAlt.SetFocus;
       Exit;
@@ -1378,7 +1383,7 @@ begin
         + ' da entrada: ' + PrNr_documento.Text + '   - Fornecedor : ' +
         LbNom_fornecedor.Caption + #13 + e.Message + #13 + 'Data: ' +
         dao.DtaSerStr + #13 + 'Usuario Logado:' + nom_usuario,
-        'Erro ao inserir Registro m√≥dulo Dao', 'claudioplasfan@gmail.com',
+        'Erro ao inserir Registro mÛdulo Dao', 'claudioplasfan@gmail.com',
         '', '', '');}
     end;
   end;
@@ -1635,6 +1640,7 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -1652,7 +1658,7 @@ begin
   // preenchendo o combo box com os campos desejados para pesquisar.
   SetLength(Campos_combo, 5);
   Campos_combo[0] := 'Codigo';
-  Campos_combo[1] := 'Raz√£o Social';
+  Campos_combo[1] := 'Raz„o Social';
   Campos_combo[2] := 'Fantasia';
   Campos_combo[3] := 'CNPJ';
   Campos_combo[4] := 'Cidade';
@@ -1667,7 +1673,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -1683,6 +1693,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -1713,7 +1724,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -1729,18 +1744,19 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
   chamou_form_old := chamou_form;
   chamou_pesquisa_old := chamou_pesquisa;
 
-  Fr_localizar.Caption := 'Localizar C√≥digo Fiscal';
+  Fr_localizar.Caption := 'Localizar CÛdigo Fiscal';
   chamou_pesquisa := 'fr_cod_fiscal';
   chamou_form := 'fr_entrada_cod_fiscal';
   chamou_cadastro := 'Fr_cod_fiscal';
 
-  Fr_localizar.BT_cadastro.Caption := 'Cadastro de' + #13 + 'C√≥digos Fiscais';
+  Fr_localizar.BT_cadastro.Caption := 'Cadastro de' + #13 + 'CÛdigos Fiscais';
   Fr_localizar.BT_cadastro.Visible := false;
 
   // preenchendo o combo box com os campos desejados para pesquisar.
@@ -1758,7 +1774,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -1774,6 +1794,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -1821,7 +1842,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -1930,7 +1955,7 @@ begin
   begin
     Prcod_fiscal.Text := '5152';
     Lbnom_cod_fiscal.Caption :=
-      'Transfer√™ncia de Mercadoria de Matriz para Filial';
+      'TransferÍncia de Mercadoria de Matriz para Filial';
     Prempresa_destino.Enabled := true;
     Gbcp1.Enabled := false;
     // pega o icms e coloca na variavel para usar no produto
@@ -1967,7 +1992,7 @@ begin
     end
     else
     begin
-      dao.msg('Registro n√£o Encontrado ou Inativo!');
+      dao.msg('Registro n„o Encontrado ou Inativo!');
       Prcod_fornecedor.Text := '';
       Prcod_fornecedor.SetFocus;
       Exit;
@@ -1997,7 +2022,7 @@ begin
     end
     else
     begin
-    dao.msg('Registro n√£o Encontrado!');
+    dao.msg('Registro n„o Encontrado!');
     Prcod_fiscal.Text:= '';
     Prcod_fiscal.SetFocus;
     Exit;
@@ -2023,7 +2048,7 @@ begin
     end
     else
     begin
-      dao.msg('Registro n√£o Encontrado!');
+      dao.msg('Registro n„o Encontrado!');
       Prcod_fop.Text := '';
       Prcod_fop.SetFocus;
       Exit;
@@ -2106,7 +2131,7 @@ begin
       Lbembalagem.Caption:='KG\ '+Q_produto.fieldbyname('qtd_embalagem').AsString;
 
       if Q_produto.FieldByName('cod_colecao').AsString <> '' then
-      Lbcolecao.Caption:='COLE√á√ÉO - ' + Q_produto.fieldbyname('descricao').AsString;
+      Lbcolecao.Caption:='COLE«√O - ' + Q_produto.fieldbyname('descricao').AsString;
 
       Emcod_colecao.Text:= Q_produto.FieldByName('cod_colecao').AsString; }
     if Q_produto.fieldbyname('nom_produto').AsString <> '' then
@@ -2222,6 +2247,7 @@ begin
   begin
     if (Prcod_fornecedor.Text = '') and (BtNov.Enabled = false) then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -2239,7 +2265,7 @@ begin
       // preenchendo o combo box com os campos desejados para pesquisar.
       SetLength(Campos_combo, 5);
       Campos_combo[0] := 'Codigo';
-      Campos_combo[1] := 'Raz√£o Social';
+      Campos_combo[1] := 'Raz„o Social';
       Campos_combo[2] := 'Fantasia';
       Campos_combo[3] := 'CNPJ';
       Campos_combo[4] := 'Cidade';
@@ -2263,7 +2289,11 @@ begin
     // SelectNext(sender as TWinControl, true, true);
     Key := #0;
   end;
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 end;
 
@@ -2363,8 +2393,8 @@ begin
     QuotedStr(nr_documento) + fornecedor_cliente);
   if dao.Q1.RecordCount > 0 then
   begin
-    dao.msg('Este numero de entrada j√° existe verifique ' + #13 +
-      'no sistema se j√° foi dado entrada nesta nota!');
+    dao.msg('Este numero de entrada j· existe verifique ' + #13 +
+      'no sistema se j· foi dado entrada nesta nota!');
     limpa_campos('Pr');
     readonly_true('Pr');
 
@@ -2389,7 +2419,7 @@ begin
 
   if PrNr_documento.Text <> '' then
   begin
-    showmessage('Primeiro Apague o Conteudo do Campo N¬∫ Documento!');
+    showmessage('Primeiro Apague o Conteudo do Campo N∫ Documento!');
     PrNr_documento.SetFocus;
     Exit;
   end;
@@ -2576,6 +2606,7 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -2605,7 +2636,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -2632,7 +2667,7 @@ procedure TFr_entrada.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   if BtNov.Enabled = false then
   begin
-    showmessage('<ATEN√á√ÉO>ALGUM BOT√ÉO GRAVAR/CANCELAR EST√Å PENDENTE!<ATEN√á√ÉO>');
+    showmessage('<ATEN«√O>ALGUM BOT√O GRAVAR/CANCELAR EST¡ PENDENTE!<ATEN«√O>');
     CanClose := false;
   end
   else
@@ -2713,6 +2748,7 @@ begin
     end;
     if (Emcod_produto.Text = '') and (BtNovEm.Enabled = false) then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -2747,7 +2783,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -2791,6 +2831,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -2820,7 +2861,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -2849,6 +2894,7 @@ begin
   begin
     if (Emid_cor.Text = '') and (BtNov.Enabled = false) then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
       // guardar os valores antigos
       chamou_form_old := chamou_form;
@@ -2877,7 +2923,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -2890,7 +2940,7 @@ begin
         LbCor.Caption := dao.q2.fieldbyname('cor').AsString
       else
       begin
-        dao.msg('Registro n√£o Encontrado');
+        dao.msg('Registro n„o Encontrado');
         Emid_cor.Text := '';
         Emid_cor.SetFocus;
         Exit;
@@ -2925,6 +2975,7 @@ begin
   begin
     if (Emid_Tamanho.Text = '') and (BtNov.Enabled = false) then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
       // guardar os valores antigos
       chamou_form_old := chamou_form;
@@ -2953,7 +3004,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -2967,7 +3022,7 @@ begin
         Lbtamanho.Caption := dao.q2.fieldbyname('tamanho').AsString
       else
       begin
-        dao.msg('Registro n√£o Encontrado');
+        dao.msg('Registro n„o Encontrado');
         Emid_Tamanho.Text := '';
         Emid_Tamanho.SetFocus;
         Exit;
@@ -2991,6 +3046,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
   // guardar os valores antigos
   chamou_form_old := chamou_form;
@@ -3019,7 +3075,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;;
 
   chamou_form := chamou_form_old;
@@ -3046,19 +3106,20 @@ begin
   begin
     if (Prcod_fiscal.Text = '') and (BtNov.Enabled = false) then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
       chamou_form_old := chamou_form;
       chamou_pesquisa_old := chamou_pesquisa;
 
-      Fr_localizar.Caption := 'Localizar C√≥digo Fiscal';
+      Fr_localizar.Caption := 'Localizar CÛdigo Fiscal';
       chamou_pesquisa := 'fr_cod_fiscal';
       chamou_form := 'fr_entrada_cod_fiscal';
       chamou_cadastro := 'Fr_cod_fiscal';
 
       Fr_localizar.BT_cadastro.Caption := 'Cadastro de' + #13 +
-        'C√≥digos Fiscais';
+        'CÛdigos Fiscais';
       Fr_localizar.BT_cadastro.Visible := false;
 
       // preenchendo o combo box com os campos desejados para pesquisar.
@@ -3076,7 +3137,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -3108,6 +3173,7 @@ begin
   begin
     if (Prcod_transportadora.Text = '') and (BtNov.Enabled = false) then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -3138,7 +3204,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -3173,6 +3243,7 @@ begin
   begin
     if (Prcod_fop.Text = '') and (BtNov.Enabled = false) then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -3203,7 +3274,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -3233,7 +3308,7 @@ begin
       if dao.Q1.RecordCount < 1 then
       begin
         Result := false;
-        dao.msg('Produto n√£o encontrado!');
+        dao.msg('Produto n„o encontrado!');
         Emcod_produto.Text := '';
         Emcod_produto.SetFocus;
         Exit;
@@ -3369,7 +3444,7 @@ begin
       if dao.Q1.RecordCount < 1 then
       begin
         Result := false;
-        dao.msg('Produto n√£o encontrado!');
+        dao.msg('Produto n„o encontrado!');
         Emcod_produto.Text := '';
         Emcod_produto.SetFocus;
         Exit;
@@ -3405,7 +3480,7 @@ begin
     if dao.Q1.RecordCount < 1 then
     begin
       Result := false;
-      dao.msg('Produto n√£o encontrado!');
+      dao.msg('Produto n„o encontrado!');
       Emcod_produto.Text := '';
       Emcod_produto.SetFocus;
       Exit;
@@ -3424,7 +3499,7 @@ begin
   if BtNov.Enabled = false then
   begin
     Prcod_fiscal.Text := '5202';
-    Lbnom_cod_fiscal.Caption := 'Devolu√ß√£o de Mercadoria Estadual';
+    Lbnom_cod_fiscal.Caption := 'DevoluÁ„o de Mercadoria Estadual';
     Prempresa_destino.Enabled := false;
     Gbcp1.Enabled := false;
     ////Xb_produto.Collapsed := true;
@@ -3436,7 +3511,7 @@ begin
   if BtNov.Enabled = false then
   begin
     Prcod_fiscal.Text := '6202';
-    Lbnom_cod_fiscal.Caption := 'Devolu√ß√£o de Mercadoria Inter-Estadual';
+    Lbnom_cod_fiscal.Caption := 'DevoluÁ„o de Mercadoria Inter-Estadual';
     Prempresa_destino.Enabled := false;
     Gbcp1.Enabled := false;
     ////Xb_produto.Collapsed := true;
@@ -3475,7 +3550,7 @@ begin
   begin
     Prcod_fiscal.Text := '5914';
     Lbnom_cod_fiscal.Caption :=
-      'Remessa de Merc. ou Bem para Exposi√ß√£o ou Feira Estadual';
+      'Remessa de Merc. ou Bem para ExposiÁ„o ou Feira Estadual';
     Prempresa_destino.Enabled := false;
     Gbcp1.Enabled := false;
     ////Xb_produto.Collapsed := true;
@@ -3489,7 +3564,7 @@ begin
   begin
     Prcod_fiscal.Text := '6914';
     Lbnom_cod_fiscal.Caption :=
-      'Remessa de Merc. ou Bem para Exposi√ß√£o ou Feira Inter-al';
+      'Remessa de Merc. ou Bem para ExposiÁ„o ou Feira Inter-al';
     Prempresa_destino.Enabled := false;
     Gbcp1.Enabled := false;
     ////Xb_produto.Collapsed := true;
@@ -3503,7 +3578,7 @@ begin
   begin
     Prcod_fiscal.Text := '1914';
     Lbnom_cod_fiscal.Caption :=
-      'Retorno de Merc. ou Bem Remetido para Exposi√ß√£o ou Feira Estadual';
+      'Retorno de Merc. ou Bem Remetido para ExposiÁ„o ou Feira Estadual';
     Prempresa_destino.Enabled := false;
     Gbcp1.Enabled := false;
     ////Xb_produto.Collapsed := true;
@@ -3516,7 +3591,7 @@ begin
   begin
     Prcod_fiscal.Text := '2914';
     Lbnom_cod_fiscal.Caption :=
-      'Retorno de Merc. ou Bem Remetido para Exposi√ß√£o ou Feira Inter-Estadual';
+      'Retorno de Merc. ou Bem Remetido para ExposiÁ„o ou Feira Inter-Estadual';
     Prempresa_destino.Enabled := false;
     Gbcp1.Enabled := false;
     ////Xb_produto.Collapsed := true;
@@ -3526,7 +3601,7 @@ end;
 
 procedure TFr_entrada.Gera_cod_barras;
 begin
-  // CRIA√á√ÉO DOS COD. BARRAS
+  // CRIA«√O DOS COD. BARRAS
   codbarras := Fmfun.enchezero(q_entrada2.fieldbyname('cod_produto').AsString,
     5) + Fmfun.enchezero(q_entrada2.fieldbyname('id_cor').AsString, 3) +
     Fmfun.enchezero(q_entrada2.fieldbyname('id_tamanho').AsString, 3) +
@@ -3578,7 +3653,7 @@ begin
 
     { if dao.Q1.FieldByName('ent_fechada').AsString = 'S' then
       begin
-      dao.msg('Est√° Entrada j√° est√° Fechada!');
+      dao.msg('Est· Entrada j· est· Fechada!');
       exit;
       end; }
     { if not importar_xml then
@@ -3825,7 +3900,7 @@ begin
   begin
     Prcod_fiscal.Text := '5152';
     Lbnom_cod_fiscal.Caption :=
-      'Transfer√™ncia de Mercadoria de Matriz para Filial';
+      'TransferÍncia de Mercadoria de Matriz para Filial';
     Prempresa_destino.Enabled := true;
     Gbcp1.Enabled := false;
     //Xb_produto.Collapsed := true;
@@ -3840,7 +3915,7 @@ begin
   begin
     Prcod_fiscal.Text := '5152';
     Lbnom_cod_fiscal.Caption :=
-      'Transfer√™ncia de Mercadoria de Filial para Matriz';
+      'TransferÍncia de Mercadoria de Filial para Matriz';
     Prempresa_destino.Enabled := true;
     Gbcp1.Enabled := false;
     //Xb_produto.Collapsed := true;
@@ -3889,6 +3964,7 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -3917,7 +3993,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -3944,6 +4024,7 @@ begin
   begin
     if (Prempresa_destino.Text = '') and (BtNov.Enabled = false) then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -3972,7 +4053,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -4068,7 +4153,7 @@ begin
       Excel.WorkBooks[1].sheets[1].cells[Linha, 1] := 'Cor';
       Excel.WorkBooks[1].sheets[1].cells[Linha, 3] := 'Tamanho';
       Excel.WorkBooks[1].sheets[1].cells[Linha, 5] := 'Qtd';
-      Excel.WorkBooks[1].sheets[1].cells[Linha, 6] := 'Pre√ßo';
+      Excel.WorkBooks[1].sheets[1].cells[Linha, 6] := 'PreÁo';
       Excel.WorkBooks[1].sheets[1].cells[Linha, 7] := 'Total';
       Linha := Linha + 1;
     end;
@@ -4091,7 +4176,7 @@ begin
     dao.Q1.next;
   end;
   Linha := Linha + 1;
-  Excel.WorkBooks[1].sheets[1].cells[Linha, 1] := 'Qtd Total de Pe√ßas:';
+  Excel.WorkBooks[1].sheets[1].cells[Linha, 1] := 'Qtd Total de PeÁas:';
   Excel.WorkBooks[1].sheets[1].cells[Linha, 3] := ac_qtd;
 
   Excel.WorkBooks[1].sheets[1].cells[Linha, 5] := 'Valor Total:';
@@ -4113,7 +4198,7 @@ begin
     //mz if PrintDialog1.Execute then
     //mz begin
     //mz    MSWord.ActiveDocument.PrintOut(Copies := PrintDialog1.Copies);
-    //mz    MessageDlg('Aguarde o t√©rmino da impress√£o ...', mtInformation, [mbOk], 0);
+    //mz    MessageDlg('Aguarde o tÈrmino da impress„o ...', mtInformation, [mbOk], 0);
     //mz end;
 
     Excel.Workooks[1].Close(0);
@@ -4193,7 +4278,7 @@ begin
     on e: Exception do
     begin
       dao.cn.Rollback;
-      dao.msg('Houve um erro ao tentar Reabrir Est√° Nota !' + #13 + #13 +
+      dao.msg('Houve um erro ao tentar Reabrir Est· Nota !' + #13 + #13 +
         e.Message);
     end;
   end;
@@ -4204,7 +4289,7 @@ begin
 
   if PrNr_documento.Text = '' then
   begin
-    dao.msg('Voc√™ Deve Selecionar uma Nota para Reabrir!');
+    dao.msg('VocÍ Deve Selecionar uma Nota para Reabrir!');
     Exit;
   end;
 
@@ -4216,7 +4301,7 @@ begin
     if dao.Q1.RecordCount >= 1 then
       if dao.Q1.fieldbyname('rom_enviado').AsString = 'S' then
       begin
-        dao.msg('Este Romaneio n√£o pode mais ser Reaberto porque j√° foi enviado para a loja de destino'
+        dao.msg('Este Romaneio n„o pode mais ser Reaberto porque j· foi enviado para a loja de destino'
           + #13 + 'Crie um novo romaneio para o destino!');
         Exit;
       end;
@@ -4227,7 +4312,7 @@ begin
     QuotedStr(Prcod_fornecedor.Text));
   if dao.Q1.fieldbyname('ent_fechada').AsString = 'N' then
   begin
-    dao.msg('A Nota n√£o est√° Fechada!');
+    dao.msg('A Nota n„o est· Fechada!');
     Exit;
   end;
 
@@ -4256,12 +4341,12 @@ begin
     dao.update('cp1', 'id', Cpid.Text, 'Cp', Fr_entrada);
     dao.cn.Commit;
     ativa_cp1(PrNr_documento.Text, Prcod_fornecedor.Text);
-    dao.msg('Altera√ß√µes Gravadas com Sucesso!');
+    dao.msg('AlteraÁıes Gravadas com Sucesso!');
   except
     on e: Exception do
     begin
       dao.cn.Rollback;
-      dao.msg('Houve um erro ao gravar Altera√ß√µes no grid do Contas a Pagar!' +
+      dao.msg('Houve um erro ao gravar AlteraÁıes no grid do Contas a Pagar!' +
         #13 + e.Message);
 {      dao.envia_email_suporte(e.Message + #13 + 'Data: ' + dao.DtaSerStr + #13 +
         'Usuario Logado:' + nom_usuario,
@@ -4463,7 +4548,7 @@ begin
     dao.Q1.next;
   end;
   Linha := Linha + 1;
-  Excel.WorkBooks[1].sheets[1].cells[Linha, 1] := 'Qtd Total de Pe√ßas:';
+  Excel.WorkBooks[1].sheets[1].cells[Linha, 1] := 'Qtd Total de PeÁas:';
   Excel.WorkBooks[1].sheets[1].cells[Linha, 3] := ac_qtd;
 
   Excel.WorkBooks[1].sheets[1].cells[Linha, 5] := 'Total Custo :';
@@ -4485,7 +4570,7 @@ begin
     //mz if PrintDialog1.Execute then
     //mz begin
     //mz    MSWord.ActiveDocument.PrintOut(Copies := PrintDialog1.Copies);
-    //mz    MessageDlg('Aguarde o t√©rmino da impress√£o ...', mtInformation, [mbOk], 0);
+    //mz    MessageDlg('Aguarde o tÈrmino da impress„o ...', mtInformation, [mbOk], 0);
     //mz end;
 
     Excel.Workooks[1].Close(0);
@@ -4529,7 +4614,7 @@ begin
   begin
     Prcod_fiscal.Text := '5152';
     Lbnom_cod_fiscal.Caption :=
-      'Transfer√™ncia de Mercadoria de FILIAL para FILIAL';
+      'TransferÍncia de Mercadoria de FILIAL para FILIAL';
     Prempresa_destino.Enabled := true;
     Gbcp1.Enabled := false;
     //Xb_produto.Collapsed := true;
@@ -4710,8 +4795,8 @@ begin
       dao.cn_net.Rollback;
       dao.cn.Rollback;
 
-      dao.msg('N√£o foi possivel enviar o Romaneio para a Loja de destino' + #13
-        + 'N¬∫ documento=' + PrNr_documento.Text + #13 + e.Message);
+      dao.msg('N„o foi possivel enviar o Romaneio para a Loja de destino' + #13
+        + 'N∫ documento=' + PrNr_documento.Text + #13 + e.Message);
 
 {      dao.envia_email_suporte(e.Message + #13 + 'Data: ' + dao.DtaSerStr + #13 +
         'Usuario Logado:' + nom_usuario, 'Erro ao Enviar Romaneio ',
@@ -4802,9 +4887,9 @@ begin
   end
   else
   begin
-    showmessage('N√£o foi Possivel buscar esse Romaneio, possiveis causas!' + #13
-      + 'O Romaneio n√£o foi transferido de sua Origem' + #13 +
-      'O Romaneio j√° foi Recebido no destino!');
+    showmessage('N„o foi Possivel buscar esse Romaneio, possiveis causas!' + #13
+      + 'O Romaneio n„o foi transferido de sua Origem' + #13 +
+      'O Romaneio j· foi Recebido no destino!');
 
   end;
 
@@ -4853,6 +4938,7 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -4881,7 +4967,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -4908,6 +4998,7 @@ begin
   begin
     if (Prempresa.Text = '') and (BtNov.Enabled = false) then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -4936,7 +5027,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -4965,7 +5060,7 @@ begin
     end
     else
     begin
-      dao.msg('Registro n√£o Encontrado!');
+      dao.msg('Registro n„o Encontrado!');
       Prempresa.Text := '';
       Prempresa.SetFocus;
       Exit;
@@ -4990,7 +5085,7 @@ begin
     end
     else
     begin
-      dao.msg('Registro n√£o Encontrado!');
+      dao.msg('Registro n„o Encontrado!');
       Prempresa_destino.Text := '';
       Prempresa_destino.SetFocus;
       Exit;
@@ -5014,7 +5109,7 @@ begin
     end
     else
     begin
-      dao.msg('Registro n√£o Encontrado!');
+      dao.msg('Registro n„o Encontrado!');
       Prcod_transportadora.Text := '';
       Prcod_transportadora.SetFocus;
       Exit;
@@ -5035,7 +5130,7 @@ begin
     end
     else
     begin
-      dao.msg('Registro n√£o Encontrado!');
+      dao.msg('Registro n„o Encontrado!');
       Emid_cor.Text := '';
       Emid_cor.SetFocus;
       Exit;
@@ -5057,7 +5152,7 @@ begin
     end
     else
     begin
-      dao.msg('Registro n√£o Encontrado!');
+      dao.msg('Registro n„o Encontrado!');
       Emid_Tamanho.Text := '';
       Emid_Tamanho.SetFocus;
       Exit;
@@ -5081,7 +5176,7 @@ var
   ver_nota: TFDQuery;
   base_calculo_icm, vlr_icm, vlr_ipi, valor_agregado: real;
   base_calculo_ST, vlr_icm_ST, vlr_ipi_ST: real;
-  modelo_empresa: string; // marca o tipo de empresa se √© super simples ou epp
+  modelo_empresa: string; // marca o tipo de empresa se È super simples ou epp
 begin
   dao.Geral1
     ('select a.NR_DOCUMENTO, a.COD_FORNECEDOR, a.DTA_DOCUMENTO, a.COD_FISCAL, a.VL_FRETE, a.VL_OUTROS, a.BASE_ICMS, '
@@ -5111,7 +5206,7 @@ begin
   // 'left join produto p on p.cod_produto= e2.cod_produto '+
   // 'where e2.nr_documento='+QuotedStr(nr_documento)+' and e2.cod_fornecedor='+QuotedStr(cod_fornecedor));
 
-  // VERIFICAR SE O NUMERO DA NOTA J[A N√ÅO FOI USADO
+  // VERIFICAR SE O NUMERO DA NOTA J[A N¡O FOI USADO
 
   modelo_empresa := dao.Q1.fieldbyname('tipo_empresa').AsString;
   uf := dao.Q1.fieldbyname('uf').AsString;
@@ -5166,7 +5261,7 @@ begin
     MQTDNOT := int(numero);
   MCTNOT := 1;
 
-  // ***** IMPRESS√ÉO DA NOTA  ********
+  // ***** IMPRESS√O DA NOTA  ********
 
   RD.Abrir;
 
@@ -5204,7 +5299,7 @@ begin
     vlr_ipi := vlr_ipi + dao.q2.fieldbyname('ipi').AsFloat;
     vlr_icm := vlr_icm + (dao.q2.fieldbyname('subtotal').AsFloat * (icm / 100));
 
-    if dao.q2.fieldbyname('trib_icms').AsString = '8' then // SUBSTITUI√á√ÉO TRIB
+    if dao.q2.fieldbyname('trib_icms').AsString = '8' then // SUBSTITUI«√O TRIB
     begin
       base_calculo_ST := base_calculo_ST + dao.q2.fieldbyname
         ('subtotal').AsFloat;
@@ -5219,24 +5314,24 @@ begin
   end;
   // if (MCTNOT=2) and (i=1) then continue;
 
-  // BASE C√ÅLCULO ICMS
+  // BASE C¡LCULO ICMS
   if modelo_empresa <> '0' then
     RD.impD(39, 30, FormatFloat('###,##0.00', base_calculo_icm), [comp17]);
   // VLR DO ICMS
   if modelo_empresa <> '0' then
     RD.impD(39, 50, FormatFloat('###,##0.00', vlr_icm), [comp17]);
 
-  // **********************C√ÅLCULO DO IMPOSTO ***********************
+  // **********************C¡LCULO DO IMPOSTO ***********************
   if (verifica_substituicao_tributaria(nr_documento, cod_fornecedor) = '2') or
     (verifica_substituicao_tributaria(nr_documento, cod_fornecedor) = '3') then
   begin
 
-    // BASE C√ÅLCULO SUBSTITUI√á√ÉO TRIBUTARIA
+    // BASE C¡LCULO SUBSTITUI«√O TRIBUTARIA
     base_calculo_ST := base_calculo_ST + (base_calculo_ST * (44 / 100));
     // base_calculo_ST:= base_calculo_ST + vlr_icm_ST;
     RD.impD(39, 74, FormatFloat('###,##0.00', base_calculo_ST), [comp17]);
 
-    // VALOR ICMS SUBSTITUI√á√ÉO TRIBUTARIA
+    // VALOR ICMS SUBSTITUI«√O TRIBUTARIA
     RD.impD(39, 101, FormatFloat('###,##0.00',
       (base_calculo_ST * (dao.q2.fieldbyname('icms').AsFloat / 100)) -
       vlr_icm_ST), [comp17]);
@@ -5256,7 +5351,7 @@ begin
     / 100)) - vlr_icm_ST)), [comp17]);
 
   // ****************TRANSPORTADORA*******************************
-  // NOME /RAZ√ÉO SOCIAL
+  // NOME /RAZ√O SOCIAL
   RD.ImpF(43, 10, dao.Q1.fieldbyname('nom_transportadora').AsString, [comp17]);
 
   // frete por conta
@@ -5271,19 +5366,19 @@ begin
   // cnpj transportadora
   RD.ImpF(43, 116, dao.Q1.fieldbyname('cnpjtra').AsString, [comp17]);
 
-  // endere√ßo
+  // endereÁo
   RD.ImpF(45, 10, dao.Q1.fieldbyname('endtra').AsString, [comp17]);
 
   // MUNICIPIO
   // RDIMPNOT.impf(46,72,DMREL.QUTRANE1NOMCID.AsString,[comp17]);
 
-  // INSCRI√á√ÉO ESTADUAL
+  // INSCRI«√O ESTADUAL
   RD.ImpF(45, 116, dao.Q1.fieldbyname('ietra').AsString, [comp17]);
 
   // VOLUME DO PEDIDO
   RD.ImpF(47, 26, dao.Q1.fieldbyname('volume').AsString, [comp17]);
 
-  // ESP√âCIE
+  // ESP…CIE
   RD.ImpF(47, 31, 'VOLUMES', [comp17]);
 
   // MARCA
@@ -5295,10 +5390,10 @@ begin
   // PESO LIQUIDO
   // RD.impVAL(48,114,'###,##0.00',dao.Q1.fieldbyname('PESPED').AsFloat,[comp17]);
 
-  // ********INFORMA√á√ïES ADICIONAIS*************************
+  // ********INFORMA«’ES ADICIONAIS*************************
   RD.ImpF(50, 10, 'Documento emitido por EPP optante pelo Simples Nacional e',
     [comp17]);
-  RD.ImpF(51, 10, 'n√£o gera direito a cr√©dito fiscal de ICMS.', [comp17]);
+  RD.ImpF(51, 10, 'n„o gera direito a crÈdito fiscal de ICMS.', [comp17]);
 
   // mudei por ultimo     if (verifica_substituicao_tributaria(nr_documento, cod_fornecedor)= '1') then
   // 20/10/2009     RD.impf(54,10,'Base de Calculo='+ FormatFloat('###,##0.00', dao.Q1.fieldbyname('base_icms').AsFloat)+' - Vlr ICMS= '+formatfloat('###,##0.00', dao.Q1.fieldbyname('vl_total').AsFloat*(icm/100)),[comp17]);
@@ -5313,7 +5408,7 @@ begin
   // RDIMPNOT.impf(51,15,'EMPRESA OPTANTE PELO SIMPLES CF. REGIME ANEXO IV DO RICMS/SC',[comp17]);
 
   RD.Fechar;
-  // ****** acabou a impress√£o da nota *******
+  // ****** acabou a impress„o da nota *******
   try
     if not(dao.cn.InTransaction) then
       dao.cn.StartTransaction;
@@ -5389,7 +5484,7 @@ begin
 
   RD.ImpF(08, 10, Lbnom_cod_fiscal.Caption, [comp17]);
 
-  // NATUREZA OPERA√á√ÉO
+  // NATUREZA OPERA«√O
   RD.ImpF(08, 46, Prcod_fiscal.Text, [comp17]);
   // NOME FORNECEDOR
   RD.ImpF(11, 10, dao.Q1.fieldbyname('cod_fornecedor').AsString + '/ ' +
@@ -5397,11 +5492,11 @@ begin
   // CNPJ
   // rd.impF(11,87,dao.Q1.FieldByName('cpf').AsString,[comp17]);
   RD.ImpF(11, 87, dao.Q1.fieldbyname('cnpjfor').AsString, [comp17]);
-  // DTA EMISS√ÉO
+  // DTA EMISS√O
   // if copy(datetostr(DMREL.QUNOTNE1DTADOC.VALUE),7,4) <> '1899' then
   RD.ImpF(11, 124, datetostr(now), [comp17]);
 
-  // endere√ßo
+  // endereÁo
   RD.ImpF(13, 10, dao.Q1.fieldbyname('endereco').AsString, [comp17]);
 
   // bairro
@@ -5510,7 +5605,7 @@ begin
 
   if dao.Q1.fieldbyname('UF').AsString = '' then
   begin
-    dao.msg('Fornecedor n√£o tem cidade cadastrada no cadastro!');
+    dao.msg('Fornecedor n„o tem cidade cadastrada no cadastro!');
     Exit;
   end;
   uf := dao.Q1.fieldbyname('uf').AsString;
@@ -5524,10 +5619,10 @@ end;
 
 procedure TFr_entrada.BtnNFEClick(Sender: TObject);
 var
-  NodePai, NodeFilho, NodeSec, NodeFat, NodeDup, NodeTmp, NodeAux: IXMLNode;
+  NodePai, NodeFilho, NodeSec, NodeFat, NodeDup, NodeTmp, NodeAux, NodeEAN: IXMLNode;
   data: Tdate;
   data_arr, arquivo: TStringList;
-  produto, duplicata: string;
+  produto, duplicata, EAN, ProdutoVinculado: string;
   sequencia, item, parcelas: Integer;
   procedure AjustaXML(arquivoxml: string);
   begin
@@ -5535,28 +5630,28 @@ var
 
     arquivo.LoadFromFile(arquivoxml);
     arquivo.Text := stringreplace(arquivo.Text, '&amp;', 'e', [rfReplaceAll]);
-    arquivo.Text := stringreplace(arquivo.Text, '√ï', 'O', [rfReplaceAll]);
+    arquivo.Text := stringreplace(arquivo.Text, '’', 'O', [rfReplaceAll]);
     arquivo.Text := stringreplace(arquivo.Text, '&amp;quo;', '',
       [rfReplaceAll]);
-    arquivo.Text := stringreplace(arquivo.Text, '√Ø¬ª¬ø', '', [rfReplaceAll]);
+    arquivo.Text := stringreplace(arquivo.Text, 'Ôªø', '', [rfReplaceAll]);
     arquivo.Text := stringreplace(arquivo.Text, #13#10 + ' ', '',
       [rfReplaceAll]);
-    arquivo.Text := stringreplace(arquivo.Text, '‚Ä°', 'C', [rfReplaceAll]);
-    arquivo.Text := stringreplace(arquivo.Text, 'A¬ßA¬£', 'cao', [rfReplaceAll]);
-    arquivo.Text := stringreplace(arquivo.Text, 'A¬≠', 'i', [rfReplaceAll]);
-    arquivo.Text := stringreplace(arquivo.Text, '‚Ä∞', '', [rfReplaceAll]);
-    arquivo.Text := stringreplace(arquivo.Text, '¬Å', '', [rfReplaceAll]);
-    arquivo.Text := stringreplace(arquivo.Text, 'A¬©', 'e', [rfReplaceAll]);
-    arquivo.Text := stringreplace(arquivo.Text, 'A¬ç', 'I', [rfReplaceAll]);
-    arquivo.Text := stringreplace(arquivo.Text, 'A¬≤', 'a', [rfReplaceAll]);
+    arquivo.Text := stringreplace(arquivo.Text, 'á', 'C', [rfReplaceAll]);
+    arquivo.Text := stringreplace(arquivo.Text, 'AßA£', 'cao', [rfReplaceAll]);
+    arquivo.Text := stringreplace(arquivo.Text, 'A≠', 'i', [rfReplaceAll]);
+    arquivo.Text := stringreplace(arquivo.Text, 'â', '', [rfReplaceAll]);
+    arquivo.Text := stringreplace(arquivo.Text, 'Å', '', [rfReplaceAll]);
+    arquivo.Text := stringreplace(arquivo.Text, 'A©', 'e', [rfReplaceAll]);
+    arquivo.Text := stringreplace(arquivo.Text, 'Aç', 'I', [rfReplaceAll]);
+    arquivo.Text := stringreplace(arquivo.Text, 'A≤', 'a', [rfReplaceAll]);
     arquivo.Text := stringreplace(arquivo.Text, 'oo', 'o', [rfReplaceAll]);
-    arquivo.Text := stringreplace(arquivo.Text, '√á', 'C', [rfReplaceAll]);
-    arquivo.Text := stringreplace(arquivo.Text, '√É', 'A', [rfReplaceAll]);
-    arquivo.Text := stringreplace(arquivo.Text, 'A‚Ä°A∆í', 'CA', [rfReplaceAll]);
-    arquivo.Text := stringreplace(arquivo.Text, '∆í', 'A', [rfReplaceAll]);
+    arquivo.Text := stringreplace(arquivo.Text, '«', 'C', [rfReplaceAll]);
+    arquivo.Text := stringreplace(arquivo.Text, '√', 'A', [rfReplaceAll]);
+    arquivo.Text := stringreplace(arquivo.Text, 'AáAÉ', 'CA', [rfReplaceAll]);
+    arquivo.Text := stringreplace(arquivo.Text, 'É', 'A', [rfReplaceAll]);
     arquivo.Text := stringreplace(arquivo.Text, 'AA', 'A', [rfReplaceAll]);
     arquivo.Text := Fmfun.AnsiToAscii(arquivo.Text, false);
-    // √Ø¬ª¬ø ;
+    // Ôªø ;
     arquivo.SaveToFile(DlgXml.FileName);
     arquivo.Free;
   end;
@@ -5589,6 +5684,20 @@ var
       dao.Q5.fieldbyname('QUANT_UNID').AsFloat;
     mmEntradas2CUSTO_PRO.Value := mmEntradas2CUSTO_PRO.Value /
       dao.Q5.fieldbyname('QUANT_UNID').AsFloat;
+  end;
+
+  procedure GravaEAN(const AEAN, ACodProduto: string);
+  begin
+    if (Trim(AEAN) = '') or SameText(Trim(AEAN), 'SEM GTIN') or
+      (Trim(ACodProduto) = '') then
+      Exit;
+
+    dao.Geral1('select cod_barras from cod_barras where trim(cod_barras) = ' +
+      QuotedStr(Trim(AEAN)));
+    if dao.Q1.IsEmpty then
+      dao.Execsql('insert into cod_barras (cod_barras, cod_produto, data) values (' +
+        QuotedStr(Trim(AEAN)) + ',' + QuotedStr(Trim(ACodProduto)) + ',' +
+        QuotedStr(FormatDateTime('dd.mm.yyyy', Prdta_documento.Date)) + ')');
   end;
 
 begin
@@ -5821,7 +5930,7 @@ begin
     NodePai := XMLGeral.DocumentElement.childNodes.first.childNodes.
       FindNode('det');
 
-  // Esse n√≥ vai ser usado no LOOP
+  // Esse nÛ vai ser usado no LOOP
   NodeSec := NodePai;
   item := 0;
   // Posiciona o primeiro elemento encontrado
@@ -5829,8 +5938,8 @@ begin
   repeat
     // referencia a tag <prod> dentro de <det>
     NodeTmp := NodeSec.childNodes['prod'];
-    // da pra ver que √© um XML resumido da NFe (so temos uma tag <prod> para cada <det> ent√£o n√£o precisaria da linha abaixo
-    // agora se tiv√©ssemos mais de uma seria o caso de posicionar tamb√©m na primeira ocorrencia.
+    // da pra ver que È um XML resumido da NFe (so temos uma tag <prod> para cada <det> ent„o n„o precisaria da linha abaixo
+    // agora se tivÈssemos mais de uma seria o caso de posicionar tambÈm na primeira ocorrencia.
     // NodeTmp.ChildNodes.First;
     NodeTmp.childNodes.first;
     PcEntrada.ActivePage := TabSheet2;
@@ -5840,6 +5949,13 @@ begin
       // pega os dados que vc quiser dentro da tag <prod>
 
       produto := NodeTmp.childNodes['xProd'].NodeValue;
+      ProdutoVinculado := '';
+      EAN := '';
+      NodeEAN := NodeTmp.childNodes.FindNode('cEAN');
+      if NodeEAN = nil then
+        NodeEAN := NodeTmp.childNodes.FindNode('cEANTrib');
+      if NodeEAN <> nil then
+        EAN := Trim(NodeEAN.Text);
 
       mmEntradas2QTD_ENTRADA.AsString :=
         stringreplace(NodeTmp.childNodes['qCom'].Text, '.', ',',
@@ -5878,6 +5994,7 @@ begin
         begin
           mmEntradas2COD_PRODUTO.Text :=
             dao.Q1.fieldbyname('COD_PRODUTO').AsString;
+          ProdutoVinculado := mmEntradas2COD_PRODUTO.AsString;
           Emcod_produtoExit(self);
           ConverterUnidade(NodeTmp.childNodes['uCom'].Text,
             dao.Q1.fieldbyname('ID').AsString);
@@ -5900,6 +6017,7 @@ begin
           begin
             Emcod_produto.Text := fm_produto_fornecedor.Emcod_produto.Text;
             mmEntradas2COD_PRODUTO.AsString := fm_produto_fornecedor.Emcod_produto.Text;
+            ProdutoVinculado := mmEntradas2COD_PRODUTO.AsString;
             dao.Exec_sql.sql.clear;
             dao.Exec_sql.sql.add
               ('INSERT INTO PRODUTO_FORNECEDOR (COD_PRODUTO, COD_FORNECEDOR, COD_PRODUTO_FORNECEDOR) VALUES ('
@@ -5924,6 +6042,9 @@ begin
       else
         CancelarItem;
 
+      if (EAN <> '') and (ProdutoVinculado <> '') then
+        GravaEAN(EAN, ProdutoVinculado);
+
       NodeAux := NodeAux.NextSibling;
     end
     else
@@ -5944,7 +6065,7 @@ begin
 
   if NodePai <> nil then
   begin
-    // Esse n√≥ vai ser usado no LOOP
+    // Esse nÛ vai ser usado no LOOP
     NodeDup := NodePai;
     NodeDup.childNodes.first;
     sequencia := 0;
@@ -5981,7 +6102,7 @@ begin
 
   if (NodePai <> nil) and (parcelas = 0) then
   begin
-    // Esse n√≥ vai ser usado no LOOP
+    // Esse nÛ vai ser usado no LOOP
     NodeFat := NodePai;
     parcelas := 0;
     NodeFat.childNodes.first;
@@ -6020,6 +6141,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -6036,7 +6158,7 @@ begin
 
   SetLength(Campos_combo, 6);
   Campos_combo[0] := 'Codigo';
-  Campos_combo[1] := 'Raz√£o Social';
+  Campos_combo[1] := 'Raz„o Social';
   Campos_combo[2] := 'Nome Fantasia';
   Campos_combo[3] := 'CNPJ';
   Campos_combo[4] := 'CPF';
@@ -6052,7 +6174,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -6082,7 +6208,7 @@ begin
     end
     else
     begin
-      dao.msg('Registro n√£o Encontrado!');
+      dao.msg('Registro n„o Encontrado!');
       Prcod_cliente.Text := '';
       Prcod_cliente.SetFocus;
       Exit;
@@ -6181,7 +6307,7 @@ begin
       lbVeiculo.Caption := dao.q2.fieldbyname('placa').AsString
     else
     begin
-      dao.msg('Registro n√£o Encontrado!');
+      dao.msg('Registro n„o Encontrado!');
       EmID_VEICULO.Text := '';
       EmID_VEICULO.SetFocus;
       Exit;
@@ -6198,6 +6324,7 @@ var
   valor_combo: string;
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   chamou_form_old := chamou_form;
@@ -6212,10 +6339,10 @@ begin
   Fr_localizar.BT_cadastro.Visible := false;
 
   SetLength(Campos_combo, 4);
-  Campos_combo[0] := 'C√≥digo';
+  Campos_combo[0] := 'CÛdigo';
   Campos_combo[1] := 'Nome do veiculo';
   Campos_combo[2] := 'Placa';
-  Campos_combo[3] := 'Data de aquisi√ß√£o';
+  Campos_combo[3] := 'Data de aquisiÁ„o';
 
   for i := 0 to 3 do
   begin
@@ -6236,7 +6363,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;

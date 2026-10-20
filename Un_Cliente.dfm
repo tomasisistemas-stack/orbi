@@ -2330,8 +2330,8 @@ object Fr_Cliente: TFr_Cliente
           SkinData.SkinSection = 'EDIT'
         end
         object Prcliente_bloqueado: TsCheckBox
-          Left = 493
-          Top = 161
+          Left = 494
+          Top = 164
           Width = 123
           Height = 20
           Caption = 'Cliente Bloqueado'
@@ -2341,7 +2341,7 @@ object Fr_Cliente: TFr_Cliente
           Font.Name = 'MS Sans Serif'
           Font.Style = [fsBold]
           ParentFont = False
-          TabOrder = 22
+          TabOrder = 23
           SkinData.SkinSection = 'CHECKBOX'
           ImgChecked = 0
           ImgUnchecked = 0
@@ -2436,7 +2436,7 @@ object Fr_Cliente: TFr_Cliente
           Width = 122
           Height = 20
           Caption = 'Enviar NF-e por Email'
-          TabOrder = 27
+          TabOrder = 28
           SkinData.SkinSection = 'CHECKBOX'
           ImgChecked = 0
           ImgUnchecked = 0
@@ -2477,7 +2477,7 @@ object Fr_Cliente: TFr_Cliente
           Width = 81
           Height = 20
           Caption = 'Pr'#233' Cadastro'
-          TabOrder = 26
+          TabOrder = 27
           SkinData.SkinSection = 'CHECKBOX'
           ImgChecked = 0
           ImgUnchecked = 0
@@ -2614,6 +2614,20 @@ object Fr_Cliente: TFr_Cliente
           OnClick = BtBuscaCEPClick
           SkinData.SkinSection = 'BUTTON'
         end
+        object PrEntrega_mesmo_endereco: TsCheckBox
+          Left = 300
+          Top = 18
+          Width = 102
+          Height = 20
+          Caption = 'Mesmo endereco'
+          Checked = True
+          State = cbChecked
+          TabOrder = 40
+          OnClick = PrEntrega_mesmo_enderecoClick
+          SkinData.SkinSection = 'CHECKBOX'
+          ImgChecked = 0
+          ImgUnchecked = 0
+        end
         object PrTip_pessoa: TsEdit
           Left = 313
           Top = 326
@@ -2732,7 +2746,7 @@ object Fr_Cliente: TFr_Cliente
           Font.Style = []
           MaxLength = 50
           ParentFont = False
-          TabOrder = 28
+          TabOrder = 41
           OnKeyPress = PrNom_ClienteKeyPress
           SkinData.SkinSection = 'EDIT'
           BoundLabel.Indent = 0
@@ -2831,7 +2845,7 @@ object Fr_Cliente: TFr_Cliente
         end
         object PrACEITA_NOTA_SIMPLES: TsCheckBox
           Left = 494
-          Top = 177
+          Top = 180
           Width = 134
           Height = 20
           Caption = 'Aceita NF-e Simples'
@@ -2841,7 +2855,7 @@ object Fr_Cliente: TFr_Cliente
           Font.Name = 'MS Sans Serif'
           Font.Style = [fsBold]
           ParentFont = False
-          TabOrder = 23
+          TabOrder = 24
           SkinData.SkinSection = 'CHECKBOX'
           ImgChecked = 0
           ImgUnchecked = 0
@@ -2951,8 +2965,8 @@ object Fr_Cliente: TFr_Cliente
           SkinData.SkinSection = 'BUTTON'
         end
         object PrConsumidor_Final: TsCheckBox
-          Left = 493
-          Top = 193
+          Left = 494
+          Top = 196
           Width = 116
           Height = 20
           Caption = 'Consumidor Final'
@@ -2962,7 +2976,7 @@ object Fr_Cliente: TFr_Cliente
           Font.Name = 'MS Sans Serif'
           Font.Style = [fsBold]
           ParentFont = False
-          TabOrder = 24
+          TabOrder = 25
           SkinData.SkinSection = 'CHECKBOX'
           ImgChecked = 0
           ImgUnchecked = 0
@@ -3052,7 +3066,7 @@ object Fr_Cliente: TFr_Cliente
           Width = 80
           Height = 20
           Caption = 'Construtora?'
-          TabOrder = 25
+          TabOrder = 26
           SkinData.SkinSection = 'CHECKBOX'
           ImgChecked = 0
           ImgUnchecked = 0
@@ -3180,6 +3194,328 @@ object Fr_Cliente: TFr_Cliente
           GlyphMode.Blend = 0
           GlyphMode.Grayed = False
           DisplayFormat = '0.00'
+        end
+      end
+    end
+    object TabEntrega: TsTabSheet
+      Caption = 'Endereco Entrega'
+      ImageIndex = 8
+      SkinData.CustomColor = False
+      SkinData.CustomFont = False
+      object GbEntrega: TsGroupBox
+        Left = 0
+        Top = 0
+        Width = 681
+        Height = 500
+        Align = alClient
+        Caption = 'Endereco de Entrega'
+        TabOrder = 0
+        SkinData.SkinSection = 'GROUPBOX'
+        object LbEntregaEndereco: TsLabel
+          Left = 12
+          Top = 24
+          Width = 46
+          Height = 13
+          Caption = 'Endereco'
+        end
+        object LbEntregaNr: TsLabel
+          Left = 450
+          Top = 24
+          Width = 8
+          Height = 13
+          Caption = 'N'
+        end
+        object LbEntregaComplemento: TsLabel
+          Left = 12
+          Top = 58
+          Width = 64
+          Height = 13
+          Caption = 'Complemento'
+        end
+        object LbEntregaProximo: TsLabel
+          Left = 315
+          Top = 58
+          Width = 37
+          Height = 13
+          Caption = 'Proximo'
+        end
+        object LbEntregaBairro: TsLabel
+          Left = 12
+          Top = 92
+          Width = 27
+          Height = 13
+          Caption = 'Bairro'
+        end
+        object LbEntregaCep: TsLabel
+          Left = 315
+          Top = 92
+          Width = 21
+          Height = 13
+          Caption = 'CEP'
+        end
+        object LbEntregaCidade: TsLabel
+          Left = 12
+          Top = 126
+          Width = 33
+          Height = 13
+          Caption = 'Cidade'
+        end
+        object LbEntregaNomCidade: TsLabel
+          Left = 170
+          Top = 126
+          Width = 9
+          Height = 13
+          Caption = '...'
+        end
+        object LbEntregaContato: TsLabel
+          Left = 12
+          Top = 160
+          Width = 37
+          Height = 13
+          Caption = 'Contato'
+        end
+        object LbEntregaTelefone: TsLabel
+          Left = 315
+          Top = 160
+          Width = 42
+          Height = 13
+          Caption = 'Telefone'
+        end
+        object PrEntrega_endereco: TsEdit
+          Left = 80
+          Top = 20
+          Width = 360
+          Height = 21
+          CharCase = ecUpperCase
+          TabOrder = 0
+          SkinData.SkinSection = 'EDIT'
+          BoundLabel.Indent = 0
+          BoundLabel.Font.Charset = DEFAULT_CHARSET
+          BoundLabel.Font.Color = clWindowText
+          BoundLabel.Font.Height = -11
+          BoundLabel.Font.Name = 'Tahoma'
+          BoundLabel.Font.Style = []
+          BoundLabel.Layout = sclLeft
+          BoundLabel.MaxWidth = 0
+          BoundLabel.UseSkinColor = True
+        end
+        object PrEntrega_nr_endereco: TsEdit
+          Left = 475
+          Top = 20
+          Width = 70
+          Height = 21
+          TabOrder = 1
+          SkinData.SkinSection = 'EDIT'
+          BoundLabel.Indent = 0
+          BoundLabel.Font.Charset = DEFAULT_CHARSET
+          BoundLabel.Font.Color = clWindowText
+          BoundLabel.Font.Height = -11
+          BoundLabel.Font.Name = 'Tahoma'
+          BoundLabel.Font.Style = []
+          BoundLabel.Layout = sclLeft
+          BoundLabel.MaxWidth = 0
+          BoundLabel.UseSkinColor = True
+        end
+        object PrEntrega_complemento: TsEdit
+          Left = 80
+          Top = 54
+          Width = 220
+          Height = 21
+          CharCase = ecUpperCase
+          TabOrder = 2
+          SkinData.SkinSection = 'EDIT'
+          BoundLabel.Indent = 0
+          BoundLabel.Font.Charset = DEFAULT_CHARSET
+          BoundLabel.Font.Color = clWindowText
+          BoundLabel.Font.Height = -11
+          BoundLabel.Font.Name = 'Tahoma'
+          BoundLabel.Font.Style = []
+          BoundLabel.Layout = sclLeft
+          BoundLabel.MaxWidth = 0
+          BoundLabel.UseSkinColor = True
+        end
+        object PrEntrega_proximo: TsEdit
+          Left = 365
+          Top = 54
+          Width = 180
+          Height = 21
+          CharCase = ecUpperCase
+          TabOrder = 3
+          SkinData.SkinSection = 'EDIT'
+          BoundLabel.Indent = 0
+          BoundLabel.Font.Charset = DEFAULT_CHARSET
+          BoundLabel.Font.Color = clWindowText
+          BoundLabel.Font.Height = -11
+          BoundLabel.Font.Name = 'Tahoma'
+          BoundLabel.Font.Style = []
+          BoundLabel.Layout = sclLeft
+          BoundLabel.MaxWidth = 0
+          BoundLabel.UseSkinColor = True
+        end
+        object PrEntrega_bairro: TsEdit
+          Left = 80
+          Top = 88
+          Width = 220
+          Height = 21
+          CharCase = ecUpperCase
+          TabOrder = 4
+          SkinData.SkinSection = 'EDIT'
+          BoundLabel.Indent = 0
+          BoundLabel.Font.Charset = DEFAULT_CHARSET
+          BoundLabel.Font.Color = clWindowText
+          BoundLabel.Font.Height = -11
+          BoundLabel.Font.Name = 'Tahoma'
+          BoundLabel.Font.Style = []
+          BoundLabel.Layout = sclLeft
+          BoundLabel.MaxWidth = 0
+          BoundLabel.UseSkinColor = True
+        end
+        object PrEntrega_cep: TsMaskEdit
+          Left = 365
+          Top = 88
+          Width = 100
+          Height = 21
+          EditMask = '99999-999;1;_'
+          MaxLength = 9
+          TabOrder = 5
+          Text = '     -   '
+          CheckOnExit = True
+          BoundLabel.Indent = 0
+          BoundLabel.Font.Charset = DEFAULT_CHARSET
+          BoundLabel.Font.Color = clWindowText
+          BoundLabel.Font.Height = -11
+          BoundLabel.Font.Name = 'Tahoma'
+          BoundLabel.Font.Style = []
+          BoundLabel.Layout = sclLeft
+          BoundLabel.MaxWidth = 0
+          BoundLabel.UseSkinColor = True
+          SkinData.SkinSection = 'EDIT'
+        end
+        object PrEntrega_cod_cidade: TsComboEdit
+          Left = 80
+          Top = 122
+          Width = 80
+          Height = 21
+          AutoSize = False
+          TabOrder = 6
+          Text = ''
+          OnExit = PrEntrega_cod_cidadeExit
+          CheckOnExit = True
+          BoundLabel.Indent = 0
+          BoundLabel.Font.Charset = DEFAULT_CHARSET
+          BoundLabel.Font.Color = clWindowText
+          BoundLabel.Font.Height = -11
+          BoundLabel.Font.Name = 'Tahoma'
+          BoundLabel.Font.Style = []
+          BoundLabel.Layout = sclLeft
+          BoundLabel.MaxWidth = 0
+          BoundLabel.UseSkinColor = True
+          SkinData.SkinSection = 'EDIT'
+          OnButtonClick = PrEntrega_cod_cidadeButtonClick
+          GlyphMode.Blend = 0
+          GlyphMode.Grayed = False
+        end
+        object PrEntrega_contato: TsEdit
+          Left = 80
+          Top = 156
+          Width = 220
+          Height = 21
+          CharCase = ecUpperCase
+          TabOrder = 7
+          SkinData.SkinSection = 'EDIT'
+          BoundLabel.Indent = 0
+          BoundLabel.Font.Charset = DEFAULT_CHARSET
+          BoundLabel.Font.Color = clWindowText
+          BoundLabel.Font.Height = -11
+          BoundLabel.Font.Name = 'Tahoma'
+          BoundLabel.Font.Style = []
+          BoundLabel.Layout = sclLeft
+          BoundLabel.MaxWidth = 0
+          BoundLabel.UseSkinColor = True
+        end
+        object PrEntrega_telefone: TsMaskEdit
+          Left = 365
+          Top = 156
+          Width = 130
+          Height = 21
+          EditMask = '(99) 9999-9999;1;_'
+          MaxLength = 14
+          TabOrder = 8
+          Text = '(  )     -    '
+          CheckOnExit = True
+          BoundLabel.Indent = 0
+          BoundLabel.Font.Charset = DEFAULT_CHARSET
+          BoundLabel.Font.Color = clWindowText
+          BoundLabel.Font.Height = -11
+          BoundLabel.Font.Name = 'Tahoma'
+          BoundLabel.Font.Style = []
+          BoundLabel.Layout = sclLeft
+          BoundLabel.MaxWidth = 0
+          BoundLabel.UseSkinColor = True
+          SkinData.SkinSection = 'EDIT'
+        end
+        object BtBuscaEndEntrega: TsBitBtn
+          Left = 480
+          Top = 86
+          Width = 96
+          Height = 26
+          Caption = 'Buscar CEP'
+          Glyph.Data = {
+            76060000424D760600000000000036000000280000001A000000140000000100
+            1800000000004006000000000000000000000000000000000000724633886132
+            7C5B3083563078524189552F8D54319154308455318254317D582E7C56308555
+            2A80523084552B815431825431795C2E8254318354317A5B2E815631845A328C
+            57319A563071443200005C1F00793C00743B007F3800883A00843A0087390086
+            3A00823B00762F006A2D006C2E006D2900762B007E3502843900833B00813800
+            833A008639008337008339007E3700763600873B006222020000792E028A4901
+            7E48008743027843067E43027E46027E4605612E088A61389E7F5D96785CA681
+            5EAF8464763F15793E057D45047C41087B40087C40087641087A40077F40077C
+            4601884B006F321200006B28048B49047A46007E400585410485440087430277
+            3C00592600CAB398C2AC91B9A390DDC3B59781776531027D4105834200854004
+            8241038441038341038241018840058B44047D4A00602C110000762D02844107
+            743E097D3F05854200864200894301662300AF8458C5AA8BA48C83BEA392C9A6
+            806A25007E37008542017E44007F45008B42018941017C430283420088400083
+            4100894A00582D120000752D029046018744009146008C44018A460179330081
+            4F1FC6A88CAF978DB3968BC6AC949B622F792D009549008243017C4901844500
+            8940028241067D42028244008944008044009549005F36210000762C01813600
+            6D25007129006F27006B2900723304B48666B59B8D9C8F90BBA08DAE84605318
+            006925006529006C27006A28007A3A008136007934006E34007D3600863F0082
+            4702934A00652C1000006E2E06A8764A907152896647886A41875B34774C26BC
+            A486B79073A38E7FAF99816F46269B6C4E906E458267408B684780603E613606
+            93582C8C4F2787562C895529612A00754005954B005A2A0E0000531C02CAAE91
+            FFFFFFFFFFFFFFFFFFFFFFFFAC9B939D7361C19B7EC09F79B6A086784D3DCFBE
+            B5FFFFFFFFFFFFFFFFFFFFFFFF9C857DA38A7FCBB29BC1AB8FD7BFAB8F70666B
+            2900954A00632C1100006726006C391DD9CFCDFFFFFFF4FCFDFFFFFFDFD7D474
+            5549B99985B09A7DBBA18CBC94805C2412F3F1E8FFFFFFFBFCFEFFFFFFDDD5D0
+            7B5A4BB09384AA9279BA9F8FBFA086793F1A873B005E2F100000763001672800
+            8E6C57FDFCF5FEFFFFFCFAF8FFFFFFAB978C836356C7A180B49A7EC5AF9F8963
+            587D6856FFFFFFFCFDFDF1FDFEFFFFFFB69988A27A60AC9991A99289C2A6959E
+            73547A34005D2C0F00006B2B067D4211552400DBD0C4FFFFFFFFFFFFFFFFFFFF
+            FFFF715042C2A08AC6A28DB89E97D0C9C55E3323DACCBEFFFFFFE4FBFDFFFFFF
+            E8DCD68A6552A39381B29C91CFAB99D0B1A194532754240900006A2803924A02
+            5C2900724023ECE4DCE7E3DDE4E0DAEFECE6C0B2A782614BBFA27BBB9776CE9E
+            74C2926667422BF4F4ECF9FFFFFCFCFEFFFFFFC1B4ADA1755CC59773B99C74BF
+            A485C392625C2D1100006929048F49027D480175330073380C6A330C6A330B6F
+            38107E4311793400703D0B7739067E3802682C048A6555FBF9F8FFF9FFFCFDFD
+            FFFFFFBBA2996C26088036026E3B0C67340E84460E6131110000732B01904803
+            8045008645007F38007E39007F39007E39007F3C00813E01753900853E008235
+            00552913EEE4DEFFFFFFFCF7FBFFFFFFE8E8DD6F4929772B008D3C00793D0073
+            38048B3F006030100000652C108A46007B46018642007943038141057F430376
+            4306773E0A7942058640069347004A0B00B89F85FFFFFFFDFDFEFBFEFFFFFFFF
+            AB8A746728008344008245008544008144019447006434130000772D018B4605
+            7F44008342018744008442008645008B45008543008044008C42026C26007A4E
+            1AFFFFFFFEFFFFF8FFFFFFFFFFE1D7CC5C1F007E38007E48007943037F420382
+            41019348006332120000702B028E4601864102823F048242017F42018344007F
+            44017D42028344017D3B006F3000DAD4C1FFF7ECF8EEE3F5EEE9FCF7EC835B2E
+            5C1F0083450C854100804302823B037741088549007030110000692902944800
+            8D44008B44008E44008E43008F43008F43008E42008F44008B43008845029A67
+            448E56338F57329359389457316B32008543038E4A069144008F44008F420081
+            4303824A00682F0F000059290E713D086C37086A37077C34106B37076C360770
+            3C096D37076F3B0B69380F6E3A07652D00612C016A2D00722E00662D006B4601
+            743E0A773E09763F08713E096F40157D370D7C4309572A0F0000}
+          TabOrder = 9
+          OnClick = BtBuscaEndEntregaClick
+          SkinData.SkinSection = 'BUTTON'
         end
       end
     end

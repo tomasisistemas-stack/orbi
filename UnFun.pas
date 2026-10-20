@@ -196,7 +196,6 @@ begin
     CloseHandle(MainHandle);
   except
   end;
-  Application.ProcessMessages;
 end;
 
 {$IFDEF ORBI}
@@ -300,10 +299,21 @@ procedure TFMFUN.MontaCobrancaItem(NomeCliente, TipoPessoa, cnpj, cpf, Endereco,
 
 var
   txt: TextFile;
-  dia, mes, ano, Ord, ext, pathSaida, tempFile, nosso_numero, nosso_numero_div, sql_cliente, dir_remessa: string;
+  dia, mes, ano, Ord, ext, pathSaida, tempFile, nosso_numero, nosso_numero_div, sql_cliente, dir_remessa, NumeroDocumentoBase: string;
   sequencial_arquivo: Integer;
   MensagemPadrao: TStrings;
   TituloBoleto: TACBrTitulo;
+
+  function SomenteNumeros(const AValor: string): string;
+  var
+    I: Integer;
+  begin
+    Result := '';
+    for I := 1 to Length(AValor) do
+      if AValor[I] in ['0'..'9'] then
+        Result := Result + AValor[I];
+  end;
+
 begin
   TituloBoleto := ACBrBoleto1.CriarTituloNaLista;
 
@@ -324,8 +334,6 @@ begin
     if ACBrBoleto1.Banco.Numero = 104 then
     begin
       LocalPagamento := 'EM TODA A REDE BANCÁRIA E SEUS CORRESPONDENTES ATÉ O VALOR LIMITE';
-      // Nao setar layout 107/67 na impressao: no ACBr Caixa isso altera o campo livre para 7 digitos.
-      // O layout da remessa continua sendo definido pela conta corrente.
     end;
     // MEnsagem exigida pelo cef
 
@@ -333,13 +341,22 @@ begin
     Vencimento := Vencto;
 
     if ACBrBoleto1.Banco.Numero = 756 then
-      NumeroDocumento := Copy(Titulo, 1, 6) + FMFUN.enchezero(Sequencia, 1)
+      NumeroDocumentoBase := Copy(Titulo, 1, 6) + FMFUN.enchezero(Sequencia, 1)
+    else if ACBrBoleto1.Banco.Numero = 104 then
+      NumeroDocumentoBase := Copy(Titulo, 1, 8) + FMFUN.enchezero(Sequencia, 1)
     else
-      NumeroDocumento := Copy(Titulo, 1, 8) + FMFUN.enchezero(Sequencia, 1);
+      NumeroDocumentoBase := Copy(Titulo, 1, 8) + FMFUN.enchezero(Sequencia, 1);
+
+    if ACBrBoleto1.Banco.Numero = 104 then
+      NumeroDocumento := UpperCase(Trim(Copy(Titulo, 1, 8))) + '-' + FMFUN.enchezero(Sequencia, 1)
+    else
+      NumeroDocumento := NumeroDocumentoBase;
 
     Carteira := carteira_conta;
+    if (ACBrBoleto1.Banco.Numero = 1) and (Trim(Carteira) = '') then
+      raise Exception.Create('Banco do Brasil: carteira da conta corrente nao informada. Verifique o cadastro da conta corrente antes de gerar o boleto.');
 
-    NossoNumero := MontaNossoNumero(NumeroDocumento);
+    NossoNumero := MontaNossoNumero(NumeroDocumentoBase);
 
     EspecieDoc := 'DM';
     // Aceite :=
@@ -432,6 +449,7 @@ begin
       mensagem.Add('OUVIDORIA BANRISUL-0800 644 2200');
     end;
 
+    mensagem.Add('Grupo empresarial: PLASFAN.');
     // ACBrBoleto1.AdicionarMensagensPadroes(TituloBoleto, Mensagem);
   end;
 
@@ -464,6 +482,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -503,7 +522,11 @@ begin
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
-  Fr_localizar.free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 end;
 
 function TFMFUN.BonificacaoLiberado(cliente, produto, pedido: string; qtd: Integer): boolean;
@@ -1091,7 +1114,7 @@ const
   colunas = 27;
 var
   f: TextFile;
-  i, dvi, tam_descricao: Integer;
+  i, dvi, tam_descricao, ErroIO: Integer;
   imp_primeira: boolean;
   Arquivo, dv, pf, descricao1, descricao2, descricao3: string;
 begin
@@ -1108,7 +1131,14 @@ begin
   if codigo_barra = '' then
     codigo_barra := GravaCodeBar(codigo, tipo);
   // FileMode := 0;
+{$I-}
   Rewrite(f);
+  ErroIO := IOResult;
+{$I+}
+  if ErroIO <> 0 then
+    raise EInOutError.CreateFmt(
+      'Não foi possível acessar a impressora de etiquetas "%s". Erro %d: %s',
+      [caminho_imp_cod_barras, ErroIO, SysErrorMessage(ErroIO)]);
   Writeln(f, ' ');
   Writeln(f, 'O');
   Writeln(f, 'OD');
@@ -1334,37 +1364,55 @@ end;
 
 function TFMFUN.cmdAux(wheresql, filtro: string): string;
 var
-  cmd_aux: string;
+  cmd_aux, item: string;
   cmd_arr: TStringList;
   x: Integer;
 begin
+  Result := '';
+  filtro := Trim(filtro);
+  if filtro = '' then
+    Exit;
+
   if pos(';', filtro) > 0 then
   begin
-    cmd_arr := TStringList.Create;
     cmd_arr := Explode(filtro, ';');
-    cmd_aux := '';
-    for x := 0 to cmd_arr.Count - 1 do
-    begin
-      cmd_aux := cmd_aux + cmd_arr[x] + ', ';
+    try
+      cmd_aux := '';
+      for x := 0 to cmd_arr.Count - 1 do
+      begin
+        item := Trim(cmd_arr[x]);
+        if item <> '' then
+        begin
+          if cmd_aux <> '' then
+            cmd_aux := cmd_aux + ', ';
+          cmd_aux := cmd_aux + item;
+        end;
+      end;
+
+      if cmd_aux <> '' then
+        Result := ' and cast(' + wheresql + ' as integer) in (' + cmd_aux + ')';
+    finally
+      cmd_arr.free;
     end;
-    cmd_arr.free;
-    Result := ' and cast(' + wheresql + ' as integer) in (' + Copy(cmd_aux, 1, length(cmd_aux) - 2) + ')';
     exit;
   end;
+
   if pos('-', filtro) > 0 then
   begin
-    cmd_arr := TStringList.Create;
     cmd_arr := Explode(filtro, '-');
-    cmd_aux := '';
-    for x := 0 to cmd_arr.Count - 1 do
-    begin
-      cmd_aux := cmd_aux + cmd_arr[x] + ' and ';
+    try
+      if cmd_arr.Count >= 2 then
+      begin
+        if (Trim(cmd_arr[0]) <> '') and (Trim(cmd_arr[1]) <> '') then
+          Result := ' and cast(' + wheresql + ' as integer) between ' + Trim(cmd_arr[0]) + ' and ' + Trim(cmd_arr[1]);
+      end;
+    finally
+      cmd_arr.free;
     end;
-    cmd_arr.free;
-    Result := 'and cast(' + wheresql + ' as integer) between ' + Copy(cmd_aux, 1, length(cmd_aux) - 5);
     exit;
   end;
-  Result := 'and cast(' + wheresql + ' as integer) in (' + filtro + ')';
+
+  Result := ' and cast(' + wheresql + ' as integer) in (' + filtro + ')';
 end;
 
 function TFMFUN.InverteData(Data: string): string;
@@ -4039,6 +4087,7 @@ var
   valor_combo: string;
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -4061,11 +4110,14 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 end;
 end.
-
 
 
 

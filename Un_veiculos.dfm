@@ -888,7 +888,7 @@ object fr_veiculo: Tfr_veiculo
         Font.Height = -11
         Font.Name = 'MS Sans Serif'
         Font.Style = []
-        MaxLength = 50
+        MaxLength = 2
         ParentFont = False
         TabOrder = 2
         OnKeyPress = Prnom_veiculoKeyPress
@@ -915,7 +915,7 @@ object fr_veiculo: Tfr_veiculo
         Font.Height = -11
         Font.Name = 'MS Sans Serif'
         Font.Style = []
-        MaxLength = 9
+        MaxLength = 8
         ParentFont = False
         TabOrder = 4
         SkinData.SkinSection = 'EDIT'

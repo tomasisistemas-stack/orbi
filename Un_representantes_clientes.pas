@@ -50,7 +50,7 @@ type
     mmCidades: TRxMemoryData;
     mmCidadesNome: TStringField;
     mmCidadesCheck: TBooleanField;
-    mmClientes: TRxMemoryData;
+    mmClientes: TFDMemTable;
     mmClientesCheck: TBooleanField;
     dsClientes: TDataSource;
     mmRepID: TIntegerField;
@@ -84,6 +84,13 @@ type
     mmBairroCheck: TBooleanField;
     mmClientesbairro: TStringField;
     q_clientes: TFDQuery;
+    LbUltimaVenda: TsLabel;
+    PrUltimaVenda: TsDateEdit;
+    LbMediaPedido: TsLabel;
+    PrMediaPedido: TsCurrencyEdit;
+    BtFiltrarClientes: TsBitBtn;
+    mmClientesDTA_ULTIMA_VENDA: TDateField;
+    mmClientesMEDIA_VALOR_PEDIDO: TCurrencyField;
     procedure FormShow(Sender: TObject);
     procedure PridKeyPress(Sender: TObject; var Key: Char);
     procedure Prdta_cargaKeyPress(Sender: TObject; var Key: Char);
@@ -117,6 +124,7 @@ type
     procedure dgCargaDblClick(Sender: TObject);
     procedure dgCargaKeyPress(Sender: TObject; var Key: Char);
     procedure dgCargaTitleClick(Column: TColumn);
+    procedure BtFiltrarClientesClick(Sender: TObject);
     procedure CheckTodosClick(Sender: TObject);
     procedure Prcod_representanteButtonClick(Sender: TObject);
     procedure Prcod_representanteExit(Sender: TObject);
@@ -244,6 +252,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -282,7 +291,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -1156,18 +1169,31 @@ var
   cmd: string;
   clientes_marcados: TStringList;
 
-  procedure SetStringSeguro(AField: TStringField; const AValue: string);
+  procedure SetStringSeguro(const ANomeCampo, AValue: string);
   var
+    Campo: TField;
+    CampoString: TStringField;
     Tam: Integer;
   begin
-    Tam := AField.Size;
+    if not mmClientes.Active then
+      Exit;
+    Campo := mmClientes.FindField(ANomeCampo);
+    if not (Campo is TStringField) then
+      Exit;
+
+    CampoString := TStringField(Campo);
+    if CampoString.DataSet <> mmClientes then
+      Exit;
+
+    Tam := CampoString.Size;
     if Tam <= 0 then
       Tam := 255;
-    AField.AsString := Copy(AValue, 1, Tam);
+    CampoString.AsString := Copy(AValue, 1, Tam);
   end;
 
 begin
-  cmd := 'SELECT distinct c.cod_cliente, c.cod_cliente||''-''||c.NOM_CLIENTE as CLIENTE, R.ID||''-''||r.NOM_REPRESENTANTE as representante, cd.nom_cidade||''-''||cd.uf as cidade, c.bairro ' +
+  cmd := 'SELECT distinct c.cod_cliente, c.cod_cliente||''-''||c.NOM_CLIENTE as CLIENTE, R.ID||''-''||r.NOM_REPRESENTANTE as representante, cd.nom_cidade||''-''||cd.uf as cidade, c.bairro, ' +
+    'c.dta_ultima_venda, coalesce(c.media_valor_pedido, 0) as media_valor_pedido ' +
     'FROM cliente c ' +
     'left outer join cidades cd on (c.cod_cidade = cd.cod_cidade) ' +
     'left outer join cadmicro mc on (mc.microcod = cd.microcod) ' +
@@ -1192,6 +1218,14 @@ begin
 
   if lista_bairros <> '' then
     cmd := cmd + ' and c.bairro in (' + lista_bairros + ') ';
+
+  if PrUltimaVenda.Date > 0 then
+    cmd := cmd + ' and c.dta_ultima_venda >= ' +
+      QuotedStr(FormatDateTime('yyyy-mm-dd', PrUltimaVenda.Date));
+
+  if PrMediaPedido.Value > 0 then
+    cmd := cmd + ' and coalesce(c.media_valor_pedido, 0) >= ' +
+      StringReplace(FormatFloat('0.00', PrMediaPedido.Value), ',', '.', [rfReplaceAll]);
 
   if ordem_clientes <> '' then
     cmd := cmd + ' ORDER BY ' + ordem_clientes;
@@ -1223,16 +1257,27 @@ begin
     fm_splash.ggProgress.Progress := 0;
     fm_splash.Update;
 
+    // A grade nao pode consultar o buffer enquanto ele e recriado.
+    dsClientes.DataSet := nil;
+
+    // Recria o buffer do dataset antes das atribuicoes.
+    
+    if mmClientes.Active then
+      mmClientes.Close;
     mmClientes.Open;
-    mmClientes.EmptyTable;
     while not dao.Q1.Eof do
     begin
       mmClientes.Append;
-      SetStringSeguro(mmClientesCLIENTE, dao.Q1.fieldbyname('CLIENTE').AsString);
-      SetStringSeguro(mmClientesREPRESENTANTE, dao.Q1.fieldbyname('REPRESENTANTE').AsString);
-      mmClientescod_cliente.AsString := dao.Q1.fieldbyname('COD_CLIENTE').AsString;
-      SetStringSeguro(mmClientescidade, dao.Q1.fieldbyname('cidade').AsString);
-      SetStringSeguro(mmClientesbairro, dao.Q1.fieldbyname('bairro').AsString);
+      SetStringSeguro('CLIENTE', dao.Q1.fieldbyname('CLIENTE').AsString);
+      SetStringSeguro('REPRESENTANTE', dao.Q1.fieldbyname('REPRESENTANTE').AsString);
+      mmClientescod_cliente.AsInteger := dao.Q1.fieldbyname('COD_CLIENTE').AsInteger;
+      SetStringSeguro('cidade', dao.Q1.fieldbyname('cidade').AsString);
+      SetStringSeguro('bairro', dao.Q1.fieldbyname('bairro').AsString);
+      if dao.Q1.fieldbyname('dta_ultima_venda').IsNull then
+        mmClientesDTA_ULTIMA_VENDA.Clear
+      else
+        mmClientesDTA_ULTIMA_VENDA.AsDateTime := dao.Q1.fieldbyname('dta_ultima_venda').AsDateTime;
+      mmClientesMEDIA_VALOR_PEDIDO.AsCurrency := dao.Q1.fieldbyname('media_valor_pedido').AsCurrency;
       mmClientesCheck.Value := clientes_marcados.IndexOf(mmClientescod_cliente.AsString) >= 0;
 
       mmClientes.post;
@@ -1244,6 +1289,7 @@ begin
   finally
     fm_splash.Hide;
     mmClientes.EnableControls;
+    dsClientes.DataSet := mmClientes;
     clientes_marcados.Free;
   end;
 end;
@@ -1399,6 +1445,10 @@ begin
   end;
 end;
 
+procedure TFr_representantes_clientes.BtFiltrarClientesClick(Sender: TObject);
+begin
+  CarregarClientes;
+end;
 procedure TFr_representantes_clientes.dgCargaTitleClick(Column: TColumn);
 begin
   if (Column.Field = nil) or SameText(Column.FieldName, CheckClientes.DataField) then
@@ -1412,6 +1462,10 @@ begin
     ordem_clientes := 'cidade'
   else if SameText(Column.FieldName, 'bairro') then
     ordem_clientes := 'bairro'
+  else if SameText(Column.FieldName, 'DTA_ULTIMA_VENDA') then
+    ordem_clientes := 'dta_ultima_venda desc nulls last'
+  else if SameText(Column.FieldName, 'MEDIA_VALOR_PEDIDO') then
+    ordem_clientes := 'media_valor_pedido desc'
   else
     Exit;
 
@@ -1429,6 +1483,5 @@ begin
 end;
 
 end.
-
 
 

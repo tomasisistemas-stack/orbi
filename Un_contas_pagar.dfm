@@ -1727,10 +1727,6 @@ object Fr_contas_pagar: TFr_contas_pagar
       OnShow = tab_dadosShow
       SkinData.CustomColor = False
       SkinData.CustomFont = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object SpeedButton1: TsSpeedButton
         Left = 543
         Top = 71

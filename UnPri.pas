@@ -17,7 +17,7 @@ uses
   StdCtrls, midaslib, IdGlobal,
   shellApi, ACBrBase, IdMessage,
   IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient,
-  IdMessageClient, IdSMTP, ACBrCalculadora, ACBrValidador,
+  IdMessageClient, IdSMTP, IdIMAP4, ACBrCalculadora, ACBrValidador,
   wininet, pcnconversao, RxGIF, IdFTP, ExtDlgs, ComObj,
   jpeg, RDprint, frxClass, frxExportRTF,
   Grids, BaseGrid, AdvGrid,
@@ -343,6 +343,10 @@ type
     C9: TMenuItem;
     pgDashboard: TPageControl;
     tsVendas: TTabSheet;
+    tsEmailIncorretos: TTabSheet;
+    dbEmailsIncorretos: TDBGrid;
+    qEmailsIncorretos: TFDQuery;
+    dsEmailsIncorretos: TDataSource;
     DashVendasRoot: TPanel;
     DashContentPanel: TPanel;
     DashTopo: TPanel;
@@ -430,6 +434,11 @@ type
     FinGridPanel: TPanel;
     FinGridTitulo: TLabel;
     FinGrid: TStringGrid;
+    qEmailsIncorretoscod_cliente: TStringField;
+    qEmailsIncorretosnome_cliente: TStringField;
+    qEmailsIncorretosemail: TStringField;
+    F1: TMenuItem;
+    sbVendasSimplificada: TsSpeedButton;
     procedure JvXPBar1Items0Click(Sender: TObject);
     procedure JvXPBar1Items1Click(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -514,6 +523,7 @@ type
     procedure AlterarSenha1Click(Sender: TObject);
     procedure Vendas3Click(Sender: TObject);
     procedure VendasSimplificado1Click(Sender: TObject);
+    procedure VendasNFCeSimplificado1Click(Sender: TObject);
     procedure RemessaseDevolues1Click(Sender: TObject);
     procedure EnviodeLote1Click(Sender: TObject);
     procedure DANFe1Click(Sender: TObject);
@@ -536,6 +546,10 @@ type
     procedure RelaodePedidosImportadosdoSistemaPalm1Click(Sender: TObject);
     procedure TmPedidoPalmTimer(Sender: TObject);
     procedure tmHoraTimer(Sender: TObject);
+    procedure ChecarRetornosEmail;
+    procedure CriarAbaEmailsIncorretos;
+    procedure EmailIncorretoDblClick(Sender: TObject);
+    procedure dbEmailsIncorretosTitleClick(Column: TColumn);
     procedure NFComplementar1Click(Sender: TObject);
     procedure MalaDiretaPromoes1Click(Sender: TObject);
     procedure ransfernciadeValoresentreContas1Click(Sender: TObject);
@@ -568,6 +582,7 @@ type
     procedure ProdutosDescontoEspecial1Click(Sender: TObject);
     procedure sbClientesClick(Sender: TObject);
     procedure sbVendasClick(Sender: TObject);
+    procedure sbPDVClick(Sender: TObject);
     procedure sbContasPagarClick(Sender: TObject);
     procedure sbContasReceberClick(Sender: TObject);
     procedure sbProdutoClick(Sender: TObject);
@@ -647,13 +662,21 @@ type
     procedure Button3Click(Sender: TObject);
     procedure S6Click(Sender: TObject);
     procedure C9Click(Sender: TObject);
+    procedure qEmailsIncorretosAfterOpen(DataSet: TDataSet);
+    procedure F1Click(Sender: TObject);
+    procedure sbVendasSimplificadaClick(Sender: TObject);
   private
     FUltimaGeracaoRankingVendas: TDateTime;
+    FUltimaVerificacaoEmail: TDateTime;
+    FEmailsOrdemCampo: string;
+    FEmailsOrdemAsc: Boolean;
     FDashboardCarregando: Boolean;
     FClientesNaoAtendidosCarregando: Boolean;
     FUltimaGeracaoComissaoDesconto: TDateTime;
-    procedure GerarRankingVendasDiario;
-    procedure GerarComissaoDescontoDiario;
+    FGerandoRelatoriosDiarios: Boolean;
+    FFechandoSistema: Boolean;
+    function GerarRankingVendasDiario: string;
+    procedure GerarComissaoDescontoDiario(const ARepresentantesRanking: string);
     procedure CarregarListaMenu;
     procedure AvisoAniversariantes;
 
@@ -805,7 +828,7 @@ type
 
 const
   ////////////////////////////////////////////////////////////
-  versao: ShortString = '2.00.90';
+  versao: ShortString = '2.01.04';
   ///////////////////////////////////////////////////////////
 var
 
@@ -860,7 +883,8 @@ var
 
 implementation
 
-uses UnUsu,
+
+uses UnUsu, Un_PDV,
   UnFun, UnLog, Un_Cliente, Un_Fornecedor, Un_Cotacao,
   Un_Transportadora, Un_cidade, Un_dao, Un_produto, Un_grupo, Un_entrada,
   Un_Cadempresa, Un_log,
@@ -888,7 +912,11 @@ uses UnUsu,
   Un_calcular_13o_salarios, un_vendor_enviar_pedidos, AtualizaBD,
   un_produto_simplificado, un_pre_cadastro, {MapaAtuacao,} un_controle_visitas,
   Un_representantes_clientes, un_email_nfe, Un_etapas_producao,
-  un_entrada_producao, un_alterar_preco, Un_pedido_simplificado;
+  Un_Error_Logger,
+  un_entrada_producao, un_alterar_preco, Un_pedido_simplificado, Un_nfce_simplificado;
+
+function PainelAvisosLateral(AForm: TFRPRI): TsPanel; forward;
+procedure AtualizarPainelAvisosLateral(AForm: TFRPRI); forward;
 
 {$R *.dfm}
 
@@ -968,6 +996,11 @@ end;
 
 procedure TFRPRI.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
+  if FGerandoRelatoriosDiarios then
+  begin
+    CanClose := False;
+    Exit;
+  end;
   { IF MessageDlg('DESEJA SAIR DO SISTEMA?',mtConfirmation,[MBYES,MBNO],0)=MRYES THEN
     begin
     //    dao.msg('antes');
@@ -1485,7 +1518,14 @@ begin
     '           and vu.faturado = ''1'' ' +
     '           and vu.nfeentradasaida = ''0'' ' +
     '           and vu.orcamento = ''0'' ' +
-    '           and vu.dta_emissao <= :dtafim) as ultima_venda ' +
+    '           and vu.dta_emissao <= :dtafim) as ultima_venda, ' +
+    '       coalesce((select avg(coalesce(vm.tot_liquido, 0)) from vendas1 vm ' +
+    '         where vm.cod_cliente = c.cod_cliente ' +
+    '           and vm.cod_representante = :rep ' +
+    '           and vm.faturado = ''1'' ' +
+    '           and vm.nfeentradasaida = ''0'' ' +
+    '           and vm.orcamento = ''0'' ' +
+    '           and vm.dta_emissao <= :dtafim), 0) as media_valor_pedido ' +
     'from cliente c ' +
     'left join cidades cd on cd.cod_cidade = c.cod_cidade ' +
     'where c.id_representante = :rep ' +
@@ -1508,7 +1548,7 @@ begin
   Grid := TStringGrid(FindComponent('CliNaoGrid'));
   if Assigned(Grid) then
   begin
-    Grid.ColCount := 4;
+    Grid.ColCount := 5;
     Grid.FixedRows := 1;
     Grid.RowCount := 2;
     Grid.Options := Grid.Options + [goColSizing, goRowSelect];
@@ -1516,10 +1556,12 @@ begin
     Grid.Cells[1, 0] := 'Cliente';
     Grid.Cells[2, 0] := 'Cidade';
     Grid.Cells[3, 0] := 'Ultima venda';
+    Grid.Cells[4, 0] := 'Media pedido';
     Grid.ColWidths[0] := 80;
-    Grid.ColWidths[1] := 420;
-    Grid.ColWidths[2] := 240;
+    Grid.ColWidths[1] := 360;
+    Grid.ColWidths[2] := 210;
     Grid.ColWidths[3] := 110;
+    Grid.ColWidths[4] := 110;
     for Row := 0 to Grid.ColCount - 1 do
       Grid.Cells[Row, 1] := '';
   end;
@@ -1542,7 +1584,7 @@ begin
       Partes: TStringList;
       Erro: string;
       Qtde: Integer;
-      Cidade, UltimaVenda: string;
+      Cidade, UltimaVenda, MediaPedido: string;
     begin
       ConnThread := nil;
       Q := nil;
@@ -1579,8 +1621,9 @@ begin
             UltimaVenda := ''
           else
             UltimaVenda := FormatDateTime('dd/mm/yyyy', Q.FieldByName('ultima_venda').AsDateTime);
+          MediaPedido := DashMoneyBR(Q.FieldByName('media_valor_pedido').AsFloat);
           Lista.Add(Q.FieldByName('cod_cliente').AsString + #9 +
-            Q.FieldByName('nom_cliente').AsString + #9 + Cidade + #9 + UltimaVenda);
+            Q.FieldByName('nom_cliente').AsString + #9 + Cidade + #9 + UltimaVenda + #9 + MediaPedido);
           Q.Next;
         end;
       except
@@ -1617,6 +1660,10 @@ begin
                     G.Cells[3, Idx + 1] := Partes[3]
                   else
                     G.Cells[3, Idx + 1] := '';
+                  if Partes.Count >= 5 then
+                    G.Cells[4, Idx + 1] := Partes[4]
+                  else
+                    G.Cells[4, Idx + 1] := '';
                 end;
               end;
             end;
@@ -2644,6 +2691,7 @@ var
 var
   AtuBD: TAtuBD;
 begin
+  CriarAbaEmailsIncorretos;
   Habilita_Consultas := True;
   if dao.CN.params.values['server'] = '200.180.91.99:3050' then
     DesabilitaTimers;
@@ -2802,12 +2850,14 @@ begin
     ImprimirVisitas(Representante_usuario);
 
   MenuCarregado := True;
-  if tsTotais.TabVisible and (pgDashboard.ActivePage = nil) then
-    pgDashboard.ActivePage := tsTotais;
+
 
   CarregarDashboardMeses;
   CarregarDashboardTotais;
   CarregarDashboardFinanceiro;
+
+  if tsTotais.TabVisible and (pgDashboard.ActivePage = nil) then
+    pgDashboard.ActivePage := tsTotais;
 
   if tsVendas.TabVisible then
   begin
@@ -2817,7 +2867,6 @@ begin
     CarregarDashboardVendas;
     CarregarClientesNaoAtendidos;
   end;
-
 end;
 
 procedure TFRPRI.HabilitaTimers;
@@ -3308,11 +3357,14 @@ begin
          Fr_vendas_industria2.q_cr1.Active and
          (not Fr_vendas_industria2.q_cr1.IsEmpty) then
       begin
-        Fr_vendas_industria2.MontaArquivoCobrancaEnvio;
+      Fr_vendas_industria2.MontaArquivoCobrancaEnvio;
+      if FMFUN.ACBrBoleto1.ListadeBoletos.Count > 0 then
+      begin
         FMFUN.ACBrBoletoFCFR1.FastReportFile := ExtractFilePath(Application.ExeName) + 'Relatorios\Boleto.fr3';
         FMFUN.ACBrBoletoFCFR1.DirLogo := ExtractFilePath(Application.ExeName) + 'Logos\colorido\';
         FMFUN.ACBrBoletoFCFR1.NomeArquivo := boletoPDF;
         FMFUN.ACBrBoleto1.GerarPDF;
+      end;
       end;
     end;
 
@@ -3798,6 +3850,18 @@ begin
   Modo.WorkBooks[1].Sheets[Tab].Range[Intervalo].BorderAround[Weight := Par1];
 
   // ex.: BordaCelGeral(Excel, 1, 'A9:I9', 4);
+end;
+
+procedure TFRPRI.F1Click(Sender: TObject);
+begin
+  try
+    Application.CreateForm(TFr_PDV, Fr_PDV);
+    SetaAcesso(Fr_PDV.Caption);
+    Fr_PDV.ShowModal;
+  finally
+    if Assigned(Fr_PDV) then
+      Fr_PDV.Free;
+  end;
 end;
 
 procedure TFRPRI.FontCel(Modo: Variant; Tab, cor, tamanho, Negrito: Integer;
@@ -4364,6 +4428,8 @@ end;
 
 procedure TFRPRI.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  FFechandoSistema := True;
+  tmHora.Enabled := False;
   dao.SkinData1.Active := False;
 
   fm_splash.show;
@@ -4741,6 +4807,43 @@ begin
   end
   else
     MessageDlg('Documento XML não informado...', mtInformation, [mbOk], 0);
+end;
+
+procedure TFRPRI.dbEmailsIncorretosTitleClick(Column: TColumn);
+var
+  Campo, Direcao: string;
+begin
+  case Column.Index of
+    0: Campo := 'e.cod_cliente';
+    1: Campo := 'e.nome_cliente';
+    2: Campo := 'e.email';
+  else
+    Exit;
+  end;
+
+  if SameText(FEmailsOrdemCampo, Campo) then
+    FEmailsOrdemAsc := not FEmailsOrdemAsc
+  else
+  begin
+    FEmailsOrdemCampo := Campo;
+    FEmailsOrdemAsc := True;
+  end;
+
+  if FEmailsOrdemAsc then
+    Direcao := 'ASC'
+  else
+    Direcao := 'DESC';
+
+  qEmailsIncorretos.Close;
+  qEmailsIncorretos.SQL.Text :=
+    'select e.cod_cliente, e.nome_cliente, e.email ' +
+    'from emails_incorretos e ' +
+    'order by ' + Campo + ' ' + Direcao;
+  qEmailsIncorretos.Open;
+end;
+procedure TFRPRI.qEmailsIncorretosAfterOpen(DataSet: TDataSet);
+begin
+  tsEmailIncorretos.TabVisible := not qEmailsIncorretos.IsEmpty;
 end;
 
 // LimpaCNPJ (retira máscaras do CNPJ)
@@ -5183,7 +5286,38 @@ var
   sl, ListaAnexos, ItensAnexo: TStringList;
   i, ToCount: Integer;
   emailTmp, listaEndereco: string;
+  Sucesso: Boolean;
+  pnlEmail: TsPanel;
+  lblEmailTit, lblEmailMsg: TsLabel;
+  function NormalizarEmail(const AEmail: string): string;
+  var
+    PInicio, PFim: Integer;
+  begin
+    Result := Trim(AEmail);
+    Result := StringReplace(Result, #13, '', [rfReplaceAll]);
+    Result := StringReplace(Result, #10, '', [rfReplaceAll]);
+    Result := StringReplace(Result, '"', '', [rfReplaceAll]);
+    PInicio := Pos('<', Result);
+    PFim := Pos('>', Result);
+    if (PInicio > 0) and (PFim > PInicio) then
+      Result := Trim(Copy(Result, PInicio + 1, PFim - PInicio - 1));
+  end;
+
+  function EmailValido(const AEmail: string): Boolean;
+  var
+    PArroba, PUltimoArroba: Integer;
+    Dominio: string;
+  begin
+    PArroba := Pos('@', AEmail);
+    PUltimoArroba := LastDelimiter('@', AEmail);
+    Dominio := Copy(AEmail, PArroba + 1, MaxInt);
+    Result := (AEmail <> '') and (PArroba > 1) and
+      (PArroba = PUltimoArroba) and (PArroba < Length(AEmail)) and
+      (Pos(' ', AEmail) = 0) and (Pos('.', Dominio) > 1) and
+      (Pos('.', Dominio) < Length(Dominio));
+  end;
 begin
+  Sucesso := False;
   path := ExtractFilePath(Application.ExeName);
 
   try
@@ -5238,8 +5372,8 @@ begin
       ItensAnexo.DelimitedText := listaEndereco;
       for i := 0 to ItensAnexo.Count - 1 do
       begin
-        emailTmp := Trim(ItensAnexo[i]);
-        if (emailTmp <> '') and (Pos('@', emailTmp) > 1) then
+        emailTmp := NormalizarEmail(ItensAnexo[i]);
+        if EmailValido(emailTmp) then
         begin
           frpri.ACBrMail.AddAddress(emailTmp);
           Inc(ToCount);
@@ -5252,8 +5386,8 @@ begin
         ItensAnexo.DelimitedText := StringReplace(StringReplace(StringReplace(cCC, ',', ';', [rfReplaceAll]), #13, ';', [rfReplaceAll]), #10, ';', [rfReplaceAll]);
         for i := 0 to ItensAnexo.Count - 1 do
         begin
-          emailTmp := Trim(ItensAnexo[i]);
-          if (emailTmp <> '') and (Pos('@', emailTmp) > 1) then
+          emailTmp := NormalizarEmail(ItensAnexo[i]);
+          if EmailValido(emailTmp) then
           begin
             if ToCount = 0 then
             begin
@@ -5272,8 +5406,8 @@ begin
         ItensAnexo.DelimitedText := StringReplace(StringReplace(StringReplace(bCC, ',', ';', [rfReplaceAll]), #13, ';', [rfReplaceAll]), #10, ';', [rfReplaceAll]);
         for i := 0 to ItensAnexo.Count - 1 do
         begin
-          emailTmp := Trim(ItensAnexo[i]);
-          if (emailTmp <> '') and (Pos('@', emailTmp) > 1) then
+          emailTmp := NormalizarEmail(ItensAnexo[i]);
+          if EmailValido(emailTmp) then
           begin
             if ToCount = 0 then
             begin
@@ -5412,18 +5546,65 @@ begin
     except
       on E: Exception do
       begin
-        Fr_email_envio.lbResultado.Caption :=
-          'Erro ao enviar: ' + E.Message;
-        Exit;
+        raise;
       end;
     end;
 
-  finally
+    Sucesso := True;
+  except
+    on E: Exception do
+    begin
+      RegistrarErroAplicacao(E, 'TEmail.envia_email', '',
+        'Destinatarios=' + cEnd1 + ';' + cEnd2 + ';' + cEnd3 +
+        '; Assunto=' + cAssunto);
+      Fr_email_envio.lbResultado.Caption := 'Erro ao enviar: ' + E.Message;
+      if Assigned(frpri) then
+      begin
+        pnlEmail := TsPanel(frpri.FindComponent('pnlEmailAviso'));
+        if not Assigned(pnlEmail) then
+        begin
+          pnlEmail := TsPanel.Create(frpri);
+          pnlEmail.Name := 'pnlEmailAviso';
+          pnlEmail.Parent := PainelAvisosLateral(frpri);
+          pnlEmail.Align := alNone;
+          pnlEmail.Width := 340;
+          pnlEmail.Height := 82;
+          pnlEmail.Color := clInfoBk;
+          pnlEmail.ParentBackground := False;
+          pnlEmail.SkinData.SkinSection := 'PANEL';
+          lblEmailTit := TsLabel.Create(pnlEmail);
+          lblEmailTit.Name := 'lblEmailAvisoTitulo';
+          lblEmailTit.Parent := pnlEmail;
+          lblEmailTit.Left := 12;
+          lblEmailTit.Top := 6;
+          lblEmailTit.Font.Style := [fsBold];
+          lblEmailMsg := TsLabel.Create(pnlEmail);
+          lblEmailMsg.Name := 'lblEmailAvisoMsg';
+          lblEmailMsg.Parent := pnlEmail;
+          lblEmailMsg.Left := 12;
+          lblEmailMsg.Top := 24;
+          lblEmailMsg.Width := 320;
+          lblEmailMsg.Height := 52;
+          lblEmailMsg.AutoSize := False;
+          lblEmailMsg.WordWrap := True;
+        end;
+        lblEmailTit := TsLabel(pnlEmail.FindComponent('lblEmailAvisoTitulo'));
+        lblEmailMsg := TsLabel(pnlEmail.FindComponent('lblEmailAvisoMsg'));
+        lblEmailTit.Caption := 'EMAIL DA NOTA NAO ENVIADO';
+        lblEmailMsg.Caption := 'Nota/assunto: ' + cAssunto +
+          sLineBreak + 'Destinatarios: ' + cEnd1 +
+          sLineBreak + 'Causa: ' + E.Message;
+        pnlEmail.Visible := True;
+        AtualizarPainelAvisosLateral(frpri);
+      end;
+      Fr_email_envio.Refresh;
+    end;
+  end;
+  if Sucesso then
     Fr_email_envio.lbResultado.Caption := 'Email enviado com sucesso!';
     Fr_email_envio.Refresh;
     Sleep(2000);
     Fr_email_envio.ModalResult := mrOk;
-  end;
 end;
 
 
@@ -5459,8 +5640,6 @@ begin
   end;
 end;
 
-function PainelAvisosLateral(AForm: TFRPRI): TsPanel; forward;
-procedure AtualizarPainelAvisosLateral(AForm: TFRPRI); forward;
 
 procedure TFRPRI.ChecarAvisoAtualizacao;
 var
@@ -5732,6 +5911,20 @@ begin
     Fr_pedido_simplificado.ShowModal;
   finally
     Fr_pedido_simplificado.Free;
+  end;
+end;
+
+procedure TFRPRI.VendasNFCeSimplificado1Click(Sender: TObject);
+begin
+  try
+    Application.CreateForm(TFr_nfce_simplificado, Fr_nfce_simplificado);
+    mform := 'nfce_simplificado';
+    Fr_nfce_simplificado.Caption := 'Pedidos - NFC-e Simplificada';
+    SetaAcesso(Fr_nfce_simplificado.Caption);
+    Fr_nfce_simplificado.ShowModal;
+  finally
+    if Assigned(Fr_nfce_simplificado) then
+      Fr_nfce_simplificado.Free;
   end;
 end;
 
@@ -6483,18 +6676,20 @@ begin
     CheckPedidoPalm;
 end;
 
-procedure TFRPRI.GerarComissaoDescontoDiario;
+procedure TFRPRI.GerarComissaoDescontoDiario(const ARepresentantesRanking: string);
 begin
+  if Trim(ARepresentantesRanking) = '' then
+    Exit;
   if Trunc(FUltimaGeracaoComissaoDesconto) = Date then
     Exit;
   if Fr_opc_relatorios <> nil then
     Exit;
 
-  FUltimaGeracaoComissaoDesconto := Date;
   try
     Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
     try
-      Fr_opc_relatorios.GerarComissaoDescontoDiario;
+      Fr_opc_relatorios.GerarComissaoDescontoDiario(ARepresentantesRanking);
+      FUltimaGeracaoComissaoDesconto := Date;
     finally
       FreeAndNil(Fr_opc_relatorios);
     end;
@@ -6503,27 +6698,19 @@ begin
       OutputDebugString(PChar('Falha ao gerar comissao/desconto diario: ' + E.Message));
   end;
 end;
-procedure TFRPRI.GerarRankingVendasDiario;
-var
-  PastaDia, ArquivoJpg: string;
+function TFRPRI.GerarRankingVendasDiario: string;
 begin
+  Result := '';
   if Trunc(FUltimaGeracaoRankingVendas) = Date then
     Exit;
   if Fr_opc_relatorios <> nil then
     Exit;
 
-  PastaDia := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName)) +
-    'Relatorios\RankingVendas\' + FormatDateTime('yyyy_mm_dd', Date);
-  ArquivoJpg := IncludeTrailingPathDelimiter(PastaDia) + 'ranking_vendas.jpg';
-
-  FUltimaGeracaoRankingVendas := Date;
-  if FileExists(ArquivoJpg) then
-    Exit;
-
   try
     Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
     try
-      Fr_opc_relatorios.GerarRankingVendasDiario;
+      Result := Fr_opc_relatorios.GerarRankingVendasDiario;
+      FUltimaGeracaoRankingVendas := Date;
     finally
       FreeAndNil(Fr_opc_relatorios);
     end;
@@ -6533,7 +6720,60 @@ begin
   end;
 end;
 
+procedure TFRPRI.EmailIncorretoDblClick(Sender: TObject);
+var
+  Grid: TDBGrid;
+  Q: TDataSet;
+  CampoCodigo: TField;
+  Codigo: string;
+begin
+  if not (Sender is TDBGrid) then
+    Exit;
+
+  Grid := TDBGrid(Sender);
+  if not Assigned(Grid.DataSource) or
+    not Assigned(Grid.DataSource.DataSet) then
+    Exit;
+
+  Q := Grid.DataSource.DataSet;
+  if (not Q.Active) or Q.IsEmpty then
+    Exit;
+
+  CampoCodigo := Q.FindField('cod_cliente');
+  if not Assigned(CampoCodigo) or CampoCodigo.IsNull then
+    Exit;
+
+  Codigo := Trim(CampoCodigo.AsString);
+  if (Codigo = '') or (StrToIntDef(Codigo, 0) <= 0) then
+    Exit;
+
+  if not Assigned(Fr_Cliente) then
+    Application.CreateForm(TFr_Cliente, Fr_Cliente);
+  Fr_Cliente.dados_incompletos := True;
+  Fr_Cliente.cliente := Codigo;
+  Fr_Cliente.ShowModal;
+end;
+
+procedure TFRPRI.CriarAbaEmailsIncorretos;
+begin
+  qEmailsIncorretos.Close;
+  qEmailsIncorretos.FetchOptions.Mode := fmAll;
+  qEmailsIncorretos.Open;
+end;
+
+procedure TFRPRI.ChecarRetornosEmail;
+begin
+  { O EmissorFila consulta o Gmail e grava os retornos. O ORBI apenas atualiza a grid. }
+  if (FUltimaVerificacaoEmail > 0) and
+     ((Now - FUltimaVerificacaoEmail) < (5 / 1440)) then
+    Exit;
+  FUltimaVerificacaoEmail := Now;
+  CriarAbaEmailsIncorretos;
+end;
+
 procedure TFRPRI.tmHoraTimer(Sender: TObject);
+var
+  RepresentantesRanking: string;
 begin
   FMFUN.TrimAppMemorySize;
   SB.Panels[2].Text := formatdatetime
@@ -6542,57 +6782,66 @@ begin
   if not Habilita_Consultas then
     Exit;
 
+  if FFechandoSistema or FGerandoRelatoriosDiarios then
+    Exit;
 
+  ChecarRetornosEmail;
   if SameText(Trim(nom_usuario), 'CLAUDIO') then
   begin
-    GerarRankingVendasDiario;
-    GerarComissaoDescontoDiario;
-  end;
-
-  if (GetASyncKeyState(VK_F2) <> 0) then
-  begin
-    if (fr_produtos_detalhes <> nil) then
-      Exit;
+    FGerandoRelatoriosDiarios := True;
+    tmHora.Enabled := False;
     try
-      Application.CreateForm(Tfr_produtos_detalhes, fr_produtos_detalhes);
-	  SetaAcesso(fr_produtos_detalhes.caption);
-      fr_produtos_detalhes.ShowModal;
+      RepresentantesRanking := GerarRankingVendasDiario;
+      GerarComissaoDescontoDiario(RepresentantesRanking);
     finally
-      fr_produtos_detalhes.Free;
-      fr_produtos_detalhes := nil;
+      FGerandoRelatoriosDiarios := False;
+      if not FFechandoSistema then
+        tmHora.Enabled := True;
     end;
-
   end;
 
   if (GetASyncKeyState(VK_F3) <> 0) then
   begin
-    if (fr_ultimas_vendas <> nil) then
-      Exit;
-    try
+    if fr_ultimas_vendas = nil then
+    begin
       Application.CreateForm(Tfr_ultimas_vendas, fr_ultimas_vendas);
-	  SetaAcesso(fr_ultimas_vendas.caption);
-      fr_ultimas_vendas.ShowModal;
-    finally
-      fr_ultimas_vendas.Free;
-      fr_ultimas_vendas := nil;
+      SetaAcesso(fr_ultimas_vendas.Caption);
     end;
-
+    fr_ultimas_vendas.Show;
+    if fr_ultimas_vendas.WindowState = wsMinimized then
+      fr_ultimas_vendas.WindowState := wsNormal;
+    fr_ultimas_vendas.BringToFront;
   end;
+
+  if (GetASyncKeyState(VK_F2) <> 0) then
+  begin
+    if fr_produtos_detalhes = nil then
+    begin
+      Application.CreateForm(Tfr_produtos_detalhes, fr_produtos_detalhes);
+      SetaAcesso(fr_produtos_detalhes.Caption);
+    end;
+    fr_produtos_detalhes.Show;
+    if fr_produtos_detalhes.WindowState = wsMinimized then
+      fr_produtos_detalhes.WindowState := wsNormal;
+    fr_produtos_detalhes.BringToFront;
+  end;
+
 
   if (GetASyncKeyState(VK_F11) <> 0) then
   begin
-    if (fr_etiquetas_multiplos_produtos <> nil) then
-      Exit;
-    try
+    if fr_etiquetas_multiplos_produtos = nil then
+    begin
       Application.CreateForm(Tfr_etiquetas_multiplos_produtos, fr_etiquetas_multiplos_produtos);
-  	  SetaAcesso(fr_etiquetas_multiplos_produtos.caption);
-      fr_etiquetas_multiplos_produtos.ShowModal;
-    finally
-      fr_etiquetas_multiplos_produtos.Free;
-      fr_etiquetas_multiplos_produtos := nil;
+      SetaAcesso(fr_etiquetas_multiplos_produtos.Caption);
     end;
-
+    fr_etiquetas_multiplos_produtos.Show;
+    if fr_etiquetas_multiplos_produtos.WindowState = wsMinimized then
+      fr_etiquetas_multiplos_produtos.WindowState := wsNormal;
+    fr_etiquetas_multiplos_produtos.BringToFront;
   end;
+
+  if Application.ModalLevel > 0 then
+    Exit;
 
 end;
 
@@ -7222,6 +7471,16 @@ begin
   end;
 end;
 
+procedure TFRPRI.sbVendasSimplificadaClick(Sender: TObject);
+begin
+  VendasSimplificado1Click(Self);
+end;
+
+procedure TFRPRI.sbPDVClick(Sender: TObject);
+begin
+  F1Click(Sender);
+end;
+
 procedure TFRPRI.sbContasPagarClick(Sender: TObject);
 begin
   if Contasapagar1.Visible then
@@ -7544,11 +7803,12 @@ end;
 
 procedure TFRPRI.FormCreate(Sender: TObject);
 begin
-  Screen.OnActiveControlChange := ChangeControl;
+    Screen.OnActiveControlChange := ChangeControl;
   tsVendas.TabVisible := False;
   tsClientesNaoAtendidos.TabVisible := False;
   tsTotais.TabVisible := False;
   tsFinanceiro.TabVisible := False;
+  tsEmailIncorretos.TabVisible := False;
 
   if Assigned(DashCbMes) then
     DashCbMes.OnChange := DashboardVendasFiltroChange;
@@ -7665,12 +7925,12 @@ end;
 
 procedure TFRPRI.produto_completoClick(Sender: TObject);
 begin
+  Fr_produtos := TFr_produtos.Create(Application);
   try
-    Application.CreateForm(TFr_produtos, Fr_produtos);
-	SetaAcesso(Fr_produtos.Caption);
+    SetaAcesso(Fr_produtos.Caption);
     Fr_produtos.ShowModal;
   finally
-    Fr_produtos.Free;
+    FreeAndNil(Fr_produtos);
   end;
 end;
 
@@ -8002,7 +8262,7 @@ end;
 
 procedure AtualizarPainelAvisosLateral(AForm: TFRPRI);
 var
-  pnlColuna, pnlAtualizacao, pnlPedidos, pnlEstoque: TsPanel;
+  pnlColuna, pnlAtualizacao, pnlPedidos, pnlEstoque, pnlCert, pnlEmail: TsPanel;
   TopAviso: Integer;
 begin
   pnlColuna := TsPanel(AForm.FindComponent('pnlAvisosLateral'));

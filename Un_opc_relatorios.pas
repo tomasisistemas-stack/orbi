@@ -113,6 +113,12 @@ type
     sbGrupo: TsSpeedButton;
     Prcod_grupo: TsComboEdit;
     edGrupo: TsEdit;
+    pais: TsPanel;
+    LbNom_Pais: TsLabel;
+    Lbl_pais: TsLabel;
+    sbPais: TsSpeedButton;
+    Prcod_pais: TsComboEdit;
+    edPais: TsEdit;
     gbUltimaCompra: TsGroupBox;
     sLabel3: TsLabel;
     PrUltimaCompra: TsDateEdit;
@@ -152,10 +158,13 @@ type
     rgAlfabeticamente: TsRadioButton;
     rgCodigo: TsRadioButton;
     rgEndereco: TsRadioButton;
+    rgMediavenda: TsRadioButton;
+    rgUltimaVenda: TsRadioButton;
     rgClienteBloqueado: TsGroupBox;
     rbbloqueado: TsRadioButton;
     rbNaoBloqueado: TsRadioButton;
     sRadioButton3: TsRadioButton;
+    rbSemRepresentante: TsCheckBox;
     categoria: TsPanel;
     lbCategoria: TsLabel;
     sLabel5: TsLabel;
@@ -225,6 +234,8 @@ type
     lbUFDestino: TsLabel;
     PrNaoConstrutoras: TsCheckBox;
     PrPessoaJuridica: TsCheckBox;
+    sLabelMediaValorPedido: TsLabel;
+    PrMediaValorPedido: TsCurrencyEdit;
     pnBairro: TsPanel;
     sLabel13: TsLabel;
     edBairro: TsEdit;
@@ -263,6 +274,10 @@ type
     procedure Prcod_clienteExit(Sender: TObject);
     procedure Prcod_cidadeExit(Sender: TObject);
     procedure Prcod_grupoExit(Sender: TObject);
+    procedure Prcod_paisButtonClick(Sender: TObject);
+    procedure Prcod_paisKeyPress(Sender: TObject; var Key: Char);
+    procedure Prcod_paisExit(Sender: TObject);
+    procedure sbPaisClick(Sender: TObject);
     procedure PrempresaButtonClick(Sender: TObject);
     procedure PrempresaKeyPress(Sender: TObject; var Key: Char);
     procedure Prcod_fiscalButtonClick(Sender: TObject);
@@ -374,8 +389,8 @@ type
     { Private declarations }
   public
     { Public declarations }
-    procedure GerarRankingVendasDiario;
-    procedure GerarComissaoDescontoDiario;
+    function GerarRankingVendasDiario: string;
+    procedure GerarComissaoDescontoDiario(const ARepresentantesRanking: string);
     procedure busca_produto_unitario(leitor: boolean; cod_barras: string);
 
     { *******RELATORIOS DE LISTAGEM******** }
@@ -477,11 +492,77 @@ uses
 {$R *.dfm}
 { TFr_opc_relatorios }
 
+function FiltroClienteMediaValorPedido(AValor: Double): string;
+var
+  ValorSQL: string;
+begin
+  ValorSQL := StringReplace(FormatFloat('0.00', AValor), ',', '.', [rfReplaceAll]);
+  Result :=
+    ' and exists (select 1 from vendas1 vm ' +
+    'where vm.cod_cliente = c.cod_cliente ' +
+    'and vm.cod_cliente is not null ' +
+    'and vm.NFEENTRADASAIDA = ''0'' ' +
+    'and vm.COD_FISCAL not in (''6152'', ''6409'') ' +
+    'and vm.NUMDOC not in (select vr.NUMDOC_REF_ENT from VENDAS1 vr where vr.FATURADO <> 2 and vr.NFEENTRADASAIDA = ''1'' and vr.NUMDOC_REF_ENT is not null) ' +
+    'and vm.nfe_dev is null ' +
+    'and vm.faturado in (0, 1, 3) ' +
+    'group by vm.cod_cliente ' +
+    'having avg(coalesce(vm.tot_liquido, 0)) >= ' + ValorSQL + ') ';
+end;
+
+function CampoClienteMediaValorPedido: string;
+begin
+  Result :=
+    'cast(coalesce((select avg(coalesce(vm.tot_liquido, 0)) from vendas1 vm ' +
+    'where vm.cod_cliente = c.cod_cliente ' +
+    'and vm.cod_cliente is not null ' +
+    'and vm.NFEENTRADASAIDA = ''0'' ' +
+    'and vm.COD_FISCAL not in (''6152'', ''6409'') ' +
+    'and vm.NUMDOC not in (select vr.NUMDOC_REF_ENT from VENDAS1 vr where vr.FATURADO <> 2 and vr.NFEENTRADASAIDA = ''1'' and vr.NUMDOC_REF_ENT is not null) ' +
+    'and vm.nfe_dev is null ' +
+    'and vm.faturado in (0, 1, 3)), 0) as numeric(15,2)) as media_valor_pedido';
+end;
+
+function CampoClienteDataUltimaVenda: string;
+begin
+  Result :=
+    'cast((select max(vm.dtadoc) from vendas1 vm ' +
+    'where vm.cod_cliente = c.cod_cliente ' +
+    'and vm.cod_cliente is not null ' +
+    'and vm.NFEENTRADASAIDA = ''0'' ' +
+    'and vm.COD_FISCAL not in (''6152'', ''6409'') ' +
+    'and vm.NUMDOC not in (select vr.NUMDOC_REF_ENT from VENDAS1 vr where vr.FATURADO <> 2 and vr.NFEENTRADASAIDA = ''1'' and vr.NUMDOC_REF_ENT is not null) ' +
+    'and vm.nfe_dev is null ' +
+    'and vm.faturado in (0, 1, 3)) as date) as dta_ultima_venda';
+end;
+
+function FiltroClienteRepresentante(const ACampo, ARepresentantes: string;
+  AIncluirSemRepresentante: Boolean): string;
+var
+  Filtro: string;
+begin
+  Result := '';
+  if Trim(ARepresentantes) = '' then
+  begin
+    if AIncluirSemRepresentante then
+      Result := ' and ' + ACampo + ' is null';
+    Exit;
+  end;
+
+  Filtro := Trim(fmfun.cmdAux(ACampo, ARepresentantes));
+  if SameText(Copy(Filtro, 1, 4), 'and ') then
+    Delete(Filtro, 1, 4);
+
+  if AIncluirSemRepresentante then
+    Result := ' and (' + Filtro + ' or ' + ACampo + ' is null)'
+  else
+    Result := ' and ' + Filtro;
+end;
 procedure TFr_opc_relatorios.monta_rel_cliente(cod_cidade: string; uf: string);
 var
   cmd, cmd_prod: string;
 begin
-  cmd := 'select cod_cliente, cast(nom_cliente||coalesce(''/''||substring(nom_fantasia from 1 for 25), '''') as varchar(200)) as nom_cliente, c.contato, cd.nom_cidade, telefone, cd.uf from cliente c ' +
+  cmd := 'select cod_cliente, cast(nom_cliente||coalesce(''/''||substring(nom_fantasia from 1 for 25), '''') as varchar(200)) as nom_cliente, c.contato, cd.nom_cidade, telefone, cd.uf, ' + CampoClienteMediaValorPedido + ', ' + CampoClienteDataUltimaVenda + ' from cliente c ' +
          'left join cidades cd on cd.cod_cidade=c.cod_cidade ' +
          'inner join cadmicro mc on (mc.microcod = cd.microcod) ' +
          'inner join cadmeso ms on (ms.mesocod = mc.mesocod) ' +
@@ -544,12 +625,15 @@ begin
   if edcodsupervisor.Text <> '' then
     cmd := cmd + fmfun.cmdAux('cd.cod_supervisor', edcodsupervisor.Text);
 
-  if edCodRepresentante.Text <> '' then
-    cmd := cmd + fmfun.cmdAux('c.ID_REPRESENTANTE', edCodRepresentante.Text);
+  cmd := cmd + FiltroClienteRepresentante('c.ID_REPRESENTANTE',
+    edCodRepresentante.Text, rbSemRepresentante.Checked);
 
   if Pruf.Text <> '' then
     cmd := cmd + ' and cd.uf=' + quotedstr(Pruf.Text);
 
+
+  if PrMediaValorPedido.Value > 0 then
+    cmd := cmd + FiltroClienteMediaValorPedido(PrMediaValorPedido.Value);
   if rgAlfabeticamente.Checked then
     cmd := cmd + ' order by cd.nom_cidade, nom_cliente';
 
@@ -558,6 +642,12 @@ begin
 
   if rgEndereco.Checked then
     cmd := cmd + ' order by cd.nom_cidade, bairro, endereco, nr_endereco';
+
+  if rgMediavenda.Checked then
+    cmd := cmd + ' order by media_valor_pedido desc, cd.nom_cidade, nom_cliente';
+
+  if rgUltimaVenda.Checked then
+    cmd := cmd + ' order by dta_ultima_venda desc nulls last, cd.nom_cidade, nom_cliente';
 
   Application.CreateForm(TFr_rel_cliente, Fr_rel_cliente);
   with Fr_rel_cliente.qu_cliente do
@@ -1349,6 +1439,7 @@ begin
   p2.Visible := false;
   gbSupervisao.Visible := false;
   OrdenarRanking.Visible := false;
+  PrMediaValorPedido.Value := 0;
 
   ordenar1.Visible := false;
   ordenar2.Visible := false;
@@ -1415,13 +1506,6 @@ begin
     supervisor.Visible := true;
     gbCSV.Visible := true;
     Fr_opc_relatorios.Height := 700;
-    if Tipo_usuario = '4' then
-    begin
-      prcod_supervisor.Text := Representante_usuario;
-      edcodsupervisor.Text := Representante_usuario;
-      prcod_supervisorExit(Self);
-      supervisor.Enabled := false;
-    end;
     if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
@@ -1437,13 +1521,6 @@ begin
     pn_mesoregiao.Visible := true;
     pn_microregiao.Visible := true;
     supervisor.Visible := true;
-    if Tipo_usuario = '4' then
-    begin
-      prcod_supervisor.Text := Representante_usuario;
-      edcodsupervisor.Text := Representante_usuario;
-      prcod_supervisorExit(Self);
-      supervisor.Enabled := false;
-    end;
   end
   else if (tipo_relatorio = 'produto_ncm_st') or (tipo_relatorio = 'produto_ncm_st_completo') then
   begin
@@ -1651,21 +1728,14 @@ begin
     uf.Visible := true;
     rgAtivo.Visible := true;
     rgOrdemQtdeValor.Visible := True;
-    if telemarketing then
-    begin
-      prcod_supervisor.Text := Representante_usuario;
-      edcodsupervisor.Text := Representante_usuario;
-      prcod_supervisorExit(Self);
-      supervisor.Enabled := false;
-    end;
-    if (Tipo_usuario = '0') or (Representante_usuario <> '') then
+  {  if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
       edCodRepresentante.Text := Representante_usuario;
       Prcod_representanteExit(Self);
       vendedor.Enabled := false;
     end;
-
+   }
     if Tipo_usuario = '9' then
     begin
       gbConsumidorFinal.Visible := True;
@@ -1702,6 +1772,8 @@ begin
     p1.Visible := true;
     fornecedor.Visible := true;
     grupo.Visible := true;
+    if area_atuacao <> '0' then
+      pais.Visible := true;
     rgAtivo.Visible := true;
     produto.Visible := true;
     ordenar2.visible := true;
@@ -1834,13 +1906,6 @@ begin
     vendedor.Visible := true;
     supervisor.Visible := true;
 
-    if Tipo_usuario = '4' then
-    begin
-      prcod_supervisor.Text := Representante_usuario;
-      edcodsupervisor.Text := Representante_usuario;
-      prcod_supervisorExit(Self);
-      supervisor.Enabled := false;
-    end;
     if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
@@ -1931,13 +1996,6 @@ begin
     end;
 
     Fr_opc_relatorios.Height := 700;
-    if telemarketing then
-    begin
-      prcod_supervisor.Text := Representante_usuario;
-      edcodsupervisor.Text := Representante_usuario;
-      prcod_supervisorExit(Self);
-      supervisor.Enabled := false;
-    end;
   end
   else if tipo_relatorio = 'vendas_padrao' then
   begin
@@ -1967,13 +2025,6 @@ begin
     pn_pedido.Visible := true;
     fop.Visible := true;
     uf.Visible := true;
-    if telemarketing then
-    begin
-      prcod_supervisor.Text := Representante_usuario;
-      edcodsupervisor.Text := Representante_usuario;
-      prcod_supervisorExit(Self);
-      supervisor.Enabled := false;
-    end;
     if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
@@ -2022,13 +2073,6 @@ begin
     uf.Visible := true;
     produto.Visible := true;
     Fr_opc_relatorios.Height := 750;
-    if telemarketing then
-    begin
-      prcod_supervisor.Text := Representante_usuario;
-      edcodsupervisor.Text := Representante_usuario;
-      prcod_supervisorExit(Self);
-      supervisor.Enabled := false;
-    end;
 
     if Tipo_usuario = '9' then
     begin
@@ -2054,13 +2098,6 @@ begin
       edCodRepresentante.Text := Representante_usuario;
       Prcod_representanteExit(Self);
       vendedor.Enabled := false;
-    end;
-    if telemarketing then
-    begin
-      prcod_supervisor.Text := Representante_usuario;
-      edcodsupervisor.Text := Representante_usuario;
-      prcod_supervisorExit(Self);
-      supervisor.Enabled := false;
     end;
 
     // grupo.Visible:= True;
@@ -2102,13 +2139,6 @@ begin
       Prcod_representanteExit(Self);
       vendedor.Enabled := false;
     end;
-    if telemarketing then
-    begin
-      prcod_supervisor.Text := Representante_usuario;
-      edcodsupervisor.Text := Representante_usuario;
-      prcod_supervisorExit(Self);
-      supervisor.Enabled := false;
-    end;
 
     // grupo.Visible:= True;
     // marca.Visible:= True;
@@ -2147,14 +2177,6 @@ begin
       vendedor.Enabled := false;
     end;
 
-    { if telemarketing then
-      begin
-      prcod_supervisor.Text := Representante_usuario;
-      edcodsupervisor.Text := Representante_usuario;
-      prcod_supervisorExit(Self);
-      supervisor.Enabled := false;
-      end; }
-
     gbSupervisao.Visible := false;
     Fr_opc_relatorios.Height := 400;
   end
@@ -2177,13 +2199,6 @@ begin
       edCodRepresentante.Text := Representante_usuario;
       Prcod_representanteExit(Self);
       vendedor.Enabled := false;
-    end;
-    if telemarketing then
-    begin
-      prcod_supervisor.Text := Representante_usuario;
-      edcodsupervisor.Text := Representante_usuario;
-      prcod_supervisorExit(Self);
-      supervisor.Enabled := false;
     end;
 
     // grupo.Visible:= True;
@@ -2221,13 +2236,6 @@ begin
       Prcod_representanteExit(Self);
       vendedor.Enabled := false;
     end;
-    if telemarketing then
-    begin
-      prcod_supervisor.Text := Representante_usuario;
-      edcodsupervisor.Text := Representante_usuario;
-      prcod_supervisorExit(Self);
-      supervisor.Enabled := false;
-    end;
 
     // grupo.Visible:= True;
     // marca.Visible:= True;
@@ -2263,13 +2271,6 @@ begin
       Prcod_representanteExit(Self);
       vendedor.Enabled := false;
     end;
-    if telemarketing then
-    begin
-      prcod_supervisor.Text := Representante_usuario;
-      edcodsupervisor.Text := Representante_usuario;
-      prcod_supervisorExit(Self);
-      supervisor.Enabled := false;
-    end;
 
     // grupo.Visible:= True;
     // marca.Visible:= True;
@@ -2298,13 +2299,6 @@ begin
       edCodRepresentante.Text := Representante_usuario;
       Prcod_representanteExit(Self);
       vendedor.Enabled := false;
-    end;
-    if telemarketing then
-    begin
-      prcod_supervisor.Text := Representante_usuario;
-      edcodsupervisor.Text := Representante_usuario;
-      prcod_supervisorExit(Self);
-      supervisor.Enabled := false;
     end;
 
     if Tipo_usuario = '9' then
@@ -2349,13 +2343,6 @@ begin
       edCodRepresentante.Text := Representante_usuario;
       Prcod_representanteExit(Self);
       vendedor.Enabled := false;
-    end;
-    if telemarketing then
-    begin
-      prcod_supervisor.Text := Representante_usuario;
-      edcodsupervisor.Text := Representante_usuario;
-      prcod_supervisorExit(Self);
-      supervisor.Enabled := false;
     end;
 
     if Tipo_usuario = '9' then
@@ -2462,13 +2449,6 @@ begin
       Prcod_representanteExit(Self);
       vendedor.Enabled := false;
     end;
-    if telemarketing then
-    begin
-      prcod_supervisor.Text := Representante_usuario;
-      edcodsupervisor.Text := Representante_usuario;
-      prcod_supervisorExit(Self);
-      supervisor.Enabled := false;
-    end;
 
     // grupo.Visible:= True;
     // marca.Visible:= True;
@@ -2501,13 +2481,6 @@ begin
       Prcod_representanteExit(Self);
       vendedor.Enabled := false;
     end;
-    if telemarketing then
-    begin
-      prcod_supervisor.Text := Representante_usuario;
-      edcodsupervisor.Text := Representante_usuario;
-      prcod_supervisorExit(Self);
-      supervisor.Enabled := false;
-    end;
 
     // grupo.Visible:= True;
     // marca.Visible:= True;
@@ -2537,13 +2510,6 @@ begin
       edCodRepresentante.Text := Representante_usuario;
       Prcod_representanteExit(Self);
       vendedor.Enabled := false;
-    end;
-    if telemarketing then
-    begin
-      prcod_supervisor.Text := Representante_usuario;
-      edcodsupervisor.Text := Representante_usuario;
-      prcod_supervisorExit(Self);
-      supervisor.Enabled := false;
     end;
 
     // grupo.Visible:= True;
@@ -2575,13 +2541,6 @@ begin
       Prcod_representanteExit(Self);
       vendedor.Enabled := false;
     end;
-    if telemarketing then
-    begin
-      prcod_supervisor.Text := Representante_usuario;
-      edcodsupervisor.Text := Representante_usuario;
-      prcod_supervisorExit(Self);
-      supervisor.Enabled := false;
-    end;
 
     // grupo.Visible:= True;
     // marca.Visible:= True;
@@ -2608,13 +2567,6 @@ begin
     cidade.Visible := True;
     rbTotalVendas.Checked := true;
 
-    if Tipo_usuario = '4' then
-    begin
-      prcod_supervisor.Text := Representante_usuario;
-      edcodsupervisor.Text := Representante_usuario;
-      prcod_supervisorExit(Self);
-      supervisor.Enabled := false;
-    end;
     if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
@@ -2891,13 +2843,6 @@ begin
       Prcod_representanteExit(Self);
       vendedor.Enabled := false;
     end;
-    if telemarketing then
-    begin
-      prcod_supervisor.Text := Representante_usuario;
-      edcodsupervisor.Text := Representante_usuario;
-      prcod_supervisorExit(Self);
-      supervisor.Enabled := false;
-    end;
   end
   else if tipo_relatorio = 'relatorio_transferencia' then
   begin
@@ -2953,6 +2898,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -2984,7 +2930,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -3018,6 +2968,7 @@ begin
   begin
     if (Prcod_cliente.Text = '') then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -3049,7 +3000,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -3071,6 +3026,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -3104,7 +3060,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   Prcod_cidade.SetFocus;
@@ -3137,6 +3097,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -3167,7 +3128,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -3242,6 +3207,7 @@ begin
     end;
     if (Prcod_produto.Text = '') then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -3272,7 +3238,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -3307,6 +3277,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -3338,7 +3309,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   Prcod_grupo.SetFocus;
@@ -3355,6 +3330,80 @@ begin
 
 end;
 
+procedure TFr_opc_relatorios.Prcod_paisButtonClick(Sender: TObject);
+var
+  chamou_form_old, chamou_pesquisa_old: string;
+begin
+  GarantirFrLocalizar;
+  chamou_form_old := chamou_form;
+  chamou_pesquisa_old := chamou_pesquisa;
+  try
+    Fr_localizar.Caption := 'Localizar Pais';
+    chamou_pesquisa := 'fr_pais';
+    chamou_form := 'fr_opc_relatorio_pais';
+    chamou_cadastro := '';
+    Fr_localizar.BT_cadastro.Visible := False;
+    Fr_localizar.CBcampos.Items.Add('Codigo');
+    Fr_localizar.CBcampos.Items.Add('Nome');
+    Fr_localizar.CBcampos.ItemIndex := 1;
+    Fr_localizar.ShowModal;
+  finally
+    FreeAndNil(Fr_localizar);
+    chamou_form := chamou_form_old;
+    chamou_pesquisa := chamou_pesquisa_old;
+  end;
+
+  if (edPais.Text = '') and (Prcod_pais.Text <> '') then
+    edPais.Text := Prcod_pais.Text;
+end;
+
+procedure TFr_opc_relatorios.Prcod_paisKeyPress(Sender: TObject; var Key: Char);
+begin
+  if not (Key in ['0'..'9', #8, #13]) then
+  begin
+    Beep;
+    Key := #0;
+  end;
+
+  if (Key = #13) and (Trim(Prcod_pais.Text) = '') then
+  begin
+    Prcod_paisButtonClick(Sender);
+    Key := #0;
+  end;
+end;
+
+procedure TFr_opc_relatorios.Prcod_paisExit(Sender: TObject);
+begin
+  if Trim(Prcod_pais.Text) = '' then
+  begin
+    LbNom_Pais.Caption := '...';
+    Exit;
+  end;
+
+  dao.Geral2('select nom_pais from pais where id=' + QuotedStr(Prcod_pais.Text));
+  if dao.q2.RecordCount > 0 then
+  begin
+    LbNom_Pais.Caption := dao.q2.FieldByName('nom_pais').AsString;
+    if edPais.Text = '' then
+      edPais.Text := Prcod_pais.Text
+    else if Pos(';' + Prcod_pais.Text + ';', ';' + edPais.Text + ';') = 0 then
+      edPais.Text := edPais.Text + ';' + Prcod_pais.Text;
+  end
+  else
+  begin
+    dao.msg('Registro nao Encontrado!');
+    Prcod_pais.Text := '';
+    if Prcod_pais.CanFocus then
+      Prcod_pais.SetFocus;
+  end;
+end;
+
+procedure TFr_opc_relatorios.sbPaisClick(Sender: TObject);
+begin
+  edPais.Clear;
+  Prcod_pais.Clear;
+  LbNom_Pais.Caption := '...';
+end;
 procedure TFr_opc_relatorios.Prcod_grupoKeyPress(Sender: TObject; var Key: Char);
 var
   Campos_combo: array of string;
@@ -3374,6 +3423,7 @@ begin
     begin
       // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
 
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -3405,7 +3455,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -3598,7 +3652,7 @@ var
   c_grupo, c_produto, cd_fornecedor: string;
   ac_qtd, ac_qtd_forn, ac_custo, ac_venda: Real;
   custo_final, preco_venda_final: Real;
-  cmd: string;
+  cmd, FiltroFornecedorPrincipal, FiltroFornecedorProduto: string;
 begin
 
   if tipo_relatorio = 'relatorio_estoque_custo' then
@@ -3654,7 +3708,12 @@ begin
     cmd := cmd + 'and pro.qtd_estoque > 0 '; }
 
   if edFornecedor.Text <> '' then
-    cmd := cmd + ' and (1 = 1 ' + fmfun.cmdAux('pro.fornecedor_principal', edFornecedor.Text) + ' or 0 < (SELECT count(*) FROM PRODUTO_FORNECEDOR pf where pf.cod_produto = pro.cod_produto ' + fmfun.cmdAux('pf.cod_fornecedor', edFornecedor.Text) + '))';
+  begin
+    FiltroFornecedorPrincipal := fmfun.cmdAux('pro.fornecedor_principal', edFornecedor.Text);
+    FiltroFornecedorProduto := fmfun.cmdAux('pf.cod_fornecedor', edFornecedor.Text);
+    if (FiltroFornecedorPrincipal <> '') and (FiltroFornecedorProduto <> '') then
+      cmd := cmd + ' and ((0 = 1 ' + FiltroFornecedorPrincipal + ') or exists (select 1 from produto_fornecedor pf where pf.cod_produto = pro.cod_produto ' + FiltroFornecedorProduto + '))';
+  end;
 
   if edProduto.Text <> '' then
   begin
@@ -3693,6 +3752,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -3721,7 +3781,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   Prempresa.SetFocus;
@@ -3749,6 +3813,7 @@ begin
   begin
     if (Prempresa.Text = '') then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -3777,7 +3842,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -3808,6 +3877,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -3837,7 +3907,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   Prcod_fiscal.SetFocus;
@@ -3889,6 +3963,7 @@ begin
   begin
     if (Prcod_fiscal.Text = '') then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -3918,7 +3993,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -3937,6 +4016,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -3966,7 +4046,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   Pruf.SetFocus;
@@ -3984,6 +4068,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -4013,7 +4098,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   PrUFDestino.SetFocus;
@@ -4066,6 +4155,7 @@ begin
   begin
     if (PrUFOrigem.Text = '') then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -4095,7 +4185,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -4119,6 +4213,7 @@ begin
   begin
     if (Pruf.Text = '') then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -4148,7 +4243,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;;
 
       chamou_form := chamou_form_old;
@@ -4168,6 +4267,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -4197,7 +4297,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   Pruf.SetFocus;
@@ -4241,6 +4345,7 @@ begin
   begin
     if (PrUFOrigem.Text = '') then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -4270,7 +4375,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -4511,6 +4620,7 @@ begin
   begin
     if (Prcod_fornecedor.Text = '') then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -4543,7 +4653,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -4563,6 +4677,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -4595,7 +4710,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -5590,6 +5709,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -5620,7 +5740,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   Prcod_marca.SetFocus;
@@ -5676,6 +5800,7 @@ begin
     begin
       // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
 
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -5706,7 +5831,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -6419,6 +6548,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -6448,7 +6578,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -6507,6 +6641,7 @@ begin
   begin
     if (Prcod_transportadora.Text = '') then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -6536,7 +6671,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -6550,18 +6689,32 @@ end;
 procedure TFr_opc_relatorios.relatorio_controle_fretes_transportadora(c_transportadora, dta_inicial, dta_final: string);
 var
   cmd: string;
+  DataInicial, DataFinal: TDateTime;
 begin
   if (edTransportadora.Text <> '') and (trim(edPedido.Text) <> '') then
     dao.Execsql('update vendas1 set cod_transportadora =' + edTransportadora.Text + ' where 1 = 1 '+fmfun.cmdAux('NUMDOC', edPedido.Text));
 
-  if Prdta_inicial.Text = '  /  /    ' then
+  if (Trim(dta_inicial) = '') or (Trim(dta_final) = '') or
+     (dta_inicial = '  /  /    ') or (dta_final = '  /  /    ') then
   begin
     dao.msg('Preencha os campos de Data');
     exit;
   end;
 
+  if not TryStrToDate(dta_inicial, DataInicial) then
+  begin
+    dao.msg('Data inicial inválida: ' + dta_inicial);
+    exit;
+  end;
+
+  if not TryStrToDate(dta_final, DataFinal) then
+  begin
+    dao.msg('Data final inválida: ' + dta_final);
+    exit;
+  end;
+
   cmd := 'select ' + '  ve1.numdoc,  ' + '  ve1.nf,  ' + '  ve1.nfe, ' + '  ve1.dta_emissao,  ' + '  cli.nom_cliente, ' + '  ve1.tot_liquido, ' + 'tra.cod_transportadora,  tra.nome, ' + '  cid.nom_cidade, ' + '  cid.uf, ' + '  ve1.vl_frete, ' + '  ve1.contato_frete,  ' + '  fp.nom_fop,  ' + '  pz.prazo, ' + '  ve1.faturado, tra.OBS  ' + 'from vendas1 ve1 ' + 'left join cliente cli on ve1.cod_cliente=cli.cod_cliente  ' + 'left join transportadora tra on ve1.cod_transportadora=tra.cod_transportadora  ' + 'left join cidades cid on cli.cod_cidade=cid.cod_cidade ' + 'left join fop fp on ve1.cod_fop=fp.cod_fop ' + 'left join prazo pz on pz.id=ve1.cod_prazo_pgto  ';
-  cmd := cmd + ' where ve1.dta_emissao between ' + quotedstr(formatdatetime('dd.mm.yyyy', strtodate(dta_inicial))) + ' and ' + quotedstr(formatdatetime('dd.mm.yyyy', strtodate(dta_final))) + ' and ve1.faturado in (''1'',''3'') ';
+  cmd := cmd + ' where ve1.dta_emissao between ' + QuotedStr(FormatDateTime('dd.mm.yyyy', DataInicial)) + ' and ' + QuotedStr(FormatDateTime('dd.mm.yyyy', DataFinal)) + ' and ve1.faturado in (''1'',''3'') ';
 
   if edTransportadora.Text <> '' then
     cmd := cmd + fmfun.cmdAux('ve1.cod_transportadora', edTransportadora.Text);
@@ -6717,6 +6870,8 @@ var
 begin
   cmd2 := 'select c.cod_cidade, c.cod_empresa, c.nom_cliente, c.nom_fantasia, c.cod_cliente,c.endereco, c.NR_ENDERECO, c.contato, c.cod_cidade, c.bairro, c.cep, c.telefone, ' + 'c.email, c.dta_aniversario, case when c.TIP_PESSOA = ''J'' THEN c.CNPJ ELSE c.CPF END AS CNPJ, ' +
           'case when c.TIP_PESSOA = ''J'' THEN c.IE ELSE c.RG END AS IE, ' +
+          CampoClienteMediaValorPedido + ', ' +
+          CampoClienteDataUltimaVenda + ', ' +
           'e.nom_empresa, cd.nom_cidade,  cd.uf from cliente c ' +
           'left join cidades cd on cd.cod_cidade = c.cod_cidade ' +
           'inner join cadmicro mc on (mc.microcod = cd.microcod) ' +
@@ -6754,8 +6909,8 @@ begin
   if edcodsupervisor.Text <> '' then
     cmd2 := cmd2 + fmfun.cmdAux('cd.cod_supervisor', edcodsupervisor.Text);
 
-  if edCodRepresentante.Text <> '' then
-    cmd2 := cmd2 + fmfun.cmdAux('c.ID_REPRESENTANTE', edCodRepresentante.Text);
+  cmd2 := cmd2 + FiltroClienteRepresentante('c.ID_REPRESENTANTE',
+    edCodRepresentante.Text, rbSemRepresentante.Checked);
 
   if PrClienteDataCadastro.date <> 0 then
     cmd2 := cmd2 + 'and c.DTA_CAD >= ' + quotedstr(formatdatetime('yyyy/mm/dd', PrClienteDataCadastro.date));
@@ -6774,6 +6929,9 @@ begin
   if edCliente.Text <> '' then
     cmd2 := cmd2 + fmfun.cmdAux('c.cod_cliente', edCliente.Text);
 
+
+  if PrMediaValorPedido.Value > 0 then
+    cmd2 := cmd2 + FiltroClienteMediaValorPedido(PrMediaValorPedido.Value);
   if rgAlfabeticamente.Checked then
     cmd2 := cmd2 + ' order by cd.nom_cidade, nom_cliente';
 
@@ -6782,6 +6940,12 @@ begin
 
   if rgEndereco.Checked then
     cmd2 := cmd2 + ' order by cd.nom_cidade, bairro, endereco, nr_endereco';
+
+  if rgMediavenda.Checked then
+    cmd2 := cmd2 + ' order by cd.nom_cidade, media_valor_pedido desc, nom_cliente';
+
+  if rgUltimaVenda.Checked then
+    cmd2 := cmd2 + ' order by cd.nom_cidade, dta_ultima_venda desc nulls last, nom_cliente';
 
   with dm.q_cliente do
   begin
@@ -7878,6 +8042,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -7914,7 +8079,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   Prcod_representante.SetFocus;
@@ -7974,6 +8143,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -8002,7 +8172,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   Prfop.SetFocus;
@@ -8037,6 +8211,7 @@ begin
   begin
     if (Prfop.Text = '') then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -8065,7 +8240,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -8288,6 +8467,7 @@ begin
   begin
     if (Prcod_representante.Text = '') then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -8325,7 +8505,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -9969,6 +10153,8 @@ begin
   if Pruf.Text <> '' then
     cmd := cmd + ' and cd.UF = ' + quotedstr(Pruf.Text);
 
+  Prcod_representante.Text := c_vendedor;
+
   if Prcod_representante.Text <> '' then
     cmd := cmd + fmfun.cmdAux('v1.cod_representante', Prcod_representante.Text);
 
@@ -10052,7 +10238,10 @@ begin
   if AGerarJpgDiario then
   begin
     ForceDirectories(ExtractFilePath(AArquivoJpg));
-    fR_RELATORIO.PrepareReport(True);
+    if FileExists(AArquivoJpg) then
+      DeleteFile(AArquivoJpg);
+    if not fR_RELATORIO.PrepareReport(True) then
+      raise Exception.Create('Falha ao preparar o relatório JPG.');
 
     JpegExport := TfrxJPEGExport.Create(nil);
     try
@@ -10061,6 +10250,8 @@ begin
       JpegExport.JPEGQuality := 95;
       JpegExport.FileName := AArquivoJpg;
       fR_RELATORIO.Export(JpegExport);
+      if not FileExists(AArquivoJpg) then
+        raise Exception.Create('Falha ao gerar o arquivo JPG: ' + AArquivoJpg);
     finally
       JpegExport.Free;
     end;
@@ -10070,14 +10261,13 @@ begin
 
 end;
 
-procedure TFr_opc_relatorios.GerarComissaoDescontoDiario;
-const
-  REPRESENTANTES: array[0..11] of string =
-    ('810', '1191', '196', '589', '1258', '836', '1228', '10', '1003', '948', '1289', '1264');
+procedure TFr_opc_relatorios.GerarComissaoDescontoDiario(const ARepresentantesRanking: string);
 var
-  I, J: Integer;
+  I, J, P: Integer;
   CodRepresentante, NomeRepresentante, Situacao, PastaDia, ArquivoJpg: string;
+  TipoRepresentante, RegistroRanking: string;
   DataInicial: TDateTime;
+  RepresentantesRanking: TStringList;
 
   function NomeArquivoSeguro(const AValor: string): string;
   const
@@ -10093,8 +10283,8 @@ var
       Result := 'REPRESENTANTE';
   end;
 
+
 begin
-  tipo_relatorio := 'comissoes_desconto';
   path := ExtractFilePath(Application.ExeName);
   DataInicial := EncodeDate(YearOf(Date), MonthOf(Date), 1);
   PastaDia := IncludeTrailingPathDelimiter(path) + 'Relatorios\ComissaoDesconto\' +
@@ -10104,6 +10294,7 @@ begin
   Prdta_inicial.Date := DataInicial;
   Prdta_final.Date := Date;
   Pruf.Text := '';
+  Prcod_representante.Text := '';
   edcodsupervisor.Text := '';
   edPedido.Text := '';
   rbApenasSupervisao.Checked := False;
@@ -10111,38 +10302,73 @@ begin
   rbApenasConsumidorFinal.Checked := False;
   rbNaoConsumidorFinal.Checked := False;
 
-  for I := Low(REPRESENTANTES) to High(REPRESENTANTES) do
-  begin
-    CodRepresentante := REPRESENTANTES[I];
-    dao.Geral3('select nom_representante from representante where id = ' + CodRepresentante);
-    if dao.q3.RecordCount > 0 then
-      NomeRepresentante := NomeArquivoSeguro(dao.q3.FieldByName('nom_representante').AsString)
-    else
-      NomeRepresentante := 'REP_' + CodRepresentante;
+  RepresentantesRanking := TStringList.Create;
+  try
+    RepresentantesRanking.Sorted := True;
+    RepresentantesRanking.Duplicates := dupIgnore;
+    RepresentantesRanking.CommaText := ARepresentantesRanking;
 
-    Prcod_representante.Text := CodRepresentante;
+    if RepresentantesRanking.Count = 0 then
+      raise Exception.Create('Nenhum representante encontrado no ranking de vendas para gerar os relatórios de comissão/desconto.');
 
-    for J := 0 to 1 do
+    for I := 0 to RepresentantesRanking.Count - 1 do
     begin
-      zzfaturado.Checked := J = 0;
-      zznao_faturado.Checked := J = 1;
-      if J = 0 then
-        Situacao := 'FATURADO'
-      else
-        Situacao := 'NAO_FATURADO';
+      CodRepresentante := Trim(RepresentantesRanking[I]);
+      if CodRepresentante = '' then
+        Continue;
 
-      ArquivoJpg := IncludeTrailingPathDelimiter(PastaDia) +
-        NomeRepresentante + '_' + Situacao + '.jpg';
-      if not FileExists(ArquivoJpg) then
+      dao.Geral3('select nom_representante from representante where id = ' + CodRepresentante);
+      if dao.q3.RecordCount > 0 then
+        NomeRepresentante := dao.q3.FieldByName('nom_representante').AsString
+      else
+        NomeRepresentante := 'REP_' + CodRepresentante;
+
+      tipo_relatorio := 'comissoes_desconto';
+      for J := 0 to 1 do
+      begin
+        zzfaturado.Checked := J = 0;
+        zznao_faturado.Checked := J = 1;
+        if J = 0 then
+          Situacao := 'FATURADO'
+        else
+          Situacao := 'NAO_FATURADO';
+
+        ArquivoJpg := IncludeTrailingPathDelimiter(PastaDia) +
+          NomeArquivoSeguro(CodRepresentante + '_' + NomeRepresentante + '_' + Situacao) + '.jpg';
         relatorio_comissao_desconto('', '', '', CodRepresentante, '', True, ArquivoJpg);
+      end;
     end;
+  finally
+    RepresentantesRanking.Free;
+    Prcod_representante.Text := '';
+    edcodsupervisor.Text := '';
   end;
 end;
+function TFr_opc_relatorios.GerarRankingVendasDiario: string;
+var
+   RepresentantesRanking: TStringList;
 
-procedure TFr_opc_relatorios.GerarRankingVendasDiario;
 begin
+  Result := '';
   tipo_relatorio := 'ranking_vendas';
   ranking_vendas(True);
+
+  RepresentantesRanking := TStringList.Create;
+  try
+    RepresentantesRanking.Sorted := True;
+    RepresentantesRanking.Duplicates := dupIgnore;
+
+    dm.q_ranking_vendas.Open;
+    dm.q_ranking_vendas.First;
+    while not dm.q_ranking_vendas.Eof do
+    begin
+      RepresentantesRanking.Add(dm.q_ranking_vendas.FieldByName('id').AsString);
+      dm.q_ranking_vendas.Next;
+    end;
+    Result := RepresentantesRanking.CommaText;
+  finally
+    RepresentantesRanking.Free;
+  end;
 end;
 procedure TFr_opc_relatorios.ranking_vendas(AGerarJpgDiario: Boolean);
 var
@@ -10185,11 +10411,12 @@ begin
   if (Prcod_representante.Text <> '') and (prcod_supervisor.Text <> '') then
     cmd_rep := ' and r.id in (' + Prcod_representante.Text + ',' + prcod_supervisor.Text + ')';
 
-  cmd := 'SELECT TIPO, REPRESENTANTE, TOTAL_ABERTO, TOTAL_FATURADO, QTDE, CAST(DESCONTO AS NUMERIC(15,2)) DESCONTO ' +
+  cmd := 'SELECT TIPO, ID, REPRESENTANTE, TOTAL_ABERTO, TOTAL_FATURADO, QTDE, CAST(DESCONTO AS NUMERIC(15,2)) DESCONTO ' +
          'FROM ' +
          '( ' +
          ' select ' +
          '  ''REPRESENTANTE'' AS TIPO, ' +
+         '  r.id, '+
          '  r.id||''-''||r.NOM_REPRESENTANTE as REPRESENTANTE, ' +
          '  coalesce(( ' +
          '    SELECT ' +
@@ -10280,6 +10507,7 @@ begin
          'UNION ' +
          'select ' +
          '  ''TELEVENDAS'' AS TIPO, ' +
+         '  r.id, '+
          '  r.id||''-''||r.NOM_REPRESENTANTE as REPRESENTANTE, ' +
          '  coalesce(( ' +
          '    SELECT ' +
@@ -10394,7 +10622,8 @@ begin
     PastaDia := IncludeTrailingPathDelimiter(path) + 'Relatorios\RankingVendas\' +
       FormatDateTime('yyyy_mm_dd', Date);
     ForceDirectories(PastaDia);
-    fR_RELATORIO.PrepareReport(True);
+    if not fR_RELATORIO.PrepareReport(True) then
+      raise Exception.Create('Falha ao preparar o relatório JPG.');
 
     JpegExport := TfrxJPEGExport.Create(nil);
     try
@@ -10402,7 +10631,11 @@ begin
       JpegExport.SeparateFiles := False;
       JpegExport.JPEGQuality := 95;
       JpegExport.FileName := IncludeTrailingPathDelimiter(PastaDia) + 'ranking_vendas.jpg';
+      if FileExists(JpegExport.FileName) then
+        DeleteFile(JpegExport.FileName);
       fR_RELATORIO.Export(JpegExport);
+      if not FileExists(JpegExport.FileName) then
+        raise Exception.Create('Falha ao gerar o arquivo JPG: ' + JpegExport.FileName);
     finally
       JpegExport.Free;
     end;
@@ -10872,6 +11105,7 @@ begin
          '  tm.tamanho, '+
          '  gd.est_individual, '+
          '  g.nom_grupo, '+
+         '  ps.nom_pais, '+
          '  pro.preco_venda, '+
          '  f.razao_social '+
          'from produto pro '+
@@ -10879,7 +11113,8 @@ begin
          'left join cores cr on cr.id = gd.id_cor '+
          'left join tamanho tm on tm.id = gd.id_tamanho '+
          'left join fornecedor f on f.cod_fornecedor = pro.fornecedor_principal '+
-         'left join grupo g on g.cod_grupo = pro.cod_grupo ';
+         'left join grupo g on g.cod_grupo = pro.cod_grupo '+
+         'left join pais ps on ps.id = g.id_pais ';
 
   cmd := cmd + 'where 1 = 1 ';
 
@@ -10914,17 +11149,20 @@ begin
   if edGrupo.Text <> '' then
     cmd := cmd + fmfun.cmdAux('pro.cod_grupo', edGrupo.Text);
 
+  if edPais.Text <> '' then
+    cmd := cmd + fmfun.cmdAux('ps.id', edPais.Text);
+
   if PrMostrarProdutosAbaixoEstoqueMinimo.Checked then
     cmd := cmd + ' and pro.QTD_ESTOQUE < pro.ESTOQUE_MINIMO ';
 
   if Alfabeticamente.Checked then
-    cmd := cmd + ' order by pro.nom_produto';
+    cmd := cmd + ' order by ps.nom_pais, g.nom_grupo, pro.nom_produto';
 
   if OrdemInterna.Checked then
-    cmd := cmd + ' order by pro.ord_pauta';
+    cmd := cmd + ' order by ps.nom_pais, g.nom_grupo, pro.ord_pauta';
 
   if CodigoProduto.Checked then
-    cmd := cmd + ' order by pro.cod_produto';
+    cmd := cmd + ' order by ps.nom_pais, g.nom_grupo, pro.cod_produto';
 
   with dm.q_posicao_estoque do
   begin
@@ -11361,8 +11599,8 @@ begin
                  ' AND V.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) '+
                  ' AND v.nfe_dev is null and  v.faturado in (0, 1, 3) and v.DTADOC > ''' + formatdatetime('yyyy/mm/dd', PrUltimaCompra.date) + ''') ';
 
-  if edCodRepresentante.Text <> '' then
-    cmd := cmd + fmfun.cmdAux('c.ID_REPRESENTANTE', edCodRepresentante.Text);
+  cmd := cmd + FiltroClienteRepresentante('c.ID_REPRESENTANTE',
+    edCodRepresentante.Text, rbSemRepresentante.Checked);
 
   if Pruf.Text <> '' then
     cmd := cmd + ' and cd.uf=' + quotedstr(Pruf.Text);
@@ -11697,6 +11935,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -11731,7 +11970,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   prContaCorrente.SetFocus;
@@ -11783,6 +12026,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -11813,7 +12057,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   Prid_plano_contas.SetFocus;
@@ -11922,6 +12170,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -11952,7 +12201,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   Prcod_mesoregiao.SetFocus;
@@ -12021,6 +12274,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -12052,7 +12306,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   Prcod_microregiao.SetFocus;
@@ -12109,6 +12367,7 @@ begin
   begin
     // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
 
+    if not Assigned(Fr_localizar) then
     Application.CreateForm(TFr_localizar, Fr_localizar);
 
     // guardar os valores antigos
@@ -12139,7 +12398,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
     PrCategoria.SetFocus;
@@ -12173,6 +12436,7 @@ begin
   begin
     // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
 
+    if not Assigned(Fr_localizar) then
     Application.CreateForm(TFr_localizar, Fr_localizar);
 
     // guardar os valores antigos
@@ -12203,7 +12467,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
     prSubCategoria.SetFocus;
@@ -12414,6 +12682,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -12450,7 +12719,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   prcod_supervisor.SetFocus;
@@ -12525,5 +12798,4 @@ begin
 end;
 
 end.
-
 

@@ -512,6 +512,7 @@ begin
     exit;
   end;
 
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -544,7 +545,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -891,6 +896,7 @@ var
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -917,7 +923,11 @@ begin
   Fr_localizar.CBcampos.ItemIndex := 1;
 
   Fr_localizar.ShowModal;
-  Fr_localizar.Free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -998,6 +1008,7 @@ begin
   begin
     if (Prcod_empresa.Text = '') then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -1024,7 +1035,11 @@ begin
       Fr_localizar.CBcampos.ItemIndex := 1;
 
       Fr_localizar.ShowModal;
-      Fr_localizar.Free;
+      if Assigned(Fr_localizar) then
+      begin
+        Fr_localizar.Free;
+        Fr_localizar := nil;
+      end;
 
       chamou_form := chamou_form_old;
       chamou_pesquisa := chamou_pesquisa_old;
@@ -1044,6 +1059,7 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -1073,7 +1089,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -1134,6 +1154,7 @@ begin
   begin
     if (Prcod_transportadora.Text = '') and (BtcriaCarga.Enabled = false) then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -1164,7 +1185,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -1184,6 +1209,7 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -1217,7 +1243,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -1246,6 +1276,7 @@ begin
   begin
     if (Prid_motorista.Text = '') and (BtcriaCarga.Enabled = false) then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -1283,7 +1314,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -1343,6 +1378,7 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -1374,7 +1410,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -1402,6 +1442,7 @@ begin
   begin
     if (Prid_veiculo.Text = '') and (BtcriaCarga.Enabled = false) then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -1433,7 +1474,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -1529,6 +1574,7 @@ begin
   Btgra.Enabled := false;
   btcan.Enabled := false;
 
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   chamou_form_old := chamou_form;
@@ -1567,7 +1613,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -2603,7 +2653,11 @@ begin
     'inner join prazo p on (p.ID = a.COD_PRAZO_PGTO) ' +
     'inner join fop f on (f.COD_FOP = a.COD_FOP) ' +
     'left join carga1 c1 on (a.COD_CARGA = cast(c1.ID as VARCHAR(20))) ' +
-    'where (a.FATURADO IN (1)  ';
+    'where a.NUMDOC_GRUPO IS NULL AND (a.COD_FISCAL not in (''6152'', ''6409'') OR a.COD_FISCAL IS NULL) '+
+    '  and a.NFEENTRADASAIDA = ''0'' '+
+    '  AND a.NUMDOC NOT IN (SELECT NUMDOC_REF_ENT FROM VENDAS1 WHERE FATURADO <> 2 AND NFEENTRADASAIDA = ''1'' AND NUMDOC_REF_ENT IS NOT NULL) '+
+    '  AND  (a.NFE_DEV is null or a.STATUS_NFE_DEV = 135) and a.consignacao <> ' + quotedstr('1') +
+    '  and (a.FATURADO IN (1)  ';
 
   if ckSomenteNfes.Checked then
     cmd := cmd +'  and a.chave_nfe is not null ';
@@ -3317,7 +3371,6 @@ begin
 end;
 
 end.
-
 
 
 

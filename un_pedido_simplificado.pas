@@ -163,12 +163,12 @@ type
     procedure AtualizarSubtotalItem;
     procedure AtualizarTotalLiquidoPedido;
     procedure AtualizarResumoPedido;
-    procedure ImprimirMatricial;
     procedure GravarItem(AAlterar: Boolean);
     function ObterDescontoMaximoItem: Double;
     function ValidarDescontoItem(const ADesconto: Double): Boolean;
   public
     procedure CarregarPorNumDoc(const ANumDoc: string);
+    procedure ImprimirMatricial;
   end;
 
 var
@@ -243,7 +243,7 @@ begin
   if Key = #13 then
   begin
     // se for, passa o foco para o próximo campo, zerando o valor da variável Key
-      if (ActiveControl.Name = 'Probservacoes_pedido') then
+      if Assigned(ActiveControl) and (ActiveControl.Name = 'Probservacoes_pedido') then
         Exit;
     Key := #0;
     Perform(Wm_NextDlgCtl, 0, 0);
@@ -389,7 +389,7 @@ end;
 
 procedure TFr_pedido_simplificado.MeDescontoExit(Sender: TObject);
 var
-  Desc: Double;
+  Desc, PrecoInformado: Double;
 begin
   Desc := ParseFloatFlex(MeDesconto.Text);
   if Desc < 0 then
@@ -400,8 +400,13 @@ begin
   ValidarDescontoItem(Desc);
   Desc := ParseFloatFlex(MeDesconto.Text);
 
+  PrecoInformado := ParseFloatFlex(MePreco.Text);
   if FPrecoVendaProduto > 0 then
-    MePreco.Text := FmtMoney(FPrecoVendaProduto * (1 - (Desc / 100)));
+  begin
+    { Preserva o acrescimo digitado quando o preco esta acima da tabela. }
+    if (Desc > 0) or (PrecoInformado <= FPrecoVendaProduto) then
+      MePreco.Text := FmtMoney(FPrecoVendaProduto * (1 - (Desc / 100)));
+  end;
 
   AtualizarSubtotalItem;
 end;
@@ -676,12 +681,14 @@ begin
         FRPRI.RD.ImpF(lh, 15, dao.q1.fieldbyname('nom_fop').AsString + ' ' + dao.q1.fieldbyname('prazo').AsString, [comp12]);
 
         FRPRI.RD.impC(lh, 76, 'TOT.PRODUTOS:', [comp12, NEGRITO]);
-        FRPRI.RD.impval(lh, 85, '###,##0.00', dao.q1.fieldbyname('tot_liquido').AsFloat, [comp12]);
+        FRPRI.RD.impval(lh, 85, '###,##0.00',
+          dao.q1.fieldbyname('tot_liquido').AsFloat +
+          dao.q1.fieldbyname('VLR_DESCONTO_GERAL').AsFloat, [comp12]);
 
         SetaPagina;
         lh := lh + 1;
 
-        total_liquido := dao.q1.fieldbyname('tot_liquido').AsFloat - dao.q1.fieldbyname('VLR_DESCONTO_GERAL').AsFloat;
+        total_liquido := dao.q1.fieldbyname('tot_liquido').AsFloat;
 
         FRPRI.RD.impC(lh, 02, 'PESO:', [comp12, NEGRITO]);
         FRPRI.RD.impval(lh, 6, '0.000', dao.q1.fieldbyname('peso_nota').AsFloat, [comp12]);
@@ -845,6 +852,7 @@ var
   I: Integer;
   ChamouFormOld, ChamouPesquisaOld, ChamouCadastroOld: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
   try
     ChamouFormOld := chamou_form;
@@ -899,7 +907,11 @@ begin
       end;
     end;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
     chamou_form := ChamouFormOld;
     chamou_pesquisa := ChamouPesquisaOld;
     chamou_cadastro := ChamouCadastroOld;
@@ -1302,6 +1314,7 @@ var
   I: Integer;
   ChamouFormOld, ChamouPesquisaOld, ChamouCadastroOld: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
   try
     ChamouFormOld := chamou_form;
@@ -1329,7 +1342,11 @@ begin
       LbNomProduto.Caption := Fr_localizar.mmLocalizar.FieldByName('nom_produto').AsString;
     end;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
     chamou_form := ChamouFormOld;
     chamou_pesquisa := ChamouPesquisaOld;
     chamou_cadastro := ChamouCadastroOld;
@@ -1536,6 +1553,7 @@ var
   I: Integer;
   ChamouFormOld, ChamouPesquisaOld, ChamouCadastroOld: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
   try
     ChamouFormOld := chamou_form;
@@ -1564,7 +1582,11 @@ begin
       LbNomRepresentante.Caption := Fr_localizar.mmLocalizar.FieldByName('nom_representante').AsString;
     end;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
     chamou_form := ChamouFormOld;
     chamou_pesquisa := ChamouPesquisaOld;
     chamou_cadastro := ChamouCadastroOld;
@@ -1599,6 +1621,7 @@ var
   I: Integer;
   ChamouFormOld, ChamouPesquisaOld, ChamouCadastroOld: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
   try
     ChamouFormOld := chamou_form;
@@ -1633,7 +1656,11 @@ begin
       LbNomCliente.Caption := Fr_localizar.mmLocalizar.FieldByName('nom_cliente').AsString;
     end;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
     chamou_form := ChamouFormOld;
     chamou_pesquisa := ChamouPesquisaOld;
     chamou_cadastro := ChamouCadastroOld;
@@ -1653,6 +1680,7 @@ var
   I: Integer;
   ChamouFormOld, ChamouPesquisaOld, ChamouCadastroOld: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
   try
     ChamouFormOld := chamou_form;
@@ -1682,7 +1710,11 @@ begin
       LbNomFop.Caption := Fr_localizar.mmLocalizar.FieldByName('nom_fop').AsString;
     end;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
     chamou_form := ChamouFormOld;
     chamou_pesquisa := ChamouPesquisaOld;
     chamou_cadastro := ChamouCadastroOld;
@@ -1724,6 +1756,7 @@ var
   I: Integer;
   ChamouFormOld, ChamouPesquisaOld, ChamouCadastroOld: string;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
   try
     ChamouFormOld := chamou_form;
@@ -1753,7 +1786,11 @@ begin
       LbNomPrazo.Caption := Fr_localizar.mmLocalizar.FieldByName('prazo').AsString;
     end;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
     chamou_form := ChamouFormOld;
     chamou_pesquisa := ChamouPesquisaOld;
     chamou_cadastro := ChamouCadastroOld;
@@ -1950,7 +1987,18 @@ begin
           Prcod_representante.Text := dao.q1.fieldbyname('id_representante').AsString;
           Prcod_representanteExit(Self);
           if tipo_usuario < '9' then
-            Prcod_representante.ReadOnly := True;
+          begin
+            if Trim(Prcod_representante.Text) <> '' then
+            begin
+              Prcod_representante.ReadOnly := True;
+              if Representante_usuario <> '' then
+              begin
+                Btgravar.Enabled := Trim(Prcod_representante.Text) = Representante_usuario;
+                if Trim(Prcod_representante.Text) <> Representante_usuario then
+                  MessageDlg('Não é permitido inserir pedido de cliente de outro representante!', mtWarning, [mbOk], 0);
+              end;
+            end;
+          end;
         end;
       end;
     end;
@@ -1972,7 +2020,8 @@ begin
   else begin
     dao.msg('Registro nao Encontrado!');
     Prcod_representante.Clear;
-    Prcod_representante.SetFocus;
+    if Prcod_representante.CanFocus then
+      Prcod_representante.SetFocus;
   end;
 end;
 
@@ -2079,7 +2128,6 @@ begin
 end;
 
 end.
-
 
 
 

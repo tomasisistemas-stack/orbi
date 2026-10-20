@@ -24,6 +24,28 @@ type
     PopupMenu1: TPopupMenu;
     Pgcliente: TsPageControl;
     tab_dados: TsTabSheet;
+    TabEntrega: TsTabSheet;
+    GbEntrega: TsGroupBox;
+    LbEntregaEndereco: TsLabel;
+    LbEntregaNr: TsLabel;
+    LbEntregaComplemento: TsLabel;
+    LbEntregaProximo: TsLabel;
+    LbEntregaBairro: TsLabel;
+    LbEntregaCep: TsLabel;
+    LbEntregaCidade: TsLabel;
+    LbEntregaNomCidade: TsLabel;
+    LbEntregaContato: TsLabel;
+    LbEntregaTelefone: TsLabel;
+    PrEntrega_endereco: TsEdit;
+    PrEntrega_nr_endereco: TsEdit;
+    PrEntrega_complemento: TsEdit;
+    PrEntrega_proximo: TsEdit;
+    PrEntrega_bairro: TsEdit;
+    PrEntrega_cep: TsMaskEdit;
+    PrEntrega_cod_cidade: TsComboEdit;
+    PrEntrega_contato: TsEdit;
+    PrEntrega_telefone: TsMaskEdit;
+    PrEntrega_mesmo_endereco: tsCheckbox;
     tab_perfil: TsTabSheet;
     gbDados: TsGroupBox;
     Label4: tsLabel;
@@ -297,6 +319,7 @@ type
     PrProEmprego: TCheckBox;
     sLabel9: TsLabel;
     PrSaldo: TsCurrencyEdit;
+    BtBuscaEndEntrega: TsBitBtn;
     procedure BtAltClick(Sender: TObject);
     procedure BtCanClick(Sender: TObject);
     procedure BtExcClick(Sender: TObject);
@@ -327,7 +350,11 @@ type
     procedure Prid_representanteButtonClick(Sender: TObject);
     procedure Prid_representanteExit(Sender: TObject);
     procedure BtBuscaEndClick(Sender: TObject);
+    procedure BtBuscaEndEntregaClick(Sender: TObject);
     procedure PrCod_CidadeExit(Sender: TObject);
+    procedure PrEntrega_cod_cidadeButtonClick(Sender: TObject);
+    procedure PrEntrega_cod_cidadeExit(Sender: TObject);
+    procedure PrEntrega_mesmo_enderecoClick(Sender: TObject);
     procedure BtBuscaCEPClick(Sender: TObject);
     procedure PrCNPJKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure PrFone_ContatoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -369,7 +396,8 @@ type
     procedure btCancNCMClick(Sender: TObject);
     procedure btExcNCMClick(Sender: TObject);
     procedure edTrib_icmsChange(Sender: TObject);
-  private
+private
+    FBuscaCEPEntrega: Boolean;
     procedure habilitaCamposAreaAtuacao(CodAtuacao: string);
     procedure CarregarMapa;
     procedure BuscaBonificacao;
@@ -412,9 +440,11 @@ var
 implementation
 
 uses Un_dao, UnPri, Un_localizar, Un_opc_relatorios, Un_opc_etiqueta,
-  UnFun, un_rl_etiqueta_empresa, Un_dm, pcnRetConsCad, MaskUtils;
+  UnFun, un_rl_etiqueta_empresa, Un_dm, pcnRetConsCad, MaskUtils,
+  Un_Error_Logger;
 
 const
+  GeoapifyKey = '5dbc34002e024da899f2c02920004bee';
   LocationIQKey = 'pk.d5be03405b5244d1f56bf8bda2b1e798';
 
 {$R *.dfm}
@@ -458,62 +488,305 @@ end;
 function TFr_Cliente.MontarEnderecoGeocode: string;
 begin
   Result := Trim(PrEndereco.Text) + ',' + Trim(Prnr_endereco.Text) + ', ' +
-    Trim(CIDADE) + ',' + Trim(UF);
+    Trim(PrBairro.Text) + ', ' + Trim(CIDADE) + ', ' + Trim(UF) +
+    ', CEP ' + Trim(PrCep.Text) + ', Brasil';
   Result := ExpandSiglas(Result);
 end;
 
 function TFr_Cliente.GeocodeAddress(const Address: string; out Lat, Lng: string): Boolean;
 var
-  Http: OleVariant;
-  RespStr: string;
-  JsonValue: TJSONValue;
-  Arr: TJSONArray;
-  Obj: TJSONObject;
-  Url: string;
+  LocationIQKeyValue: string;
+
+  function NomeEstado(const AUF: string): string;
+  var
+    LUF: string;
+  begin
+    LUF := UpperCase(Trim(AUF));
+    if LUF = 'AC' then Result := 'Acre'
+    else if LUF = 'AL' then Result := 'Alagoas'
+    else if LUF = 'AP' then Result := 'Amapa'
+    else if LUF = 'AM' then Result := 'Amazonas'
+    else if LUF = 'BA' then Result := 'Bahia'
+    else if LUF = 'CE' then Result := 'Ceara'
+    else if LUF = 'DF' then Result := 'Distrito Federal'
+    else if LUF = 'ES' then Result := 'Espirito Santo'
+    else if LUF = 'GO' then Result := 'Goias'
+    else if LUF = 'MA' then Result := 'Maranhao'
+    else if LUF = 'MT' then Result := 'Mato Grosso'
+    else if LUF = 'MS' then Result := 'Mato Grosso do Sul'
+    else if LUF = 'MG' then Result := 'Minas Gerais'
+    else if LUF = 'PA' then Result := 'Para'
+    else if LUF = 'PB' then Result := 'Paraiba'
+    else if LUF = 'PR' then Result := 'Parana'
+    else if LUF = 'PE' then Result := 'Pernambuco'
+    else if LUF = 'PI' then Result := 'Piaui'
+    else if LUF = 'RJ' then Result := 'Rio de Janeiro'
+    else if LUF = 'RN' then Result := 'Rio Grande do Norte'
+    else if LUF = 'RS' then Result := 'Rio Grande do Sul'
+    else if LUF = 'RO' then Result := 'Rondonia'
+    else if LUF = 'RR' then Result := 'Roraima'
+    else if LUF = 'SC' then Result := 'Santa Catarina'
+    else if LUF = 'SP' then Result := 'Sao Paulo'
+    else if LUF = 'SE' then Result := 'Sergipe'
+    else if LUF = 'TO' then Result := 'Tocantins'
+    else Result := Trim(AUF);
+  end;
+
+  function ValorJson(AObj: TJSONObject; const ANome: string): string;
+  var
+    LValue: TJSONValue;
+  begin
+    Result := '';
+    if AObj = nil then
+      Exit;
+    LValue := AObj.GetValue(ANome);
+    if LValue <> nil then
+      Result := Trim(LValue.Value);
+  end;
+
+  function ObjetoJson(AObj: TJSONObject; const ANome: string): TJSONObject;
+  var
+    LValue: TJSONValue;
+  begin
+    Result := nil;
+    if AObj = nil then
+      Exit;
+    LValue := AObj.GetValue(ANome);
+    if (LValue <> nil) and (LValue is TJSONObject) then
+      Result := TJSONObject(LValue);
+  end;
+
+  function NormalizarNumeroImovel(const AValor: string): string;
+  var
+    I: Integer;
+    C: Char;
+  begin
+    Result := '';
+    for I := 1 to Length(AValor) do
+    begin
+      C := UpCase(AValor[I]);
+      if C in ['A'..'Z', '0'..'9'] then
+        Result := Result + C;
+    end;
+  end;
+
+  function NumeroImovelConfere(const ARetornado: string): Boolean;
+  begin
+    Result := (NormalizarNumeroImovel(Prnr_endereco.Text) <> '') and
+      (NormalizarNumeroImovel(ARetornado) =
+       NormalizarNumeroImovel(Prnr_endereco.Text));
+  end;
+
+  function NumeroJsonPositivo(const AValor: string): Boolean;
+  var
+    I: Integer;
+  begin
+    Result := False;
+    for I := 1 to Length(AValor) do
+      if AValor[I] in ['1'..'9'] then
+      begin
+        Result := True;
+        Exit;
+      end;
+  end;
+
+  function ConsultarGeoapify(out ALat, ALng: string): Boolean;
+  var
+    Http: OleVariant;
+    ApiKey, Url, RespStr: string;
+    JsonValue, LValue: TJSONValue;
+    Root, Item, RankObj: TJSONObject;
+    Arr: TJSONArray;
+  begin
+    Result := False;
+    ALat := '';
+    ALng := '';
+
+    ApiKey := Trim(GetEnvironmentVariable('GEOAPIFY_API_KEY'));
+    if ApiKey = '' then
+      ApiKey := Trim(GeoapifyKey);
+    if (ApiKey = '') or SameText(ApiKey, 'Your_Geoapify_API_Key') then
+      Exit;
+
+    Url := 'https://api.geoapify.com/v1/geocode/search?' +
+      'housenumber=' + EncodeUrlParam(Trim(Prnr_endereco.Text)) +
+      '&street=' + EncodeUrlParam(ExpandSiglas(Trim(PrEndereco.Text))) +
+      '&postcode=' + EncodeUrlParam(Trim(PrCep.Text)) +
+      '&city=' + EncodeUrlParam(Trim(CIDADE)) +
+      '&state=' + EncodeUrlParam(NomeEstado(UF)) +
+      '&country=' + EncodeUrlParam('Brasil') +
+      '&format=json&limit=1&lang=pt&apiKey=' + EncodeUrlParam(ApiKey);
+
+    Http := CreateOleObject('MSXML2.ServerXMLHTTP.6.0');
+    Http.open('GET', Url, False);
+    Http.setRequestHeader('Accept', 'application/json');
+    Http.send;
+    if Http.status <> 200 then
+      Exit;
+
+    RespStr := Http.responseText;
+    JsonValue := TJSONObject.ParseJSONValue(RespStr);
+    try
+      if (JsonValue = nil) or not (JsonValue is TJSONObject) then
+        Exit;
+      Root := TJSONObject(JsonValue);
+      LValue := Root.GetValue('results');
+      if (LValue = nil) or not (LValue is TJSONArray) then
+        Exit;
+      Arr := TJSONArray(LValue);
+      if (Arr.Count = 0) or not (Arr.Items[0] is TJSONObject) then
+        Exit;
+      Item := TJSONObject(Arr.Items[0]);
+      RankObj := ObjetoJson(Item, 'rank');
+
+      if not SameText(ValorJson(Item, 'result_type'), 'building') then
+        Exit;
+      if not SameText(ValorJson(Item, 'match_type'), 'full_match') then
+        Exit;
+      if not NumeroJsonPositivo(ValorJson(RankObj,
+        'confidence_building_level')) then
+        Exit;
+      if not NumeroImovelConfere(ValorJson(Item, 'housenumber')) then
+        Exit;
+
+      ALat := StringReplace(ValorJson(Item, 'lat'), ',', '.', [rfReplaceAll]);
+      ALng := StringReplace(ValorJson(Item, 'lon'), ',', '.', [rfReplaceAll]);
+      Result := (ALat <> '') and (ALng <> '');
+    finally
+      JsonValue.Free;
+    end;
+  end;
+
+  function ConsultarLocationIQ(const AApiKey: string;
+    out ALat, ALng: string): Boolean;
+  var
+    Http: OleVariant;
+    Url, RespStr: string;
+    JsonValue: TJSONValue;
+    Arr: TJSONArray;
+    Item, AddressObj: TJSONObject;
+  begin
+    Result := False;
+    ALat := '';
+    ALng := '';
+    if (Trim(AApiKey) = '') or SameText(AApiKey,
+      'Your_LocationIQ_API_Key') then
+      Exit;
+
+    Url := 'https://us1.locationiq.com/v1/search/structured?' +
+      'key=' + EncodeUrlParam(AApiKey) +
+      '&street=' + EncodeUrlParam(Trim(Prnr_endereco.Text) + ' ' +
+        ExpandSiglas(Trim(PrEndereco.Text))) +
+      '&city=' + EncodeUrlParam(Trim(CIDADE)) +
+      '&state=' + EncodeUrlParam(NomeEstado(UF)) +
+      '&postalcode=' + EncodeUrlParam(Trim(PrCep.Text)) +
+      '&country=' + EncodeUrlParam('Brasil') +
+      '&countrycodes=br&format=json&addressdetails=1' +
+      '&normalizeaddress=1&limit=1&accept-language=pt-BR';
+
+    Http := CreateOleObject('MSXML2.ServerXMLHTTP.6.0');
+    Http.open('GET', Url, False);
+    Http.setRequestHeader('Accept', 'application/json');
+    Http.send;
+    if Http.status <> 200 then
+      Exit;
+
+    RespStr := Http.responseText;
+    JsonValue := TJSONObject.ParseJSONValue(RespStr);
+    try
+      if (JsonValue = nil) or not (JsonValue is TJSONArray) then
+        Exit;
+      Arr := TJSONArray(JsonValue);
+      if (Arr.Count = 0) or not (Arr.Items[0] is TJSONObject) then
+        Exit;
+      Item := TJSONObject(Arr.Items[0]);
+      AddressObj := ObjetoJson(Item, 'address');
+      if not NumeroImovelConfere(ValorJson(AddressObj, 'house_number')) then
+        Exit;
+
+      ALat := StringReplace(ValorJson(Item, 'lat'), ',', '.', [rfReplaceAll]);
+      ALng := StringReplace(ValorJson(Item, 'lon'), ',', '.', [rfReplaceAll]);
+      Result := (ALat <> '') and (ALng <> '');
+    finally
+      JsonValue.Free;
+    end;
+  end;
+  function ConsultarNominatim(out ALat, ALng: string): Boolean;
+  var
+    Http: OleVariant;
+    Url, RespStr: string;
+    JsonValue: TJSONValue;
+    Arr: TJSONArray;
+    Item, AddressObj: TJSONObject;
+  begin
+    Result := False;
+    ALat := '';
+    ALng := '';
+
+    Url := 'https://nominatim.openstreetmap.org/search?' +
+      'street=' + EncodeUrlParam(Trim(Prnr_endereco.Text) + ' ' +
+        ExpandSiglas(Trim(PrEndereco.Text))) +
+      '&city=' + EncodeUrlParam(Trim(CIDADE)) +
+      '&state=' + EncodeUrlParam(NomeEstado(UF)) +
+      '&postalcode=' + EncodeUrlParam(Trim(PrCep.Text)) +
+      '&country=' + EncodeUrlParam('Brasil') +
+      '&format=jsonv2&addressdetails=1&limit=1&countrycodes=br';
+
+    Sleep(1100);
+    Http := CreateOleObject('MSXML2.ServerXMLHTTP.6.0');
+    Http.open('GET', Url, False);
+    Http.setRequestHeader('Accept', 'application/json');
+    Http.setRequestHeader('User-Agent',
+      'ORBI-ERP/2.0 (geocodificacao de clientes)');
+    Http.send;
+    if Http.status <> 200 then
+      Exit;
+
+    RespStr := Http.responseText;
+    JsonValue := TJSONObject.ParseJSONValue(RespStr);
+    try
+      if (JsonValue = nil) or not (JsonValue is TJSONArray) then
+        Exit;
+      Arr := TJSONArray(JsonValue);
+      if (Arr.Count = 0) or not (Arr.Items[0] is TJSONObject) then
+        Exit;
+      Item := TJSONObject(Arr.Items[0]);
+      AddressObj := ObjetoJson(Item, 'address');
+      if not NumeroImovelConfere(ValorJson(AddressObj, 'house_number')) then
+        Exit;
+
+      ALat := StringReplace(ValorJson(Item, 'lat'), ',', '.', [rfReplaceAll]);
+      ALng := StringReplace(ValorJson(Item, 'lon'), ',', '.', [rfReplaceAll]);
+      Result := (ALat <> '') and (ALng <> '');
+    finally
+      JsonValue.Free;
+    end;
+  end;
+
 begin
   Result := False;
   Lat := '';
   Lng := '';
   if Trim(Address) = '' then
     Exit;
-  if (Trim(LocationIQKey) = '') or (LocationIQKey = 'Your_API_Access_Token') then
+
+  if ConsultarGeoapify(Lat, Lng) then
+  begin
+    Result := True;
     Exit;
-
-  Url := 'https://us1.locationiq.com/v1/search?key=' + LocationIQKey + '&q=' +
-    EncodeUrlParam(Address) + '&format=json&limit=1&countrycodes=br';
-
-  Http := CreateOleObject('MSXML2.ServerXMLHTTP.6.0');
-  Http.open('GET', Url, False);
-  Http.setRequestHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
-  Http.setRequestHeader('Accept', 'application/json,text/plain,*/*');
-  Http.setRequestHeader('Accept-Language', 'pt-BR,pt;q=0.9,en;q=0.8');
-  Http.send;
-
-  if Http.status <> 200 then
-    Exit;
-
-  RespStr := Http.responseText;
-  JsonValue := TJSONObject.ParseJSONValue(RespStr);
-  try
-    if (JsonValue <> nil) and (JsonValue is TJSONArray) then
-    begin
-      Arr := TJSONArray(JsonValue);
-      if Arr.Count > 0 then
-      begin
-        Obj := Arr.Items[0] as TJSONObject;
-        if Obj <> nil then
-        begin
-          Lat := Obj.GetValue<string>('lat');
-          Lng := Obj.GetValue<string>('lon');
-          Result := (Lat <> '') and (Lng <> '');
-        end;
-      end;
-    end;
-  finally
-    JsonValue.Free;
   end;
-end;
 
+  LocationIQKeyValue := Trim(GetEnvironmentVariable('LOCATIONIQ_API_KEY'));
+  if LocationIQKeyValue = '' then
+    LocationIQKeyValue := Trim(LocationIQKey);
+  if ConsultarLocationIQ(LocationIQKeyValue, Lat, Lng) then
+  begin
+    Result := True;
+    Exit;
+  end;
+
+  Result := ConsultarNominatim(Lat, Lng);
+end;
 function TFr_Cliente.JsEscape(const S: string): string;
 begin
   Result := StringReplace(S, '\', '\\', [rfReplaceAll]);
@@ -664,7 +937,7 @@ begin
     if Pgcliente.ActivePageIndex = 1 then
       Prestilo.SetFocus;
 
-    if (frpri.TipUsu = '0') or (frpri.TipUsu = '1') then
+    if ((frpri.TipUsu = '0') or (frpri.TipUsu = '1')) then
       Prid_representante.ReadOnly := true;
 
     //Prcliente_bloqueado.Enabled := Tipo_usuario = '9';
@@ -674,6 +947,9 @@ begin
     else
       Prid_representante.ReadOnly := false;
 
+
+    if trim(Prid_representante.Text) = '' then
+      Prid_representante.ReadOnly := false;
   except
   end;
 
@@ -1100,6 +1376,9 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 begin
 
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -1138,7 +1417,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -1256,6 +1539,8 @@ begin
   end; // end do for
 
   LbNom_cidade.Caption := q_cliente.fieldbyname('nom_cidade').AsString;
+  LbEntregaNomCidade.Caption := q_cliente.fieldbyname('entrega_nom_cidade').AsString;
+  PrEntrega_mesmo_enderecoClick(Self);
   Lbcid_trabalho.Caption := q_cliente.fieldbyname('cid_trabalho').AsString;
   Lbcid_emp_conj.Caption := q_cliente.fieldbyname('cid_trab_conj').AsString;
 
@@ -1598,7 +1883,9 @@ begin
     Close;
     sql.clear;
     sql.Add('select a.COD_CLIENTE, a.SUSPENSAO_PIS_CONFINS, a.celular, a.UltConsSerasa, a.DTA_CAD, a.PRI_COMPRA, a.NOM_CLIENTE, a.NOM_FANTASIA, a.EMAIL_END_NFE, ' +
-      'a.ENDERECO, a.CONSTRUTORA, a.COMPLEMENTO, a.PROXIMO, a.BAIRRO, a.CEP, a.COD_CIDADE, a.TIP_PESSOA, a.consumidor_final, ' +
+      'a.ENDERECO, a.CONSTRUTORA, a.COMPLEMENTO, a.PROXIMO, a.BAIRRO, a.CEP, a.COD_CIDADE, ' +
+      'a.ENTREGA_ENDERECO, a.ENTREGA_NR_ENDERECO, a.ENTREGA_COMPLEMENTO, a.ENTREGA_PROXIMO, a.ENTREGA_BAIRRO, ' +
+      'a.ENTREGA_CEP, a.ENTREGA_COD_CIDADE, a.ENTREGA_CONTATO, a.ENTREGA_TELEFONE, a.ENTREGA_MESMO_ENDERECO, a.TIP_PESSOA, a.consumidor_final, ' +
       'a.TELEFONE, a.EMAIL, a.AVISO, a.CNPJ, a.IE, a.IM, a.PROD_RURAL, a.CONTATO, a.FONE_CONTATO, a.operadora, ' +
       'a.LIMITE, a.CPF, a.RG, a.NATURALIDADE, a.EST_CIVIL, a.PAI, a.MAE, a.TIP_RESIDENCIA, a.ALUGUEL, a.pronautica, a.proemprego, ' +
       'a.EMPRESA, a.END_TRACLI, a.BAIRRO_TRABALHO, a.CID_TRABALHO, a.FONE_TRABALHO, a.CARGO, a.SALARIO, ' +
@@ -1608,8 +1895,9 @@ begin
       'a.CONTATO_PREFERIDO, a.ESTILO, a.CONTATO_FONE, a.CONTATO_EMAIL, a.CONTATO_CORRESPONDENCIA, ' +
       'a.ID_ANTIGO, a.PONTO_FIDELIDADE, a.ID_REPRESENTANTE, a.ID_FOP, a.PRAZO_MAXIMO, a.DESCONTO_MAXIMO, a.desconto_especial, ' +
       'a.CLIENTE_BLOQUEADO, a.STATUS, a.COD_EMPRESA, a.NR_ENDERECO, a.NFE_EMAIL, a.SINCRONIZAR_PALM, a.EMAIL_ADICIONAL1, EMAIL_ADICIONAL2, EMAIL_ADICIONAL3, ' +
-      'a.WHASTAPP, a.PRE_CADASTRO, c.nom_cidade, ct.nom_cidade as cid_trabalho, cj.nom_cidade as cid_trab_conj, a.saldo from cliente a ' +
+      'a.WHASTAPP, a.PRE_CADASTRO, c.nom_cidade, ce.nom_cidade as entrega_nom_cidade, ct.nom_cidade as cid_trabalho, cj.nom_cidade as cid_trab_conj, a.saldo from cliente a ' +
       'left join cidades c on c.cod_cidade = a.cod_cidade ' +
+      'left join cidades ce on ce.cod_cidade = a.entrega_cod_cidade ' +
       'left join cidades ct on ct.cod_cidade = a.cid_trabalho ' +
       'left join cidades cj on cj.cod_cidade = a.cid_emp_conj ' +
       'where a.cod_cliente=' + quotedstr(id));
@@ -1721,21 +2009,22 @@ var
 
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
+  LocalizarCidade: TFr_localizar;
 
 begin
-  Application.CreateForm(TFr_localizar, Fr_localizar);
+  LocalizarCidade := TFr_localizar.Create(nil);
 
   // guardar os valores antigos
   chamou_form_old := chamou_form;
   chamou_pesquisa_old := chamou_pesquisa;
 
-  Fr_localizar.Caption := 'Localizar Cidade';
+  LocalizarCidade.Caption := 'Localizar Cidade';
 
   chamou_pesquisa := 'fr_cidades';
   chamou_form := 'fr_cliente_cidade';
   chamou_cadastro := 'fr_cidade';
 
-  Fr_localizar.BT_cadastro.Caption := 'Cadastro de' + #13 + 'Cidades';
+  LocalizarCidade.BT_cadastro.Caption := 'Cadastro de' + #13 + 'Cidades';
 
   // preenchendo o combo box com os campos desejados para pesquisar.
   SetLength(Campos_combo, 3);
@@ -1746,15 +2035,15 @@ begin
   for i := 0 to 1 do
   begin
     valor_combo := Campos_combo[i];
-    Fr_localizar.CBcampos.Items.Add(valor_combo);
+    LocalizarCidade.CBcampos.Items.Add(valor_combo);
   end;
 
-  Fr_localizar.CBcampos.ItemIndex := 1;
+  LocalizarCidade.CBcampos.ItemIndex := 1;
 
   try
-    Fr_localizar.ShowModal;
+    LocalizarCidade.ShowModal;
   finally
-    Fr_localizar.Free;
+    LocalizarCidade.Free;
   end;
 
   chamou_form := chamou_form_old;
@@ -1773,6 +2062,9 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -1804,7 +2096,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -1823,6 +2119,9 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -1854,7 +2153,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -1865,9 +2168,15 @@ end;
 procedure TFr_Cliente.FormKeyPress(Sender: TObject; var Key: Char);
 begin
   if Key = #27 then
+  begin
+    Key := #0;
     Close;
+    Exit;
+  end;
 
-  if (ActiveControl.Name = 'PrAviso') or (ActiveControl.Name = 'PrObservacoes') then
+  if Assigned(ActiveControl) and
+     ((ActiveControl.Name = 'PrAviso') or
+      (ActiveControl.Name = 'PrObservacoes')) then
     exit;
 
   if Key = #13 then
@@ -2165,6 +2474,9 @@ begin
   begin
     if (PrCod_Cidade.Text = '') and (BtNov.Enabled = false) then
     begin
+      if Assigned(Fr_localizar) and Fr_localizar.Visible then
+        Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -2196,7 +2508,11 @@ begin
       try
         Fr_localizar.ShowModal;
       finally
-        Fr_localizar.Free;
+        if Assigned(Fr_localizar) then
+        begin
+          Fr_localizar.Free;
+          Fr_localizar := nil;
+        end;
       end;
 
       chamou_form := chamou_form_old;
@@ -2224,6 +2540,9 @@ begin
     if (Prcid_trabalho.Text = '') and (BtNov.Enabled = false) then
     begin
 
+      if Assigned(Fr_localizar) and Fr_localizar.Visible then
+        Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -2255,7 +2574,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
       chamou_form := chamou_form_old;
@@ -2282,6 +2605,9 @@ begin
   begin
     if (PrCid_emp_Conj.Text = '') and (BtNov.Enabled = false) then
     begin
+      if Assigned(Fr_localizar) and Fr_localizar.Visible then
+        Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       // guardar os valores antigos
@@ -2399,6 +2725,9 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
@@ -2437,7 +2766,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -2474,17 +2807,46 @@ begin
 end;
 
 procedure TFr_Cliente.BtBuscaEndClick(Sender: TObject);
-begin
-  if trim(PrCep.Text) = '-' then
+var
+  CEP: string;
+
+  function SomenteNumeros(const AValor: string): string;
+  var
+    I: Integer;
   begin
-    showmessage('Informe o CEP!!');
-    PrCep.SetFocus;
-    exit;
+    Result := '';
+    for I := 1 to Length(AValor) do
+      if AValor[I] in ['0'..'9'] then
+        Result := Result + AValor[I];
+  end;
+begin
+  FBuscaCEPEntrega := False;
+  CEP := SomenteNumeros(PrCep.Text);
+
+  if Length(CEP) <> 8 then
+  begin
+    ShowMessage('Informe um CEP valido com 8 digitos!');
+    if PrCep.CanFocus then
+      PrCep.SetFocus;
+    Exit;
   end;
 
-  ACBrCEP1.BuscarPorCEP(PrCep.Text);
+  try
+    ACBrCEP1.BuscarPorCEP(CEP);
 
-  PrEndereco.SetFocus;
+    if PrEndereco.CanFocus then
+      PrEndereco.SetFocus;
+  except
+    on E: Exception do
+    begin
+      RegistrarErroAplicacao(E, 'TFr_Cliente.BtBuscaEndClick', '',
+        'CEP=' + CEP);
+      MessageDlg('Nao foi possivel consultar o CEP.' + sLineBreak +
+        E.Message, mtInformation, [mbOK], 0);
+      if PrCep.CanFocus then
+        PrCep.SetFocus;
+    end;
+  end;
 end;
 
 procedure TFr_Cliente.PrCod_CidadeExit(Sender: TObject);
@@ -2517,6 +2879,67 @@ begin
   end
   else
     LbNom_cidade.Caption := '...';
+end;
+
+procedure TFr_Cliente.BtBuscaEndEntregaClick(Sender: TObject);
+var
+  CEP: string;
+begin
+  FBuscaCEPEntrega := True;
+  CEP := StringReplace(PrEntrega_cep.Text, '-', '', [rfReplaceAll]);
+  CEP := StringReplace(CEP, ' ', '', [rfReplaceAll]);
+  if Length(Trim(CEP)) <> 8 then
+  begin
+    ShowMessage('Informe um CEP valido com 8 digitos!');
+    Exit;
+  end;
+  try
+    ACBrCEP1.BuscarPorCEP(CEP);
+  except
+    on E: Exception do
+      ShowMessage('Nao foi possivel consultar o CEP.' + sLineBreak + E.Message);
+  end;
+end;
+
+procedure TFr_Cliente.PrEntrega_mesmo_enderecoClick(Sender: TObject);
+begin
+  TabEntrega.TabVisible := not PrEntrega_mesmo_endereco.Checked;
+  if PrEntrega_mesmo_endereco.Checked then
+    Pgcliente.ActivePage := tab_dados;
+end;
+
+procedure TFr_Cliente.PrEntrega_cod_cidadeButtonClick(Sender: TObject);
+begin
+  PrEntrega_cod_cidade.SetFocus;
+end;
+
+procedure TFr_Cliente.PrEntrega_cod_cidadeExit(Sender: TObject);
+var
+  Cidade: string;
+begin
+  if Trim(PrEntrega_cod_cidade.Text) = '' then
+  begin
+    LbEntregaNomCidade.Caption := '...';
+    Exit;
+  end;
+  if not FMFUN.verificaNumerico(PrEntrega_cod_cidade.Text) then
+  begin
+    ShowMessage('Dado tem que ser sempre Numérico!');
+    PrEntrega_cod_cidade.SetFocus;
+    Exit;
+  end;
+  dao.Geral2('select nom_cidade, uf from cidades where cod_cidade = ' + QuotedStr(PrEntrega_cod_cidade.Text));
+  if dao.q2.RecordCount > 0 then
+  begin
+    Cidade := dao.q2.FieldByName('nom_cidade').AsString;
+    LbEntregaNomCidade.Caption := Cidade + '-' + dao.q2.FieldByName('uf').AsString;
+  end
+  else
+  begin
+    dao.msg('Registro não Encontrado!');
+    PrEntrega_cod_cidade.Clear;
+    LbEntregaNomCidade.Caption := '...';
+  end;
 end;
 
 procedure TFr_Cliente.BtBuscaCEPClick(Sender: TObject);
@@ -2701,11 +3124,21 @@ begin
     begin
       with ACBrCEP1.Enderecos[i] do
       begin
-        PrEndereco.Text := trim(Tipo_Logradouro + ' ' + Logradouro);
-        PrComplemento.Text := Complemento;
-        PrBairro.Text := Bairro;
-        PrCod_Cidade.Text := COPY(IBGE_Municipio, 1, 6);
-        PrCod_CidadeExit(Self);
+        if FBuscaCEPEntrega then
+        begin
+          PrEntrega_endereco.Text := trim(Tipo_Logradouro + ' ' + Logradouro);
+          PrEntrega_bairro.Text := Bairro;
+          PrEntrega_cod_cidade.Text := COPY(IBGE_Municipio, 1, 6);
+          PrEntrega_cod_cidadeExit(Self);
+        end
+        else
+        begin
+          PrEndereco.Text := trim(Tipo_Logradouro + ' ' + Logradouro);
+          PrComplemento.Text := Complemento;
+          PrBairro.Text := Bairro;
+          PrCod_Cidade.Text := COPY(IBGE_Municipio, 1, 6);
+          PrCod_CidadeExit(Self);
+        end;
       end;
     end;
   end;
@@ -2886,6 +3319,9 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 begin
   try
+    if Assigned(Fr_localizar) and Fr_localizar.Visible then
+      Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
+    if not Assigned(Fr_localizar) then
     Application.CreateForm(TFr_localizar, Fr_localizar);
 
     // guardar os valores antigos
@@ -2919,7 +3355,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
     chamou_form := chamou_form_old;

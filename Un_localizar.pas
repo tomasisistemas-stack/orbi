@@ -58,6 +58,7 @@ type
     { Private declarations }
   public
     nova_pesquisa: boolean;
+    destructor Destroy; override;
     procedure mostra_campos;
     procedure ListarSelecionados;
 
@@ -70,6 +71,7 @@ type
     procedure loc_Cliente(valor: string);
     procedure loc_fornecedor(valor: string);
     procedure loc_grupo(valor: string);
+    procedure loc_pais(valor: string);
     procedure loc_usuario(valor: string);
     procedure loc_cidade(valor: string);
     procedure loc_mesoregiao(valor: string);
@@ -121,6 +123,9 @@ var
   selecionados: string;
   tem_selecionado: boolean;
 
+function FrLocalizarValido: Boolean;
+procedure GarantirFrLocalizar;
+
 implementation
 
 uses unpri, un_dao, Un_Fornecedor, Un_configuracao, Un_Cliente, Un_grupo,
@@ -129,7 +134,7 @@ uses unpri, un_dao, Un_Fornecedor, Un_configuracao, Un_Cliente, Un_grupo,
   un_tamanho, Un_colecao, Un_contas_pagar,
   Unacerto_estoque, Un_opc_relatorios,
   Un_contas_receber, Un_cheque_terceiros, Un_cheques,
-  Un_representante, Un_banco, Un_conta_corrente, Un_vendas_industria2, Un_pedido_simplificado,
+  Un_representante, Un_banco, Un_conta_corrente, Un_vendas_industria2, Un_pedido_simplificado, Un_nfce_simplificado,
   Un_prazo_pagamento, Un_montagem_carga, Un_motorista, Un_veiculos,
   Un_marcas, Un_pedidos, Un_pesquisa_produto_vendas, Un_pre_pedido, Un_ncm,
   Un_nfe_envio_lote, Un_cidade, Un_nfe_arquivos, Un_nfe_danfe,
@@ -143,9 +148,167 @@ uses unpri, un_dao, Un_Fornecedor, Un_configuracao, Un_Cliente, Un_grupo,
   un_produto_detalhes, un_impostos, un_ultimas_vendas, Un_tabela_unidade,
   Un_calcular_13o_salarios, Un_cfop, un_controle_visitas, un_etiquetas_multiplos_produtos,
   Un_representantes_clientes, un_estrutura_produto, un_entrada_producao,
-  Un_etapas_producao, Un_plano_contas, un_alterar_preco;
+  Un_etapas_producao, Un_plano_contas, un_alterar_preco, TypInfo;
 
 {$R *.dfm}
+
+destructor TFr_localizar.Destroy;
+begin
+  if Fr_localizar = Self then
+    Fr_localizar := nil;
+  inherited;
+end;
+
+function FrLocalizarValido: Boolean;
+var
+  I: Integer;
+begin
+  Result := False;
+  if not Assigned(Fr_localizar) then
+    Exit;
+
+  for I := 0 to Screen.FormCount - 1 do
+    if (Screen.Forms[I] = Fr_localizar) and
+       (Screen.Forms[I] is TFr_localizar) then
+    begin
+      Result := True;
+      Exit;
+    end;
+end;
+
+procedure GarantirFrLocalizar;
+var
+  I: Integer;
+begin
+  if FrLocalizarValido then
+    Exit;
+
+  Fr_localizar := nil;
+  for I := 0 to Screen.FormCount - 1 do
+    if Screen.Forms[I] is TFr_localizar then
+    begin
+      Fr_localizar := TFr_localizar(Screen.Forms[I]);
+      Exit;
+    end;
+
+  Application.CreateForm(TFr_localizar, Fr_localizar);
+end;
+
+type
+  TDesativarLocalizarHook = class(TComponent)
+  private
+    FForm: TCustomForm;
+    FOldActivate: TNotifyEvent;
+    FOldShow: TNotifyEvent;
+    procedure FormActivate(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+  public
+    procedure Configurar(AForm: TCustomForm);
+  end;
+
+function PropStrLocalizar(AComponent: TComponent; const APropName: string): string;
+begin
+  Result := '';
+  if Assigned(AComponent) and IsPublishedProp(AComponent, APropName) then
+    Result := GetStrProp(AComponent, APropName);
+end;
+
+procedure SetEnabledLocalizar(AComponent: TComponent; AEnabled: Boolean);
+begin
+  if Assigned(AComponent) and IsPublishedProp(AComponent, 'Enabled') then
+    SetOrdProp(AComponent, 'Enabled', Ord(AEnabled));
+end;
+
+procedure DesativarActionLocalizar(AComponent: TComponent);
+var
+  Obj: TObject;
+begin
+  if Assigned(AComponent) and IsPublishedProp(AComponent, 'Action') then
+  begin
+    Obj := GetObjectProp(AComponent, 'Action');
+    if Assigned(Obj) and (Obj is TComponent) then
+      SetEnabledLocalizar(TComponent(Obj), False);
+  end;
+end;
+
+function ComponenteLocalizar(AComponent: TComponent): Boolean;
+var
+  Nome, Caption, Classe: string;
+  EhComando: Boolean;
+begin
+  Result := False;
+  if not Assigned(AComponent) then
+    Exit;
+
+  Nome := UpperCase(AComponent.Name);
+  Caption := UpperCase(PropStrLocalizar(AComponent, 'Caption'));
+  Classe := UpperCase(AComponent.ClassName);
+  EhComando := (Pos('BUTTON', Classe) > 0) or
+               (Pos('BITBTN', Classe) > 0) or
+               (Pos('ACTION', Classe) > 0);
+
+  Result := EhComando and
+            ((Pos('LOCALIZ', Nome) > 0) or
+             (Pos('LOCALIZ', Caption) > 0) or
+             (Pos('PROCURA', Caption) > 0) or
+             (Nome = 'BTPRO') or
+             (Nome = 'BTLOC') or
+             (Nome = 'BTNLOC') or
+             (Nome = 'SBLOC'));
+end;
+
+procedure DesativarBotaoLocalizarCadastro(AForm: TCustomForm);
+var
+  I: Integer;
+  Componente: TComponent;
+  Hook: TDesativarLocalizarHook;
+begin
+  if not Assigned(AForm) then
+    Exit;
+
+  for I := 0 to AForm.ComponentCount - 1 do
+  begin
+    Componente := AForm.Components[I];
+    if ComponenteLocalizar(Componente) then
+    begin
+      SetEnabledLocalizar(Componente, False);
+      DesativarActionLocalizar(Componente);
+    end;
+  end;
+
+  if AForm.FindComponent('DesativarLocalizarHook') = nil then
+  begin
+    Hook := TDesativarLocalizarHook.Create(AForm);
+    Hook.Name := 'DesativarLocalizarHook';
+    Hook.Configurar(AForm);
+  end;
+end;
+
+procedure TDesativarLocalizarHook.Configurar(AForm: TCustomForm);
+begin
+  FForm := AForm;
+  if AForm is TForm then
+  begin
+    FOldShow := TForm(AForm).OnShow;
+    FOldActivate := TForm(AForm).OnActivate;
+    TForm(AForm).OnShow := FormShow;
+    TForm(AForm).OnActivate := FormActivate;
+  end;
+end;
+
+procedure TDesativarLocalizarHook.FormShow(Sender: TObject);
+begin
+  if Assigned(FOldShow) then
+    FOldShow(Sender);
+  DesativarBotaoLocalizarCadastro(FForm);
+end;
+
+procedure TDesativarLocalizarHook.FormActivate(Sender: TObject);
+begin
+  if Assigned(FOldActivate) then
+    FOldActivate(Sender);
+  DesativarBotaoLocalizarCadastro(FForm);
+end;
 
 procedure TFr_localizar.BT_pesquisarClick(Sender: TObject);
 begin
@@ -211,6 +374,10 @@ begin
   else if chamou_pesquisa = 'fr_grupo' then
   begin
     loc_grupo(trim(EDlocalizar.Text));
+  end
+  else if chamou_pesquisa = 'fr_pais' then
+  begin
+    loc_pais(trim(EDlocalizar.Text));
   end
   else if chamou_pesquisa = 'fr_ordem_compra' then
   begin
@@ -396,86 +563,71 @@ end;
 
 procedure TFr_localizar.loc_remessa_boleto(valor: string);
 var
-  i: Integer;
-  cmd: string;
+  cmd, ValorNumerico: string;
+  CodigoBusca: Integer;
+  PSeparador: Integer;
 begin
-  cmd := '';
+  ValorNumerico := Trim(valor);
+  PSeparador := Pos(',', ValorNumerico);
+  if PSeparador = 0 then
+    PSeparador := Pos('.', ValorNumerico);
+  if PSeparador > 0 then
+    ValorNumerico := Copy(ValorNumerico, 1, PSeparador - 1);
+
   cmd := 'SELECT distinct a.ID, a.DATA, a.CONTA, c.NOM_CONTA ' +
     'FROM BOLETO_REMESSA_ORDEM a ' +
     'left outer join CONTA_CORRENTE c on (c.ID = a.CONTA) ';
 
-  if CBcampos.Text = 'Nº Remessa' then
+  if (CBcampos.Text = 'Nº Remessa') or (CBcampos.Text = 'Conta') then
   begin
-    cmd := cmd + 'where a.id = ' + QuotedStr(valor)+' order by a.DATA  desc';
-
-    with Qu_localizar do
+    if not TryStrToInt(ValorNumerico, CodigoBusca) then
     begin
-      close;
-      sql.clear;
-      sql.add(cmd);
-      open;
+      MessageBox(Handle, 'Informe um codigo numerico valido.', 'ORBI',
+        MB_ICONWARNING);
+      Exit;
     end;
+
+    if CBcampos.Text = 'Nº Remessa' then
+      cmd := cmd + 'where a.id = ' + IntToStr(CodigoBusca) +
+        ' order by a.DATA desc'
+    else
+      cmd := cmd + 'where a.CONTA = ' + IntToStr(CodigoBusca) +
+        ' order by a.DATA desc';
   end
   else if CBcampos.Text = 'Banco' then
   begin
     if zzbusca_qualquer.Checked then
       cmd := cmd + 'where c.NOM_CONTA like ' + QuotedStr('%' + valor + '%') +
-        ' order by a.DATA  desc'
+        ' order by a.DATA desc'
     else
       cmd := cmd + 'where c.NOM_CONTA like ' + QuotedStr(valor + '%') +
         ' order by a.DATA desc';
-
-    with Qu_localizar do
-    begin
-      close;
-      sql.clear;
-      sql.add(cmd);
-      open;
-    end;
-  end
-  else if CBcampos.Text = 'Conta' then
-  begin
-    cmd := cmd + 'where a.CONTA = ' + valor +  ' order by a.DATA  desc ';
-
-    with Qu_localizar do
-    begin
-      close;
-      sql.clear;
-      sql.add(cmd);
-      open;
-    end;
   end
   else if CBcampos.Text = 'Data' then
-  begin
-    cmd := cmd + 'where a.DATA like ' + QuotedStr(valor) +
-      ' order by a.DATA desc';
+    cmd := cmd + 'where cast(a.DATA as varchar(10)) like ' +
+      QuotedStr(Trim(valor) + '%') + ' order by a.DATA desc';
 
-    with Qu_localizar do
-    begin
-      close;
-      sql.clear;
-      sql.add(cmd);
-      open;
-    end;
+  with Qu_localizar do
+  begin
+    Close;
+    SQL.Text := cmd;
+    Open;
   end;
 
   if Qu_localizar.RecordCount <= 0 then
   begin
-    MessageBox(handle, 'Não Foi Encontrado Registro com Este Dado!', 'ORBI',
+    MessageBox(Handle, 'Nao foi encontrado registro com este dado!', 'ORBI',
       MB_ICONWARNING);
-    exit;
+    Exit;
   end;
 
-  mmLocalizar.fieldbyname('id').DisplayLabel := 'Nº Remessa';
-  mmLocalizar.fieldbyname('id').DisplayWidth := 5;
-  mmLocalizar.fieldbyname('conta').DisplayLabel := 'Conta';
-  mmLocalizar.fieldbyname('conta').DisplayWidth := 5;
-  mmLocalizar.fieldbyname('nom_conta').DisplayLabel := 'Banco';
-  mmLocalizar.fieldbyname('Data').DisplayLabel := 'Data';
-  // DgLocalizar.SetFocus;
-
+  mmLocalizar.FieldByName('id').DisplayLabel := 'Nº Remessa';
+  mmLocalizar.FieldByName('id').DisplayWidth := 5;
+  mmLocalizar.FieldByName('conta').DisplayLabel := 'Conta';
+  mmLocalizar.FieldByName('conta').DisplayWidth := 5;
+  mmLocalizar.FieldByName('nom_conta').DisplayLabel := 'Banco';
+  mmLocalizar.FieldByName('Data').DisplayLabel := 'Data';
 end;
-
 procedure TFr_localizar.loc_fornecedor(valor: string);
 var
   i: Integer;
@@ -571,10 +723,10 @@ begin
   if frpri.TipUsu = '0' then
   begin
     if not frpri.supervisor then
-      cmd := cmd + ' and ID_REPRESENTANTE = ' + frpri.Representante_id
+      cmd := cmd + ' and (ID_REPRESENTANTE = ' + frpri.Representante_id + ' OR ID_REPRESENTANTE IS NULL) '
     else
       cmd := cmd +
-        ' and ID_REPRESENTANTE =  in (select r.ID from REPRESENTANTE r where r.FUNCIONARIO = ''0'' and r.ATIVO = ''S'')  and cl.cliente_bloqueado = ''N'' ';
+        ' and ID_REPRESENTANTE in (select r.ID from REPRESENTANTE r where r.FUNCIONARIO = ''0'' and r.ATIVO = ''S'')  and cl.cliente_bloqueado = ''N'' ';
   end;
 
   if CBcampos.Text = 'Codigo' then
@@ -907,6 +1059,43 @@ begin
 
 end;
 
+procedure TFr_localizar.loc_pais(valor: string);
+var
+  cmd: string;
+begin
+  cmd := 'select id, nom_pais from pais ';
+
+  if CBcampos.Text = 'Codigo' then
+    cmd := cmd + 'where id = ' + QuotedStr(valor)
+  else if CBcampos.Text = 'Nome' then
+  begin
+    if zzbusca_qualquer.Checked then
+      cmd := cmd + 'where nom_pais like ' + QuotedStr('%' + valor + '%')
+    else
+      cmd := cmd + 'where nom_pais like ' + QuotedStr(valor + '%');
+  end;
+
+  cmd := cmd + ' order by nom_pais';
+  with Qu_localizar do
+  begin
+    Close;
+    SQL.Clear;
+    SQL.Add(cmd);
+    Open;
+  end;
+
+  if Qu_localizar.RecordCount <= 0 then
+  begin
+    MessageBox(Handle, 'Não Foi Encontrado Registro com Este Dado!', 'ORBI',
+      MB_ICONWARNING);
+    Exit;
+  end;
+
+  mmLocalizar.FieldByName('id').DisplayLabel := 'Código';
+  mmLocalizar.FieldByName('id').DisplayWidth := 8;
+  mmLocalizar.FieldByName('nom_pais').DisplayLabel := 'Pais';
+  mmLocalizar.FieldByName('nom_pais').DisplayWidth := 40;
+end;
 procedure TFr_localizar.loc_categoria_estoque(valor: string);
 var
   i: Integer;
@@ -1116,15 +1305,18 @@ begin
   end
   else if chamou_form = 'frm_remessa_boleto' then
   begin
-    if not Qu_localizar.IsEmpty then
+    if mmLocalizar.Active and not mmLocalizar.IsEmpty and
+       (mmLocalizar.FindField('id') <> nil) and
+       (mmLocalizar.FindField('conta') <> nil) then
+    begin
       frm_remessa_boleto.Prid.Enabled := true;
-    frm_remessa_boleto.modo_insert := false;
-    frm_remessa_boleto.Prid.Text := mmLocalizar.fieldbyname('id').AsString;
-    frm_remessa_boleto.PrCONTA.Text := mmLocalizar.fieldbyname('conta')
-      .AsString;
-    frm_remessa_boleto.Pridexit(self);
-    frm_remessa_boleto.Prid.Enabled := false;
-    close;
+      frm_remessa_boleto.modo_insert := false;
+      frm_remessa_boleto.Prid.Text := mmLocalizar.FieldByName('id').AsString;
+      frm_remessa_boleto.PrCONTA.Text := mmLocalizar.FieldByName('conta').AsString;
+      frm_remessa_boleto.PridExit(Self);
+      frm_remessa_boleto.Prid.Enabled := false;
+      Close;
+    end;
   end
   else if chamou_form = 'fr_remessa_boleto_nfe_arquivos' then
   begin
@@ -2160,7 +2352,25 @@ begin
     end;
     close;
   end
-  else if chamou_form = 'fr_opc_relatorio_categoria' then
+  else if chamou_form = 'fr_opc_relatorio_pais' then
+  begin
+    if not Qu_localizar.IsEmpty then
+    begin
+      if tem_selecionado then
+      begin
+        if selecionados = '' then
+          Fr_opc_relatorios.edPais.Text := mmLocalizar.FieldByName('id').AsString
+        else
+          Fr_opc_relatorios.edPais.Text := selecionados;
+      end
+      else
+        Fr_opc_relatorios.Prcod_pais.Text := mmLocalizar.FieldByName('id').AsString;
+
+      Fr_opc_relatorios.LbNom_Pais.Caption :=
+        mmLocalizar.FieldByName('nom_pais').AsString;
+    end;
+    Close;
+  end  else if chamou_form = 'fr_opc_relatorio_categoria' then
   begin
     if not Qu_localizar.IsEmpty then
     begin
@@ -3177,6 +3387,12 @@ begin
         .AsString);
     close;
   end
+  else if chamou_form = 'fr_pdv' then
+  begin
+    if not Qu_localizar.IsEmpty then
+      ModalResult := mrOk;
+    Close;
+  end
   // PEDIDO
   else if chamou_form = 'fr_pedido' then
   begin
@@ -3199,6 +3415,23 @@ begin
     end;
     close;
   end  // PEDIDO SIMPLIFICADO
+  else if chamou_form = 'fr_nfce_simplificado' then
+  begin
+    hide;
+    if not Qu_localizar.IsEmpty then
+      Fr_nfce_simplificado.CarregarPorNumDoc(mmLocalizar.FieldByName('numdoc').AsString);
+    ModalResult := mrOk;
+    close;
+  end  else if (chamou_form = 'fr_pdv_produto') or (chamou_form = 'fr_pdv_cliente') or
+    (chamou_form = 'fr_pdv_representante') or (chamou_form = 'fr_pdv_fop') or
+    (chamou_form = 'fr_pdv_prazo') then
+  begin
+    if not mmLocalizar.IsEmpty then
+    begin
+      ModalResult := mrOk;
+      Close;
+    end;
+  end
   else if chamou_form = 'fr_pedido_simplificado' then
   begin
     hide;
@@ -3820,6 +4053,28 @@ begin
     end;
     close;
   end
+  else if chamou_form = 'fr_configuracao_frente_caixa_cliente' then
+  begin
+    if not Qu_localizar.IsEmpty then
+    begin
+      Fr_configuracao.PrFRENTE_CAIXA_CLIENTE_PADRAO.Text :=
+        mmLocalizar.fieldbyname('cod_cliente').AsString;
+      Fr_configuracao.Lbcliente_pdv.Caption :=
+        mmLocalizar.fieldbyname('nom_cliente').AsString;
+    end;
+    close;
+  end
+  else if chamou_form = 'fr_configuracao_frente_caixa_representante' then
+  begin
+    if not Qu_localizar.IsEmpty then
+    begin
+      Fr_configuracao.PrFRENTE_CAIXA_REPRESENTANTE_PADRAO.Text :=
+        mmLocalizar.fieldbyname('id').AsString;
+      Fr_configuracao.Lbrepresentante_pdv.Caption :=
+        mmLocalizar.fieldbyname('nom_representante').AsString;
+    end;
+    close;
+  end
   else if chamou_form = 'fr_configuracao_frente_caixa_empresa' then
   begin
     if not Qu_localizar.IsEmpty then
@@ -4081,10 +4336,10 @@ var
   cmd: string;
 begin
   cmd := '';
-  cmd := 'select p.cod_produto, nom_produto, m.NOM_MARCA as marca, preco_venda, CAST(case when p.promocao = ''S'' then ''Sim'' else ''Não'' end  AS VARCHAR(10)) as promocao, g.nom_grupo, '+
-         ' CAST(case when status = ''S'' then ''Não'' else ''Sim'' end AS VARCHAR(10)) as ativo  from produto p '
-    +
-  // 'left join produto_fornecedor pf on pf.cod_produto = p.cod_produto '+
+  cmd := 'select p.cod_produto, nom_produto, m.NOM_MARCA as marca, ' +
+         'p.qtd_estoque, preco_venda, ' +
+         'CAST(case when p.promocao = ''S'' then ''Sim'' else ''Não'' end AS VARCHAR(10)) as promocao, g.nom_grupo, ' +
+         'CAST(case when status = ''S'' then ''Não'' else ''Sim'' end AS VARCHAR(10)) as ativo from produto p ' +
   // 'left join fornecedor f on f.cod_fornecedor = pf.cod_fornecedor '+
     'left join grupo g on g.cod_grupo = p.cod_grupo ' +
     'left join marcas m on m.id = p.id_marca ';
@@ -4207,9 +4462,11 @@ begin
   else if CBcampos.Text = 'Fornecedor' then
   begin
     cmd := '';
-    cmd := 'select distinct pf.cod_fornecedor, f.razao_social, p.cod_produto, nom_produto, m.NOM_MARCA as marca, preco_venda, case when p.promocao = ''S'' then ''Sim'' else ''Não'' end as promocao, g.nom_grupo, '
-      + 'case when status = ''S'' then ''Não'' else ''Sim'' end as ativo  from produto p '
-      + 'left join produto_fornecedor pf on pf.cod_produto = p.cod_produto ' +
+    cmd := 'select distinct pf.cod_fornecedor, f.razao_social, p.cod_produto, nom_produto, ' +
+      'm.NOM_MARCA as marca, p.qtd_estoque, preco_venda, ' +
+      'case when p.promocao = ''S'' then ''Sim'' else ''Não'' end as promocao, g.nom_grupo, ' +
+      'case when status = ''S'' then ''Não'' else ''Sim'' end as ativo from produto p ' +
+      'left join produto_fornecedor pf on pf.cod_produto = p.cod_produto ' +
       'left join fornecedor f on f.cod_fornecedor = pf.cod_fornecedor ' +
       'left join grupo g on g.cod_grupo = p.cod_grupo ' +
       'left join marcas m on m.id = p.id_marca ' + 'where status=' +
@@ -4245,6 +4502,8 @@ begin
   mmLocalizar.fieldbyname('cod_produto').DisplayLabel := 'Código';
   mmLocalizar.fieldbyname('nom_produto').DisplayLabel := 'Produto';
   mmLocalizar.fieldbyname('marca').DisplayLabel := 'Marca';
+  mmLocalizar.fieldbyname('qtd_estoque').DisplayLabel := 'Estoque';
+  mmLocalizar.fieldbyname('qtd_estoque').Alignment := taRightJustify;
   mmLocalizar.fieldbyname('promocao').DisplayLabel := 'Promoção';
   mmLocalizar.fieldbyname('preco_venda').DisplayLabel := 'Preço de Venda';
   mmLocalizar.fieldbyname('nom_grupo').DisplayLabel := 'Grupo';
@@ -4616,7 +4875,7 @@ begin
 
   ativo := '';
 
-  if chamou_form = 'fr_pedido_fop' then
+  if (chamou_form = 'fr_pedido_fop') or (chamou_form = 'fr_pdv_fop') then
     ativo := ' AND ATIVO = ''S''';
 
   if chamou_form = 'fr_pedido_simplificado_fop' then
@@ -4847,6 +5106,13 @@ begin
   if mmLocalizar.Active = false then
     exit;
 
+  if (chamou_form = 'fr_nfce_simplificado') or
+     (chamou_form = 'fr_pdv') then
+  begin
+    mostra_campos;
+    Exit;
+  end;
+
   mmLocalizar.Edit;
   if mmLocalizar.fieldbyname('check').Value = true then
     mmLocalizar.fieldbyname('check').Value := false
@@ -4862,117 +5128,140 @@ begin
   if chamou_cadastro = 'Fr_produto' then
   begin
     Application.CreateForm(TFr_produtos, Fr_produtos);
+    DesativarBotaoLocalizarCadastro(Fr_produtos);
     Fr_produtos.ShowModal;
     Fr_produtos.Free;
   end
   else if chamou_cadastro = 'Fr_servicos' then
   begin
     Application.CreateForm(TFr_produto_nao_revenda, Fr_produto_nao_revenda);
+    DesativarBotaoLocalizarCadastro(Fr_produto_nao_revenda);
     Fr_produto_nao_revenda.ShowModal;
   end
   else if chamou_cadastro = 'fr_cor' then
   begin
     Application.CreateForm(TFr_cor, Fr_cor);
+    DesativarBotaoLocalizarCadastro(Fr_cor);
     Fr_cor.ShowModal;
   end
   else if chamou_cadastro = 'fr_motivo' then
   begin
     Application.CreateForm(TFr_motivo_nfe_cancel, Fr_motivo_nfe_cancel);
+    DesativarBotaoLocalizarCadastro(Fr_motivo_nfe_cancel);
     Fr_motivo_nfe_cancel.ShowModal;
   end
   else if chamou_cadastro = 'fr_plano_conta' then
   begin
     Application.CreateForm(Tfr_plano_contas, fr_plano_contas);
+    DesativarBotaoLocalizarCadastro(fr_plano_contas);
     fr_plano_contas.ShowModal;
   end
   else if chamou_cadastro = 'fr_unidade' then
   begin
     Application.CreateForm(TFr_tabela_unidade, Fr_tabela_unidade);
+    DesativarBotaoLocalizarCadastro(Fr_tabela_unidade);
     Fr_tabela_unidade.ShowModal;
   end
   else if chamou_cadastro = 'fr_tamanho' then
   begin
     Application.CreateForm(TFr_tamanho, Fr_tamanho);
+    DesativarBotaoLocalizarCadastro(Fr_tamanho);
     Fr_tamanho.ShowModal;
   end
   else if chamou_cadastro = 'Fr_colecao' then
   begin
     Application.CreateForm(TFr_colecao, Fr_colecao);
+    DesativarBotaoLocalizarCadastro(Fr_colecao);
     Fr_colecao.ShowModal;
   end
   else if chamou_cadastro = 'Fr_cliente' then
   begin
     Application.CreateForm(TFr_Cliente, Fr_Cliente);
+    DesativarBotaoLocalizarCadastro(Fr_Cliente);
     Fr_Cliente.ShowModal;
   end
   else if chamou_cadastro = 'Fr_fornecedor' then
   begin
     Application.CreateForm(TFr_fornecedor, Fr_fornecedor);
+    DesativarBotaoLocalizarCadastro(Fr_fornecedor);
     Fr_fornecedor.ShowModal;
   end
   else if chamou_cadastro = 'Fr_transportadora' then
   begin
     Application.CreateForm(TFr_Transportadora, Fr_Transportadora);
+    DesativarBotaoLocalizarCadastro(Fr_Transportadora);
     Fr_Transportadora.ShowModal;
   end
   else if chamou_cadastro = 'fr_grupo' then
   begin
     Application.CreateForm(TFr_grupo, Fr_grupo);
+    DesativarBotaoLocalizarCadastro(Fr_grupo);
     Fr_grupo.ShowModal;
   end
   else if chamou_cadastro = 'fr_subcategoria' then
   begin
     Application.CreateForm(TFr_subcategoria, Fr_subcategoria);
+    DesativarBotaoLocalizarCadastro(Fr_subcategoria);
     Fr_subcategoria.ShowModal;
   end
   else if chamou_cadastro = 'fr_categoria' then
   begin
     Application.CreateForm(TFr_categoria, Fr_categoria);
+    DesativarBotaoLocalizarCadastro(Fr_categoria);
     Fr_categoria.ShowModal;
   end
   else if chamou_cadastro = 'fr_colecao' then
   begin
     Application.CreateForm(TFr_colecao, Fr_colecao);
+    DesativarBotaoLocalizarCadastro(Fr_colecao);
     Fr_colecao.ShowModal;
   end
   else if chamou_cadastro = 'fr_representante' then
   begin
     Application.CreateForm(TFr_representante, Fr_representante);
+    DesativarBotaoLocalizarCadastro(Fr_representante);
     Fr_representante.ShowModal;
   end
   else if chamou_cadastro = 'fr_supervisor' then
   begin
     Application.CreateForm(TFr_representante, Fr_representante);
+    DesativarBotaoLocalizarCadastro(Fr_representante);
     Fr_representante.ShowModal;
   end
   else if chamou_cadastro = 'fr_fop' then
   begin
     Application.CreateForm(TFr_forma_pagamento, Fr_forma_pagamento);
+    DesativarBotaoLocalizarCadastro(Fr_forma_pagamento);
     Fr_forma_pagamento.ShowModal;
   end
   else if chamou_cadastro = 'fr_prazo' then
   begin
     Application.CreateForm(TFr_prazo_pagamento, Fr_prazo_pagamento);
+    DesativarBotaoLocalizarCadastro(Fr_prazo_pagamento);
     Fr_prazo_pagamento.ShowModal;
   end
   else if chamou_cadastro = 'fr_veiculos' then
   begin
     Application.CreateForm(Tfr_veiculo, fr_veiculo);
+    DesativarBotaoLocalizarCadastro(fr_veiculo);
     fr_veiculo.ShowModal;
   end
   else if chamou_cadastro = 'fr_marca' then
   begin
     Application.CreateForm(TFr_marcas, Fr_marcas);
+    DesativarBotaoLocalizarCadastro(Fr_marcas);
     Fr_marcas.ShowModal;
   end
   else if chamou_cadastro = 'fr_motorista' then
   begin
     Application.CreateForm(TFr_motorista, Fr_motorista);
+    DesativarBotaoLocalizarCadastro(Fr_motorista);
     Fr_motorista.ShowModal;
   end
   else if chamou_cadastro = 'Fr_cheque_terceiros' then
   begin
     Application.CreateForm(TFr_cheque_terceiros, Fr_cheque_terceiros);
+    DesativarBotaoLocalizarCadastro(Fr_cheque_terceiros);
     Fr_cheque_terceiros.ShowModal;
   end
 
@@ -5341,7 +5630,7 @@ begin
     exit;
   end;
 
-  mmLocalizar.fieldbyname('numdoc').DisplayLabel := 'Numero';
+  mmLocalizar.fieldbyname('numdoc').DisplayLabel := 'Número';
   mmLocalizar.fieldbyname('nom_cliente').DisplayLabel :=
     'Cliente - Razão Social';
   mmLocalizar.fieldbyname('nom_fantasia').DisplayLabel :=
@@ -5362,7 +5651,19 @@ var
   cmd1, cmd, cmd_aux, representante_cmd, cmd_cidades, cmd_cliente,
     cmd_fornecedor, cmd_representante, cmd_televendas: string;
 begin
+  cmd1 := '';
   cmd := '';
+  cmd_aux := '';
+  representante_cmd := '';
+
+  { A pesquisa de pedidos sempre precisa de um campo selecionado. }
+  if Trim(CBcampos.Text) = '' then
+  begin
+    if CBcampos.Items.Count > 0 then
+      CBcampos.ItemIndex := 0
+    else
+      CBcampos.Text := 'Numero';
+  end;
 
   cmd := 'select ' +#13+
     '  case v1.orcamento ' +#13+
@@ -5426,12 +5727,17 @@ begin
     if not frpri.supervisor then
     begin
       cmd_cliente := 'inner join cliente c1 on c1.cod_cliente = v1.cod_cliente '+#13;
-      representante_cmd := representante_cmd + ' and c1.id_representante = ' + frpri.Representante_id+#13;
+      if StrToIntDef(Trim(frpri.Representante_id), 0) > 0 then
+        representante_cmd := representante_cmd +
+          ' and c1.id_representante = ' +
+          IntToStr(StrToIntDef(Trim(frpri.Representante_id), 0)) + #13
+      else
+        representante_cmd := representante_cmd + ' and 1 = 0 ' + #13;
     end
     else
     begin
       cmd_cliente := 'inner join cliente c1 on c1.cod_cliente = v1.cod_cliente '+#13;
-      representante_cmd := representante_cmd +' and c1.id_representante =  in (select r.ID from REPRESENTANTE r where r.FUNCIONARIO = ''0'' and r.ATIVO = ''S'')  and cl.cliente_bloqueado = ''N'' '+#13;
+      representante_cmd := representante_cmd +' and c1.id_representante in (select r.ID from REPRESENTANTE r where r.FUNCIONARIO = ''0'' and r.ATIVO = ''S'')  and c1.cliente_bloqueado = ''N'' '+#13;
     end;
     cmd1 := cmd_representante + cmd_fornecedor + cmd_cliente + cmd_cidades
        + cmd_televendas + cmd_aux;
@@ -5480,11 +5786,11 @@ begin
     cmd1 := cmd_representante + cmd_fornecedor + cmd_cliente + cmd_cidades
        + cmd_televendas + cmd_aux;
   end
-  else if CBcampos.Text = 'Cliente - Código' then // CLIENTE
+  else if (CBcampos.Text = 'Cliente - Código') or (CBcampos.Text = 'Cliente - Codigo') then // CLIENTE
   begin
     cmd_cliente := 'inner join cliente c1 on  c1.cod_cliente = v1.cod_cliente ';
-    cmd_aux := cmd_aux + 'where c1.cod_cliente = ' + valor +
-      ' order by orcamento desc, status, c1.cod_cliente, NUMDOC DESC';
+    cmd_aux := cmd_aux + 'where c1.cod_cliente = ' + IntToStr(StrToIntDef(valor, 0)) +
+      representante_cmd + ' order by orcamento desc, status, c1.cod_cliente, NUMDOC DESC';
     cmd1 := cmd_representante + cmd_fornecedor + cmd_cliente + cmd_cidades
       + cmd_televendas + cmd_aux;
   end
@@ -5578,7 +5884,7 @@ begin
   end;
 
   mmLocalizar.fieldbyname('status').DisplayLabel := 'Status';
-  mmLocalizar.fieldbyname('Numdoc').DisplayLabel := 'Numero';
+  mmLocalizar.fieldbyname('Numdoc').DisplayLabel := 'Número';
   mmLocalizar.fieldbyname('Numdoc').DisplayWidth := 5;
   mmLocalizar.fieldbyname('Numdoc').Alignment := taCenter;
   mmLocalizar.fieldbyname('Nfe').DisplayLabel := 'NF-e';
@@ -5687,7 +5993,7 @@ begin
     exit;
   end;
 
-  mmLocalizar.fieldbyname('numdoc').DisplayLabel := 'Numero';
+  mmLocalizar.fieldbyname('numdoc').DisplayLabel := 'Número';
   mmLocalizar.fieldbyname('nom_cliente').DisplayLabel :=
     'Cliente - Razão Social';
   mmLocalizar.fieldbyname('nom_fantasia').DisplayLabel :=
@@ -6239,8 +6545,8 @@ begin
   mmLocalizar.fieldbyname('id').DisplayLabel := 'Código';
   mmLocalizar.fieldbyname('id').DisplayWidth := 5;
   mmLocalizar.fieldbyname('NOM_BANCO').DisplayLabel := 'Banco';
-  mmLocalizar.fieldbyname('nr_agencia').DisplayLabel := 'Numero da agencia';
-  mmLocalizar.fieldbyname('nr_conta').DisplayLabel := 'Numero da CC';
+  mmLocalizar.fieldbyname('nr_agencia').DisplayLabel := 'Número da agência';
+  mmLocalizar.fieldbyname('nr_conta').DisplayLabel := 'Número da CC';
   mmLocalizar.fieldbyname('dta_abertura_conta').DisplayLabel :=
     'Data da abertura da conta';
 
@@ -6302,7 +6608,7 @@ begin
   mmLocalizar.fieldbyname('id').DisplayLabel := 'Código';
   mmLocalizar.fieldbyname('id').DisplayWidth := 5;
   mmLocalizar.fieldbyname('nom_banco').DisplayLabel := 'Nome do banco';
-  mmLocalizar.fieldbyname('nr_banco').DisplayLabel := 'Numero do banco';
+  mmLocalizar.fieldbyname('nr_banco').DisplayLabel := 'Número do banco';
   // DgLocalizar.SetFocus;
 
 end;
@@ -6528,7 +6834,7 @@ begin
   cmd := 'select p.id, p.prazo, p.ativo from prazo p ' + filtro_fop;
 
   ativo := '';
-  if chamou_form = 'fr_pedido_prazo' then
+  if (chamou_form = 'fr_pedido_prazo') or (chamou_form = 'fr_pdv_prazo') then
     ativo := ' AND p.ATIVO = ''S''';
 
   if chamou_form = 'fr_pedido_simplificado_prazo' then
@@ -6724,7 +7030,7 @@ begin
     exit;
   end;
 
-  mmLocalizar.fieldbyname('numdoc').DisplayLabel := 'Numero';
+  mmLocalizar.fieldbyname('numdoc').DisplayLabel := 'Número';
   mmLocalizar.fieldbyname('nom_cliente').DisplayLabel := 'Cliente';
   mmLocalizar.fieldbyname('CNPJ').DisplayLabel := 'CNPJ';
   mmLocalizar.fieldbyname('CPF').DisplayLabel := 'CPF';
@@ -6908,48 +7214,21 @@ var
   i: Integer;
   cmd: string;
 begin
-  cmd := '';
-  cmd := 'select id, mdfe, c1.nom_carga, dta_carga, t.nome, c1.situacao_mdfe from carga1 c1 ' +
+  cmd := 'select c1.id, c1.mdfe, c1.nom_carga, c1.dta_carga, t.nome, c1.situacao_mdfe from carga1 c1 ' +
     'left join transportadora t on t.cod_transportadora=c1.cod_transportadora ';
 
   if CBcampos.Text = 'Nº Carga' then
-  begin
-    cmd := cmd + 'where id = ' + QuotedStr(valor);
-    with Qu_localizar do
-    begin
-      close;
-      sql.clear;
-      sql.add(cmd);
-      open;
-    end;
-  end
+    cmd := cmd + 'where c1.id = ' + IntToStr(StrToIntDef(valor, 0)) + ' order by c1.id desc'
   else if CBcampos.Text = 'Nº MDFe' then
-  begin
-    cmd := cmd + 'where mdfe = ' + QuotedStr(valor);
-    with Qu_localizar do
-    begin
-      close;
-      sql.clear;
-      sql.add(cmd);
-      open;
-    end;
-  end
+    cmd := cmd + 'where c1.mdfe = ' + IntToStr(StrToIntDef(valor, 0)) + ' order by c1.mdfe desc'
   else if CBcampos.Text = 'Nome da Carga' then
   begin
     if zzbusca_qualquer.Checked then
-      cmd := cmd + 'where nom_carga like ' + QuotedStr('%' + valor + '%') +
-        ' order by nom_carga'
+      cmd := cmd + 'where c1.nom_carga like ' + QuotedStr('%' + valor + '%') +
+        ' order by c1.nom_carga'
     else
-      cmd := cmd + 'where nom_carga like ' + QuotedStr(valor + '%') +
-        ' order by nom_carga';
-
-    with Qu_localizar do
-    begin
-      close;
-      sql.clear;
-      sql.add(cmd);
-      open;
-    end;
+      cmd := cmd + 'where c1.nom_carga like ' + QuotedStr(valor + '%') +
+        ' order by c1.nom_carga';
   end
   else if CBcampos.Text = 'Transportadora' then
   begin
@@ -6959,27 +7238,22 @@ begin
     else
       cmd := cmd + 'where t.nome like ' + QuotedStr(valor + '%') +
         ' order by t.nome ';
-    with Qu_localizar do
-    begin
-      close;
-      sql.clear;
-      sql.add(cmd);
-      open;
-    end;
   end
   else if CBcampos.Text = 'Data Carga' then
-  begin
-    cmd := cmd + 'where dta_carga = ' +
+    cmd := cmd + 'where c1.dta_carga = ' +
       QuotedStr(FormatDateTime('dd.mm.yyyy', strtodate(valor))) +
-      ' order by dta_carga';
-    with Qu_localizar do
-    begin
-      close;
-      sql.clear;
-      sql.add(cmd);
-      open;
-    end;
+      ' order by c1.dta_carga'
+  else
+    Exit;
+
+  with Qu_localizar do
+  begin
+    close;
+    sql.clear;
+    sql.add(cmd);
+    open;
   end;
+
   if Qu_localizar.RecordCount <= 0 then
   begin
     MessageBox(handle, 'Não Foi Encontrado Registro com Este Dado!', 'ORBI',
@@ -6993,8 +7267,8 @@ begin
   mmLocalizar.fieldbyname('dta_carga').DisplayLabel := 'Data Carga';
   mmLocalizar.fieldbyname('nome').DisplayLabel := 'Transportadora';
   mmLocalizar.fieldbyname('situacao_mdfe').DisplayLabel := 'Sit';
-  // DgLocalizar.SetFocus;
 
+  // DgLocalizar.SetFocus;
 end;
 
 procedure TFr_localizar.loc_carga_pedido(valor: string);
@@ -7507,6 +7781,18 @@ const
   IsChecked: array [boolean] of Integer = (DFCS_BUTTONCHECK, DFCS_BUTTONCHECK or
     DFCS_CHECKED);
 begin
+  if (not Assigned(Column)) or (not Assigned(Column.Field)) then
+    Exit;
+
+  if (((chamou_pesquisa = 'fr_fop') or (chamou_pesquisa = 'fr_representante') or
+       (chamou_pesquisa = 'fr_prazo')) and (not Assigned(mmLocalizar.FindField('ativo')))) or
+     ((chamou_pesquisa = 'fr_produto') and
+      ((not Assigned(mmLocalizar.FindField('promocao'))) or
+       (not Assigned(mmLocalizar.FindField('ativo'))))) then
+  begin
+    DgLocalizar.DefaultDrawDataCell(Rect, Column.Field, State);
+    Exit;
+  end;
   if (chamou_pesquisa <> 'fr_pedido') and (chamou_pesquisa <> 'fr_produto') and
     (chamou_pesquisa <> 'fr_fop') and (chamou_pesquisa <> 'fr_prazo') then
   begin
@@ -8048,17 +8334,29 @@ var
       ftFixedWideChar, ftMemo, ftWideMemo];
   end;
 
+  function CampoTextoWide(AField: TField): Boolean;
+  begin
+    Result := AField.DataType in [ftWideString, ftFixedWideChar, ftWideMemo];
+  end;
+
   function TamanhoCampoTexto(AField: TField; AMaxLen: Integer): Integer;
   begin
     Result := AField.Size;
-    if Result < AField.DataSize then
-      Result := AField.DataSize;
     if Result < AMaxLen then
       Result := AMaxLen;
     if Result < 1 then
       Result := 1;
-    if Result > 8192 then
-      Result := 8192;
+    if Result > 2048 then
+      Result := 2048;
+  end;
+
+  function TextoCampoSeguro(AField: TField; AMaxLen: Integer): string;
+  begin
+    Result := AField.AsString;
+    if AMaxLen < 1 then
+      AMaxLen := 1;
+    if Length(Result) > AMaxLen then
+      Result := Copy(Result, 1, AMaxLen);
   end;
 
 begin
@@ -8096,7 +8394,7 @@ begin
     for x := 0 to Qu_localizar.FieldCount - 1 do
     begin
       if CampoTexto(Qu_localizar.Fields[x]) then
-        mmLocalizar.FieldDefs.Add(Qu_localizar.Fields[x].FieldName, ftString,
+        mmLocalizar.FieldDefs.Add(Qu_localizar.Fields[x].FieldName, ftWideString,
           TamanhoCampoTexto(Qu_localizar.Fields[x], TamanhosTexto[x]))
       else if (Qu_localizar.Fields[x].DataType = ftBCD) or
               (Qu_localizar.Fields[x].DataType = ftFloat) or
@@ -8131,8 +8429,8 @@ begin
             mmLocalizar.Fields[x].Value := Qu_localizar.Fields[x].Value;
           end
           else if CampoTexto(mmLocalizar.Fields[x]) then
-            mmLocalizar.Fields[x].AsString := Copy(Qu_localizar.Fields[x].AsString,
-              1, mmLocalizar.Fields[x].Size)
+            mmLocalizar.Fields[x].AsString := TextoCampoSeguro(Qu_localizar.Fields[x],
+              mmLocalizar.Fields[x].Size)
           else
             mmLocalizar.Fields[x].AsVariant := Qu_localizar.Fields[x].AsVariant;
         end;

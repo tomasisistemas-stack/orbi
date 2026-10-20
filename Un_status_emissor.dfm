@@ -23,8 +23,8 @@ object Fr_status_emissor: TFr_status_emissor
     Width = 820
     Height = 20
     ParentCustomHint = False
-    AsyncDrawing = True
-    Animate = True
+    AsyncDrawing = False
+    Animate = False
     FrameIndex = 37
     Image.Data = {
       4F08010047494638396134031400F700009CCBFF000000000000000000000000

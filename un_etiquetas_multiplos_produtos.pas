@@ -31,6 +31,8 @@ type
     Meqtd: TDBEdit;
     lbDescricao: TLabel;
     Menom_produto: TDBText;
+    procedure btFecharClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure btImprimirClick(Sender: TObject);
     procedure btnovClick(Sender: TObject);
@@ -62,6 +64,22 @@ uses
   Un_dao, UnFun, UnPri, un_escolhe_impressora_termica, Un_localizar;
 
 {$R *.dfm}
+
+procedure Tfr_etiquetas_multiplos_produtos.btFecharClick(Sender: TObject);
+begin
+  Close;
+end;
+
+procedure Tfr_etiquetas_multiplos_produtos.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  if fsModal in FormState then
+    Action := caHide
+  else
+  begin
+    Action := caFree;
+    fr_etiquetas_multiplos_produtos := nil;
+  end;
+end;
 
 procedure Tfr_etiquetas_multiplos_produtos.HabilitaBotoesItens(Estado: Integer);
 begin
@@ -157,7 +175,8 @@ begin
       (Length(mmItensCODIGO.AsString) > 0) then
     begin
       dao.msg('Dado tem que ser sempre Numerico!');
-      Mecod_produto.SetFocus;
+      if Mecod_produto.CanFocus then
+        Mecod_produto.SetFocus;
       Exit;
     end;
 
@@ -165,7 +184,8 @@ begin
       mostrarUnidade) then
     begin
       dao.msg('Produto nao encontrado!');
-      Mecod_produto.SetFocus;
+      if Mecod_produto.CanFocus then
+        Mecod_produto.SetFocus;
       Exit;
     end;
 
@@ -177,7 +197,8 @@ begin
   else
   begin
     dao.msg('O Campo Produto deve ser Preenchido!');
-    Mecod_produto.SetFocus;
+    if Mecod_produto.CanFocus then
+      Mecod_produto.SetFocus;
     Exit;
   end;
 
@@ -209,6 +230,7 @@ begin
   codigoSelecionado := '';
   nomeSelecionado := '';
 
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   chamou_form_old := chamou_form;
@@ -246,7 +268,11 @@ begin
         nomeSelecionado := Fr_localizar.Qu_localizar.FieldByName('nom_produto').AsString;
     end;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
     chamou_form := chamou_form_old;
     chamou_pesquisa := chamou_pesquisa_old;
   end;
@@ -266,7 +292,7 @@ end;
 
 procedure Tfr_etiquetas_multiplos_produtos.dbItensEnter(Sender: TObject);
 begin
-  if mmItens.State = dsBrowse then
+  if (mmItens.State = dsBrowse) and btnov.CanFocus then
     btnov.SetFocus;
 end;
 
@@ -278,7 +304,8 @@ begin
   mmItens.Append;
   mmItensQTDE.AsInteger := 1;
   HabilitaBotoesItens(0);
-  Mecod_produto.SetFocus;
+  if Mecod_produto.CanFocus then
+    Mecod_produto.SetFocus;
 end;
 
 procedure Tfr_etiquetas_multiplos_produtos.btaltClick(Sender: TObject);
@@ -290,7 +317,8 @@ begin
     mmItens.Edit;
 
   HabilitaBotoesItens(0);
-  Mecod_produto.SetFocus;
+  if Mecod_produto.CanFocus then
+    Mecod_produto.SetFocus;
 end;
 
 procedure Tfr_etiquetas_multiplos_produtos.btgraClick(Sender: TObject);
@@ -304,7 +332,8 @@ begin
   if mmItensQTDE.AsInteger <= 0 then
   begin
     dao.msg('O Campo Qtd deve ser Preenchido!');
-    Meqtd.SetFocus;
+    if Meqtd.CanFocus then
+      Meqtd.SetFocus;
     Exit;
   end;
 

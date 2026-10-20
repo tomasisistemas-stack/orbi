@@ -406,8 +406,13 @@ begin
           begin
             cmd_campos := cmd_campos + copy(form.Components[i].Name, 3,
               Length(form.Components[i].Name) - 1) + ',';
-            cmd_valor := cmd_valor +
-              QuotedStr(trim(TMemo(form.Components[i]).Text)) + ',';
+            if SameText(copy(form.Components[i].Name, 3,
+              Length(form.Components[i].Name) - 1), 'historico1') then
+              cmd_valor := cmd_valor + QuotedStr(StringReplace(
+                trim(TMemo(form.Components[i]).Text), '\', '\\', [rfReplaceAll])) + ','
+            else
+              cmd_valor := cmd_valor +
+                QuotedStr(trim(TMemo(form.Components[i]).Text)) + ',';
           end;
         end; //end do if
       end; //end do with
@@ -482,6 +487,32 @@ end;
 procedure Tdao.update(tabela, campo_id, id, prefixo: shortString; form: TForm);
 var
   i: integer;
+  function ValorNumericoSql(const ATexto: string): string;
+  var
+    S, ParteInteira, ParteDecimal: string;
+    PVirgula, PPonto: Integer;
+  begin
+    S := Trim(ATexto);
+    S := StringReplace(S, 'R$', '', [rfReplaceAll]);
+    S := StringReplace(S, ' ', '', [rfReplaceAll]);
+    PVirgula := LastDelimiter(',', S);
+    PPonto := LastDelimiter('.', S);
+
+    if PVirgula > 0 then
+    begin
+      S := StringReplace(S, '.', '', [rfReplaceAll]);
+      S := StringReplace(S, ',', '.', [rfReplaceAll]);
+    end
+    else if (PPonto > 0) and (Pos('.', S) <> PPonto) then
+    begin
+      ParteInteira := StringReplace(Copy(S, 1, PPonto - 1), '.', '',
+        [rfReplaceAll]);
+      ParteDecimal := Copy(S, PPonto + 1, MaxInt);
+      S := ParteInteira + '.' + ParteDecimal;
+    end;
+
+    Result := S;
+  end;
 begin
   //ex update('processo', '235', 'PR', Fr_processo);
   try
@@ -548,8 +579,7 @@ begin
               Length(form.Components[i].Name) - 1);
             if (TsCurrencyEdit(form.Components[i]).Text <> '') then
               cmd_valor :=
-                QuotedStr(FMFUN.BuscaTroca(TsCurrencyEdit(form.Components[i]).Text,
-                ',', '.'))
+                QuotedStr(ValorNumericoSql(TsCurrencyEdit(form.Components[i]).Text))
             else
               cmd_valor := '0';
             formatsettings.DecimalSeparator := ',';

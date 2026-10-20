@@ -25,7 +25,7 @@ object Fr_contas_receber: TFr_contas_receber
     Top = 0
     Width = 605
     Height = 493
-    ActivePage = tab_dados
+    ActivePage = tab_localizar
     Align = alClient
     TabOrder = 0
     SkinData.SkinSection = 'PAGECONTROL'
@@ -1043,8 +1043,8 @@ object Fr_contas_receber: TFr_contas_receber
           SkinData.SkinSection = 'BUTTON'
         end
         object btok: TsBitBtn
-          Left = 153
-          Top = 3
+          Left = 146
+          Top = -1
           Width = 75
           Height = 43
           Glyph.Data = {
@@ -1217,8 +1217,8 @@ object Fr_contas_receber: TFr_contas_receber
           SkinData.SkinSection = 'BUTTON'
         end
         object Bt_imp_cop: TsBitBtn
-          Left = 400
-          Top = 3
+          Left = 396
+          Top = -1
           Width = 139
           Height = 43
           Glyph.Data = {
@@ -7715,7 +7715,7 @@ object Fr_contas_receber: TFr_contas_receber
     Left = 152
     Top = 160
     Bitmap = {
-      494C01010100DC09DC0910001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010100E809E80910001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

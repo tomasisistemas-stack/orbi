@@ -854,6 +854,7 @@ begin
     showmessage('Você deve gravar ou cancelar as informações antes de localizar!');
     exit;
   end;
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   //guardar os valores antigos
@@ -886,7 +887,11 @@ begin
   Fr_localizar.CBcampos.ItemIndex := 1;
 
   Fr_localizar.ShowModal;
-  Fr_localizar.Free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -913,6 +918,7 @@ begin
     if (BtNov.Enabled = false) and (Prcod_fornecedor.Text='') then
     begin
 
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       //guardar os valores antigos
@@ -963,6 +969,7 @@ var
 begin
   if (BtNov.Enabled = false) then
   begin
+    if not Assigned(Fr_localizar) then
     Application.CreateForm(TFr_localizar, Fr_localizar);
 
     //guardar os valores antigos
@@ -1041,6 +1048,7 @@ var
 begin
   if (key = #13) and (Prcod_colecao.Text='') then
   begin
+    if not Assigned(Fr_localizar) then
     Application.CreateForm(TFr_localizar, Fr_localizar);
 
     //guardar os valores antigos
@@ -1084,6 +1092,7 @@ var
   //variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old : String;
 begin
+    if not Assigned(Fr_localizar) then
     Application.CreateForm(TFr_localizar, Fr_localizar);
 
     //guardar os valores antigos
@@ -1744,6 +1753,7 @@ var
   chamou_form_old, chamou_pesquisa_old : String;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   //guardar os valores antigos
@@ -1770,7 +1780,11 @@ begin
   Fr_localizar.CBcampos.ItemIndex := 1;
 
   Fr_localizar.ShowModal;
-  Fr_localizar.Free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -1821,6 +1835,7 @@ begin
   begin
     if (Prcod_empresa.Text='') then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       //guardar os valores antigos
@@ -1847,7 +1862,11 @@ begin
       Fr_localizar.CBcampos.ItemIndex := 1;
 
       Fr_localizar.ShowModal;
-      Fr_localizar.Free;
+      if Assigned(Fr_localizar) then
+      begin
+        Fr_localizar.Free;
+        Fr_localizar := nil;
+      end;
 
       chamou_form := chamou_form_old;
       chamou_pesquisa := chamou_pesquisa_old;
@@ -1928,7 +1947,6 @@ begin
   end;
 end;
 end.
-
 
 
 

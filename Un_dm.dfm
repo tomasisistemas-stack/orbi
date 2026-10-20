@@ -1534,7 +1534,9 @@ object Dm: TDm
         'c.email, c.dta_aniversario, e.nom_empresa, cd.nom_cidade, cd.uf,' +
         ' c.contato,'
       'case when c.TIP_PESSOA = '#39'J'#39' THEN c.CNPJ ELSE c.CPF END AS CNPJ,'
-      'case when c.TIP_PESSOA = '#39'J'#39' THEN c.IE ELSE c.RG END AS IE'
+      'case when c.TIP_PESSOA = '#39'J'#39' THEN c.IE ELSE c.RG END AS IE,'
+      'cast(0 as numeric(15,2)) as media_valor_pedido,'
+      'cast(null as date) as dta_ultima_venda '
       'from cliente c '
       'left join cidades cd on cd.cod_cidade = c.cod_cidade '
       'left join empresa e on e.cod_empresa = c.cod_empresa ')
@@ -1645,6 +1647,20 @@ object Dm: TDm
       FixedChar = True
       Size = 40
     end
+    object q_clientemedia_valor_pedido: TBCDField
+      AutoGenerateValue = arDefault
+      FieldName = 'media_valor_pedido'
+      Origin = 'media_valor_pedido'
+      ReadOnly = True
+      Precision = 15
+      Size = 2
+    end
+    object q_clientedta_ultima_venda: TDateField
+      AutoGenerateValue = arDefault
+      FieldName = 'dta_ultima_venda'
+      Origin = 'dta_ultima_venda'
+      ReadOnly = True
+    end
   end
   object ds_cliente: TDataSource
     DataSet = q_cliente
@@ -1673,11 +1689,13 @@ object Dm: TDm
       'uf=UF'
       'contato=CONTATO'
       'cnpj=CNPJ'
-      'ie=IE')
+      'ie=IE'
+      'media_valor_pedido=media_valor_pedido'
+      'dta_ultima_venda=dta_ultima_venda')
     DataSet = q_cliente
     BCDToCurrency = False
-    Left = 64
-    Top = 128
+    Left = 72
+    Top = 104
   end
   object q_pauta_venda: TFDQuery
     Connection = dao.CN
@@ -11192,6 +11210,7 @@ object Dm: TDm
     Connection = dao.CN
     SQL.Strings = (
       'SELECT TIPO,'
+      '       ID,'
       '       REPRESENTANTE,'
       '       TOTAL_ABERTO,'
       '       TOTAL_FATURADO,'
@@ -11199,6 +11218,7 @@ object Dm: TDm
       '       CAST(DESCONTO AS NUMERIC(15,2)) AS DESCONTO'
       'FROM ('
       '       select '#39'REPRESENTANTE'#39' AS TIPO,'
+      '              r.id,'
       
         '              r.id || '#39'-'#39' || r.NOM_REPRESENTANTE as REPRESENTANT' +
         'E,'
@@ -11307,6 +11327,7 @@ object Dm: TDm
       '             ), 0) > 0'
       '       UNION'
       '       select '#39'TELEVENDAS'#39' AS TIPO,'
+      '              r.id,'
       
         '              r.id || '#39'-'#39' || r.NOM_REPRESENTANTE as REPRESENTANT' +
         'E,'
@@ -11462,6 +11483,9 @@ object Dm: TDm
       Precision = 15
       Size = 2
     end
+    object q_ranking_vendasid: TIntegerField
+      FieldName = 'id'
+    end
   end
   object ds_ranking_vendas: TDataSource
     DataSet = q_ranking_vendas
@@ -11477,7 +11501,8 @@ object Dm: TDm
       'total_aberto=TOTAL_ABERTO'
       'total_faturado=TOTAL_FATURADO'
       'qtde=qtde'
-      'desconto=desconto')
+      'desconto=desconto'
+      'id=id')
     DataSet = q_ranking_vendas
     BCDToCurrency = False
     Left = 1152
@@ -12118,6 +12143,7 @@ object Dm: TDm
     CasasDecimais.MaskAliquota = ',0.00'
     ACBrNFe = ACBrNFe1
     TipoDANFE = tiSemGeracao
+    ExibeCampoDePagamento = eipQuadro
     EspessuraBorda = 1
     BorderIcon = [biSystemMenu, biMinimize, biMaximize]
     ThreadSafe = False

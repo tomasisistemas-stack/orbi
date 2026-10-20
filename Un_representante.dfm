@@ -1407,7 +1407,7 @@ object Fr_representante: TFr_representante
       end
       object Prsomente_consumidor_final: TsCheckBox
         Left = 549
-        Top = 385
+        Top = 375
         Width = 169
         Height = 20
         Caption = 'Somente para Consumidor Final'
@@ -1421,10 +1421,6 @@ object Fr_representante: TFr_representante
       Caption = 'Grupo de Produtos - Desconto Especial'
       SkinData.CustomColor = False
       SkinData.CustomFont = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object GroupBox2: TsGroupBox
         Left = 0
         Top = 0
@@ -1757,6 +1753,10 @@ object Fr_representante: TFr_representante
       Caption = 'Localiza'#231#227'o'
       SkinData.CustomColor = False
       SkinData.CustomFont = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object cefLocalizacao: TCEFWindowParent
         Left = 0
         Top = 0

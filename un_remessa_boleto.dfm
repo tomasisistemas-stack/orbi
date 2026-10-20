@@ -14,6 +14,7 @@ object frm_remessa_boleto: Tfrm_remessa_boleto
   KeyPreview = True
   OldCreateOrder = False
   Position = poScreenCenter
+  OnCloseQuery = FormCloseQuery
   OnKeyPress = FormKeyPress
   OnShow = FormShow
   PixelsPerInch = 96

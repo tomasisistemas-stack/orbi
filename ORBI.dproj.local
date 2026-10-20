@@ -1,6 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BorlandProject>
 	<ProjectSortOrder AutoSort="0" SortType="0">
+    <File Path="PDV"/>
+    <File Path="Z:\PDV\Un_PDV.pas"/>
+    <File Path="Z:\PDV\Un_PDV.dfm"/>
     <File Path="alterar_status_ordem_producao.pas"/>
     <File Path="alterar_status_ordem_producao.dfm"/>
     <File Path="alterar_status_pedido.pas"/>
@@ -279,5 +282,8 @@
     <File Path="Un_BB_Cobrancas.pas"/>
     <File Path="Un_BB_Cobrancas_Api.pas"/>
     <File Path="Un_Error_Logger.pas"/>
+    <File Path="Un_CEF_Cobrancas_Api.pas"/>
+    <File Path="un_nfce_simplificado.pas"/>
+    <File Path="un_nfce_simplificado.dfm"/>
   </ProjectSortOrder>
 </BorlandProject>

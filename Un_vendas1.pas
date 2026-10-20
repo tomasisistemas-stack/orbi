@@ -882,6 +882,7 @@ var
   //variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old : String;
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   //guardar os valores antigos
@@ -1404,6 +1405,7 @@ var
   chamou_form_old, chamou_pesquisa_old : String;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   //guardar os valores antigos
@@ -1449,6 +1451,7 @@ var
   chamou_form_old, chamou_pesquisa_old : String;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   //guardar os valores antigos
@@ -1475,7 +1478,11 @@ begin
   Fr_localizar.CBcampos.ItemIndex := 1;
 
   Fr_localizar.ShowModal;
-  Fr_localizar.Free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -1501,6 +1508,7 @@ begin
   begin
     if (Prcod_cliente.Text='') and (BtNov.Enabled=false) then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       //guardar os valores antigos
@@ -1563,6 +1571,7 @@ var
   chamou_form_old, chamou_pesquisa_old : String;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   //guardar os valores antigos
@@ -1589,7 +1598,11 @@ begin
   Fr_localizar.CBcampos.ItemIndex := 1;
 
   Fr_localizar.ShowModal;
-  Fr_localizar.Free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -1615,6 +1628,7 @@ begin
   begin
     if (Prcod_representante.Text = '') and (BtNov.Enabled=false) then
     begin
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       //guardar os valores antigos
@@ -1641,7 +1655,11 @@ begin
       Fr_localizar.CBcampos.ItemIndex := 1;
 
       Fr_localizar.ShowModal;
-      Fr_localizar.Free;
+      if Assigned(Fr_localizar) then
+      begin
+        Fr_localizar.Free;
+        Fr_localizar := nil;
+      end;
 
       chamou_form := chamou_form_old;
       chamou_pesquisa := chamou_pesquisa_old;
@@ -1672,6 +1690,7 @@ var
   It, J, Coluna: byte;
 begin
 
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   //guardar os valores antigos
@@ -1977,6 +1996,7 @@ begin
     if (Prcod_fop.Text = '') and (btnov.Enabled = false) then
     begin
 
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       //guardar os valores antigos
@@ -2003,7 +2023,11 @@ begin
       Fr_localizar.CBcampos.ItemIndex := 1;
 
       Fr_localizar.ShowModal;
-      Fr_localizar.Free;
+      if Assigned(Fr_localizar) then
+      begin
+        Fr_localizar.Free;
+        Fr_localizar := nil;
+      end;
 
       chamou_form := chamou_form_old;
       chamou_pesquisa := chamou_pesquisa_old;
@@ -3495,6 +3519,7 @@ var
   chamou_form_old, chamou_pesquisa_old : String;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   //guardar os valores antigos
@@ -3521,7 +3546,11 @@ begin
   Fr_localizar.CBcampos.ItemIndex := 1;
 
   Fr_localizar.ShowModal;
-  Fr_localizar.Free;
+  if Assigned(Fr_localizar) then
+  begin
+    Fr_localizar.Free;
+    Fr_localizar := nil;
+  end;
 
   chamou_form := chamou_form_old;
   chamou_pesquisa := chamou_pesquisa_old;
@@ -3547,6 +3576,7 @@ begin
     if (Crcod_fop.Text = '') and (btnov.Enabled = false) then
     begin
 
+      if not Assigned(Fr_localizar) then
       Application.CreateForm(TFr_localizar, Fr_localizar);
 
       //guardar os valores antigos
@@ -3573,7 +3603,11 @@ begin
       Fr_localizar.CBcampos.ItemIndex := 1;
 
       Fr_localizar.ShowModal;
-      Fr_localizar.Free;
+      if Assigned(Fr_localizar) then
+      begin
+        Fr_localizar.Free;
+        Fr_localizar := nil;
+      end;
 
       chamou_form := chamou_form_old;
       chamou_pesquisa := chamou_pesquisa_old;

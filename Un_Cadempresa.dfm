@@ -3,7 +3,7 @@ object Fr_Empresa: TFr_Empresa
   Top = 110
   BorderIcons = [biSystemMenu]
   Caption = 'Cadastro da Empresa'
-  ClientHeight = 443
+  ClientHeight = 479
   ClientWidth = 556
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -22,27 +22,26 @@ object Fr_Empresa: TFr_Empresa
     Left = 0
     Top = 52
     Width = 556
-    Height = 353
+    Height = 389
     ActivePage = TabSheet1
     Align = alClient
     TabOrder = 0
     SkinData.SkinSection = 'PAGECONTROL'
+    ExplicitHeight = 353
     object TabSheet1: TsTabSheet
       Caption = 'Dados da Empresa'
       SkinData.CustomColor = False
       SkinData.CustomFont = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitHeight = 325
       object GroupBox1: TsGroupBox
         Left = 0
         Top = 0
         Width = 548
-        Height = 325
+        Height = 361
         Align = alClient
         TabOrder = 0
         SkinData.SkinSection = 'GROUPBOX'
+        ExplicitHeight = 325
         object Label3: TsLabel
           Left = 8
           Top = 64
@@ -1177,10 +1176,7 @@ object Fr_Empresa: TFr_Empresa
       ImageIndex = 3
       SkinData.CustomColor = False
       SkinData.CustomFont = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitHeight = 325
       object sbImagem: TsSpeedButton
         Left = 230
         Top = 4
@@ -1731,6 +1727,117 @@ object Fr_Empresa: TFr_Empresa
           ImgUnchecked = 0
         end
       end
+      object GroupBox4: TsGroupBox
+        Left = 231
+        Top = 165
+        Width = 314
+        Height = 190
+        Caption = 'CSC NFC-e'
+        TabOrder = 2
+        SkinData.SkinSection = 'GROUPBOX'
+        object sLabel6: TsLabel
+          Left = 8
+          Top = 22
+          Width = 107
+          Height = 13
+          Caption = 'ID CSC Homologacao:'
+        end
+        object sLabel7: TsLabel
+          Left = 8
+          Top = 64
+          Width = 93
+          Height = 13
+          Caption = 'CSC Homologacao:'
+        end
+        object sLabel8: TsLabel
+          Left = 8
+          Top = 106
+          Width = 87
+          Height = 13
+          Caption = 'ID CSC Producao:'
+        end
+        object sLabel9: TsLabel
+          Left = 8
+          Top = 148
+          Width = 73
+          Height = 13
+          Caption = 'CSC Producao:'
+        end
+        object PrID_CSC_NFCE_HOMOLOGACAO: TsEdit
+          Left = 8
+          Top = 38
+          Width = 296
+          Height = 21
+          MaxLength = 20
+          TabOrder = 0
+          SkinData.SkinSection = 'EDIT'
+          BoundLabel.Indent = 0
+          BoundLabel.Font.Charset = DEFAULT_CHARSET
+          BoundLabel.Font.Color = clWindowText
+          BoundLabel.Font.Height = -11
+          BoundLabel.Font.Name = 'Tahoma'
+          BoundLabel.Font.Style = []
+          BoundLabel.Layout = sclLeft
+          BoundLabel.MaxWidth = 0
+          BoundLabel.UseSkinColor = True
+        end
+        object PrCSC_NFCE_HOMOLOGACAO: TsEdit
+          Left = 8
+          Top = 80
+          Width = 296
+          Height = 21
+          MaxLength = 500
+          PasswordChar = '*'
+          TabOrder = 1
+          SkinData.SkinSection = 'EDIT'
+          BoundLabel.Indent = 0
+          BoundLabel.Font.Charset = DEFAULT_CHARSET
+          BoundLabel.Font.Color = clWindowText
+          BoundLabel.Font.Height = -11
+          BoundLabel.Font.Name = 'Tahoma'
+          BoundLabel.Font.Style = []
+          BoundLabel.Layout = sclLeft
+          BoundLabel.MaxWidth = 0
+          BoundLabel.UseSkinColor = True
+        end
+        object PrID_CSC_NFCE_PRODUCAO: TsEdit
+          Left = 8
+          Top = 122
+          Width = 296
+          Height = 21
+          MaxLength = 20
+          TabOrder = 2
+          SkinData.SkinSection = 'EDIT'
+          BoundLabel.Indent = 0
+          BoundLabel.Font.Charset = DEFAULT_CHARSET
+          BoundLabel.Font.Color = clWindowText
+          BoundLabel.Font.Height = -11
+          BoundLabel.Font.Name = 'Tahoma'
+          BoundLabel.Font.Style = []
+          BoundLabel.Layout = sclLeft
+          BoundLabel.MaxWidth = 0
+          BoundLabel.UseSkinColor = True
+        end
+        object PrCSC_NFCE_PRODUCAO: TsEdit
+          Left = 8
+          Top = 164
+          Width = 296
+          Height = 21
+          MaxLength = 500
+          PasswordChar = '*'
+          TabOrder = 3
+          SkinData.SkinSection = 'EDIT'
+          BoundLabel.Indent = 0
+          BoundLabel.Font.Charset = DEFAULT_CHARSET
+          BoundLabel.Font.Color = clWindowText
+          BoundLabel.Font.Height = -11
+          BoundLabel.Font.Name = 'Tahoma'
+          BoundLabel.Font.Style = []
+          BoundLabel.Layout = sclLeft
+          BoundLabel.MaxWidth = 0
+          BoundLabel.UseSkinColor = True
+        end
+      end
     end
   end
   object Panel1: TsPanel
@@ -1822,12 +1929,13 @@ object Fr_Empresa: TFr_Empresa
   end
   object Panel2: TsPanel
     Left = 0
-    Top = 405
+    Top = 441
     Width = 556
     Height = 38
     Align = alBottom
     TabOrder = 2
     SkinData.SkinSection = 'PANEL'
+    ExplicitTop = 405
     object sBitBtn6: TsBitBtn
       Left = 592
       Top = 5

@@ -35,6 +35,10 @@ type
     RLLabel4: TRLLabel;
     RLLabel5: TRLLabel;
     RLDBText5: TRLDBText;
+    RLLabelMediaPedido: TRLLabel;
+    RLDBTextMediaPedido: TRLDBText;
+    RLLabelUltimaVenda: TRLLabel;
+    RLDBTextUltimaVenda: TRLDBText;
     RLXLSFilter1: TRLXLSFilter;
     qu_clientecod_cliente: TIntegerField;
     qu_clientenom_cliente: TStringField;
@@ -42,7 +46,10 @@ type
     qu_clientenom_cidade: TStringField;
     qu_clienteuf: TStringField;
     qu_clientetelefone: TStringField;
+    qu_clientemedia_valor_pedido: TBCDField;
+    qu_clientedta_ultima_venda: TDateField;
     procedure RLImage1BeforePrint(Sender: TObject; var PrintIt: Boolean);
+    procedure RLBand2BeforePrint(Sender: TObject; var PrintIt: Boolean);
   private
     { Private declarations }
   public
@@ -57,6 +64,15 @@ implementation
 uses UnPri, Un_dao;
 
 {$R *.dfm}
+
+procedure TFr_rel_cliente.RLBand2BeforePrint(Sender: TObject;
+  var PrintIt: Boolean);
+begin
+  if Odd(qu_cliente.RecNo) then
+    RLBand2.Color := clWhite
+  else
+    RLBand2.Color := $00E4E4E4;
+end;
 
 procedure TFr_rel_cliente.RLImage1BeforePrint(Sender: TObject;
   var PrintIt: Boolean);

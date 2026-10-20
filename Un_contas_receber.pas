@@ -313,6 +313,7 @@ type
     procedure fR_RELATORIOGetValue(const VarName: string; var Value: Variant);
     procedure PrdtavenExit(Sender: TObject);
   private
+    FPreenchendoGrid: Boolean;
     procedure redimensionar(expandir: Boolean);
     { Private declarations }
   public
@@ -357,6 +358,21 @@ uses Un_localizar, UnPri, UnFun, Un_dao, Un_dados_cliente,
 
 {$R *.dfm}
 
+procedure CRSetStringSeguro(AField: TStringField; const AValue: string);
+var
+  Tam: Integer;
+begin
+  if (AField = nil) or (AField.DataSet = nil) or
+     (not AField.DataSet.Active) or
+     (not (AField.DataSet.State in [dsEdit, dsInsert])) or
+     (AField.DataSet.FindField(AField.FieldName) <> AField) then
+    Exit;
+
+  Tam := AField.Size;
+  if Tam <= 0 then
+    Tam := 255;
+  AField.AsString := Copy(AValue, 1, Tam);
+end;
 const
   BB_CONTAS_RECEBER_SCOPE = 'cobrancas.boletos-info cobrancas.boletos-requisicao';
 
@@ -844,28 +860,37 @@ begin
 end;
 
 procedure TFr_contas_receber.Zzcod_fop1Exit(Sender: TObject);
+var
+  CodFop: Integer;
 begin
-  if trim(Zzcod_fop1.Text) = '' then
-    Lbnom_fop1.Caption := '...';
-
-  if Zzcod_fop1.Text <> '' then
+  Zzcod_fop1.Text := Trim(Zzcod_fop1.Text);
+  if Zzcod_fop1.Text = '' then
   begin
-    dao.Geral2('select nom_fop from fop where cod_fop=' +
-      QuotedStr(Zzcod_fop1.Text));
-    if dao.q2.RecordCount > 0 then
-    begin
-      Lbnom_fop1.Caption := dao.q2.fieldbyname('nom_fop').AsString;
-    end
-    else
-    begin
-      dao.msg('Registro não Encontrado!');
-      Zzcod_fop1.Text := '';
-      Zzcod_fop1.SetFocus;
-      Exit;
-    end;
-
+    Lbnom_fop1.Caption := '...';
+    Exit;
   end;
 
+  if not TryStrToInt(Zzcod_fop1.Text, CodFop) then
+  begin
+    dao.msg('Informe um codigo de forma de pagamento valido!');
+    Zzcod_fop1.Text := '';
+    Lbnom_fop1.Caption := '...';
+    if Zzcod_fop1.CanFocus then
+      Zzcod_fop1.SetFocus;
+    Exit;
+  end;
+
+  dao.Geral2('select nom_fop from fop where cod_fop=' + IntToStr(CodFop));
+  if dao.q2.RecordCount > 0 then
+    Lbnom_fop1.Caption := dao.q2.fieldbyname('nom_fop').AsString
+  else
+  begin
+    dao.msg('Registro não Encontrado!');
+    Zzcod_fop1.Text := '';
+    if Zzcod_fop1.CanFocus then
+      Zzcod_fop1.SetFocus;
+    Exit;
+  end;
 end;
 
 procedure TFr_contas_receber.Zzcod_fop1KeyPress(Sender: TObject; var Key: Char);
@@ -966,28 +991,39 @@ begin
 end;
 
 procedure TFr_contas_receber.Zzcod_cliente1Exit(Sender: TObject);
+var
+  CodCliente: Integer;
 begin
-  if trim(Zzcod_cliente1.Text) = '' then
-    LbNom_cliente1.Caption := '...';
-
-  if Zzcod_cliente1.Text <> '' then
+  Zzcod_cliente1.Text := Trim(Zzcod_cliente1.Text);
+  if Zzcod_cliente1.Text = '' then
   begin
-    dao.Geral2
-      ('select cl.nom_cliente||'' - ''||c.NOM_CIDADE||''-''||c.UF as nom_cliente from cliente cl left outer join CIDADES c on c.COD_CIDADE = cl.COD_CIDADE where cl.cod_cliente='
-      + QuotedStr(Zzcod_cliente1.Text));
-    if dao.q2.RecordCount > 0 then
-    begin
-      LbNom_cliente1.Caption := dao.q2.fieldbyname('nom_cliente').AsString;
-    end
-    else
-    begin
-      dao.msg('Registro não Encontrado!');
-      Zzcod_cliente1.Text := '';
-      Zzcod_cliente1.SetFocus;
-      Exit;
-    end;
+    LbNom_cliente1.Caption := '...';
+    Exit;
   end;
 
+  if not TryStrToInt(Zzcod_cliente1.Text, CodCliente) then
+  begin
+    dao.msg('Informe um codigo de cliente valido!');
+    Zzcod_cliente1.Text := '';
+    LbNom_cliente1.Caption := '...';
+    if Zzcod_cliente1.CanFocus then
+      Zzcod_cliente1.SetFocus;
+    Exit;
+  end;
+
+  dao.Geral2
+    ('select cl.nom_cliente||'' - ''||c.NOM_CIDADE||''-''||c.UF as nom_cliente from cliente cl left outer join CIDADES c on c.COD_CIDADE = cl.COD_CIDADE where cl.cod_cliente='
+    + IntToStr(CodCliente));
+  if dao.q2.RecordCount > 0 then
+    LbNom_cliente1.Caption := dao.q2.fieldbyname('nom_cliente').AsString
+  else
+  begin
+    dao.msg('Registro não Encontrado!');
+    Zzcod_cliente1.Text := '';
+    if Zzcod_cliente1.CanFocus then
+      Zzcod_cliente1.SetFocus;
+    Exit;
+  end;
 end;
 
 procedure TFr_contas_receber.Zzcod_cliente1KeyPress(Sender: TObject;
@@ -1879,6 +1915,14 @@ end;
 procedure TFr_contas_receber.FormCloseQuery(Sender: TObject;
   var CanClose: Boolean);
 begin
+  if FPreenchendoGrid then
+  begin
+    MessageBox(handle, 'Aguarde o preenchimento da grade antes de sair!',
+      'ORBI', MB_ICONINFORMATION);
+    CanClose := False;
+    Exit;
+  end;
+
   if btgra.Enabled = true then
   begin
     MessageBox(handle,
@@ -2048,6 +2092,10 @@ var
   BBAmbiente: TBBApiAmbiente;
   CEFAmbiente: TCEFApiAmbiente;
 begin
+  if FPreenchendoGrid then
+    Exit;
+  FPreenchendoGrid := True;
+
   SQLConsulta := Q_resultado.SQL.Text;
   ConnDriverName := dao.cn.DriverName;
   ConnParams := TStringList.Create;
@@ -2055,10 +2103,10 @@ begin
   BBAmbiente := CRBBAmbienteApi;
   CEFAmbiente := CRCEFAmbienteApi;
 
+  if not mmContasPagar.Active then
+    mmContasPagar.Open;
   mmContasPagar.DisableControls;
-  mmContasPagar.Close;
   mmContasPagar.EmptyTable;
-  mmContasPagar.Open;
   VlrTotal := 0;
   btok.Enabled := False;
 
@@ -2093,7 +2141,7 @@ begin
         QThread.Open;
         QThread.FetchAll;
         QThread.First;
-        TThread.Synchronize(nil,
+        TThread.Synchronize(TThread.CurrentThread,
           procedure
           begin
             fm_splash.ggProgress.Progress := 0;
@@ -2127,7 +2175,7 @@ begin
             try
               if CRBoletoRegistradoNaApiAmbiente(QThread, BBAmbiente, CEFAmbiente, LDataPagamento, LValorPago) then
               begin
-                TThread.Synchronize(nil,
+                TThread.Synchronize(TThread.CurrentThread,
                   procedure
                   begin
                     CRBBMarcarBoletoRegistrado(LID, LDataPagamento, LValorPago);
@@ -2143,7 +2191,7 @@ begin
               on E: Exception do
               begin
                 LErro := E.Message;
-                TThread.Synchronize(nil,
+                TThread.Synchronize(TThread.CurrentThread,
                   procedure
                   begin
                     CRBBLogApi('preenche_grid verificar boleto registrado ERRO - cr1_id=' + IntToStr(LID) + ', erro=' + LErro);
@@ -2152,32 +2200,40 @@ begin
             end;
           end;
 
-          TThread.Synchronize(nil,
+          TThread.Synchronize(TThread.CurrentThread,
             procedure
             begin
+              if (Fr_contas_receber <> Self) or (not mmContasPagar.Active) then
+                Exit;
               mmContasPagar.Append;
-              mmContasPagarID.AsInteger := LID;
+              try
+                mmContasPagarID.AsInteger := LID;
               mmContasPagarNR_DOCUMENTO.AsString := LNrDocumento;
-              mmContasPagarTITULO.AsString := LTitulo;
+              CRSetStringSeguro(mmContasPagarTITULO, LTitulo);
               mmContasPagarSEQUENCIA.AsInteger := LSequencia;
-              mmContasPagarRAZAO_SOCIAL.AsString := LRazaoSocial;
-              mmContasPagarHISTORICO.AsString := LHistorico;
+              CRSetStringSeguro(mmContasPagarRAZAO_SOCIAL, LRazaoSocial);
+              CRSetStringSeguro(mmContasPagarHISTORICO, LHistorico);
               mmContasPagarDTAVEN.AsString := LDtaVen;
               mmContasPagarTOTAL_PEDIDO.AsString := LTotalPedido;
               mmContasPagarVALOR.AsFloat := LValor;
               mmContasPagarDTAPAG.AsString := LDtaPag;
               mmContasPagarVALOR_PAGO.AsFloat := LValorPagoOriginal;
               mmContasPagarVALOR_CORRIGIDO.AsFloat := LValorCorrigido;
-              mmContasPagarNOM_FOP.AsString := LNomFop;
-              mmContasPagarEXTRATO.AsString := LExtrato;
+              CRSetStringSeguro(mmContasPagarNOM_FOP, LNomFop);
+              mmContasPagarEXTRATO.AsInteger := StrToIntDef(Trim(LExtrato), 0);
               VlrTotal := VlrTotal + mmContasPagarVALOR.Value;
-              mmContasPagarDESCONTADA.AsString := LDescontada;
-              mmContasPagarCONTA.AsString := LConta;
-              mmContasPagarBOLETO_REGISTRADO.AsBoolean := LBoletoRegistrado;
-              mmContasPagar.Post;
+              CRSetStringSeguro(mmContasPagarDESCONTADA, LDescontada);
+              CRSetStringSeguro(mmContasPagarCONTA, LConta);
+                mmContasPagarBOLETO_REGISTRADO.AsBoolean := LBoletoRegistrado;
+                mmContasPagar.Post;
+              except
+                if mmContasPagar.State in [dsEdit, dsInsert] then
+                  mmContasPagar.Cancel;
+                raise;
+              end;
             end);
 
-          TThread.Synchronize(nil,
+          TThread.Synchronize(TThread.CurrentThread,
             procedure
             begin
               fm_splash.ggProgress.Progress := fm_splash.ggProgress.Progress + 1;
@@ -2187,7 +2243,7 @@ begin
           QThread.Next;
         end;
 
-        TThread.Synchronize(nil,
+        TThread.Synchronize(TThread.CurrentThread,
           procedure
           begin
             mmContasPagar.First;
@@ -2200,6 +2256,7 @@ begin
             total_parcial_pgto := 0;
             VlrTotalSel := 0;
             btok.Enabled := True;
+            FPreenchendoGrid := False;
             Screen.Cursor := crDefault;
             fm_splash.Hide;
           end);
@@ -2207,13 +2264,14 @@ begin
         on E: Exception do
         begin
           LErro := E.Message;
-          TThread.Synchronize(nil,
+          TThread.Synchronize(TThread.CurrentThread,
             procedure
             begin
               mmContasPagar.EnableControls;
               fm_splash.Hide;
               Screen.Cursor := crDefault;
               btok.Enabled := True;
+              FPreenchendoGrid := False;
               dao.msg('Houve um Erro ao preencher a grade!' + #13 +
                 'Abaixo segue o Erro Detalhado:' + #13 + LErro);
             end);
@@ -2912,6 +2970,7 @@ begin
     close;
     sql.Clear;
     sql.Add(cmd + ordem);
+    Open;
   end;
 
   if Dm.q_contas_receber.RecordCount <= 0 then

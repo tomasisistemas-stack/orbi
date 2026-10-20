@@ -80,13 +80,16 @@ type
     sLabel16: TsLabel;
     Prcod_grupo: TsComboEdit;
     LbNom_Grupo: TsLabel;
+    procedure sBitBtn1Click(Sender: TObject);
     procedure Prcod_produtoButtonClick(Sender: TObject);
     procedure Prcod_produtoExit(Sender: TObject);
+    procedure Prcod_produtoKeyPress(Sender: TObject; var Key: Char);
     procedure PrCod_ClienteExit(Sender: TObject);
     procedure PrCod_ClienteButtonClick(Sender: TObject);
     procedure btokClick(Sender: TObject);
     procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure FormShow(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure q_produtoAfterOpen(DataSet: TDataSet);
     procedure sDBGrid1DrawColumnCell(Sender: TObject; const Rect: TRect;
       DataCol: Integer; Column: TColumn; State: TGridDrawState);
@@ -107,6 +110,16 @@ uses UnFun, Un_localizar, Un_dao, UnPri;
 
 {$R *.dfm}
 
+procedure Tfr_ultimas_vendas.sBitBtn1Click(Sender: TObject);
+begin
+  Close;
+end;
+
+procedure Tfr_ultimas_vendas.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Action := caFree;
+  fr_ultimas_vendas := nil;
+end;
 
 procedure Tfr_ultimas_vendas.Prcod_grupoButtonClick(Sender: TObject);
 var
@@ -114,12 +127,21 @@ var
   Campos_combo: array of string;
   i: Integer;
   valor_combo: string;
+  LocalizarAnterior: TFr_localizar;
 
   // variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
-  Application.CreateForm(TFr_localizar, Fr_localizar);
+  LocalizarAnterior := nil;
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+  begin
+    LocalizarAnterior := Fr_localizar;
+    Fr_localizar := nil;
+  end;
+
+  if not Assigned(Fr_localizar) then
+    Application.CreateForm(TFr_localizar, Fr_localizar);
 
   // guardar os valores antigos
   chamou_form_old := chamou_form;
@@ -150,13 +172,15 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
+    Fr_localizar := LocalizarAnterior;
+    chamou_form := chamou_form_old;
+    chamou_pesquisa := chamou_pesquisa_old;
   end;
-
-  chamou_form := chamou_form_old;
-  chamou_pesquisa := chamou_pesquisa_old;
-
-
 end;
 
 procedure Tfr_ultimas_vendas.Prcod_grupoExit(Sender: TObject);
@@ -188,7 +212,9 @@ var
   //variavel para armazenar o valor antigo de chamou_form e chamou_pesquisa
   chamou_form_old, chamou_pesquisa_old: string;
 begin
-  Application.CreateForm(TFr_localizar, Fr_localizar);
+  GarantirFrLocalizar;
+  if Fr_localizar.Visible then
+    Exit;
 
   //guardar os valores antigos
   chamou_form_old := chamou_form;
@@ -219,7 +245,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -227,26 +257,46 @@ begin
 end;
 
 procedure Tfr_ultimas_vendas.Prcod_produtoExit(Sender: TObject);
+var
+  CodigoProduto: string;
 begin
-  if trim(Prcod_produto.Text) = '' then
-    lbNomeProduto.Caption := '...';
+  CodigoProduto := Trim(Prcod_produto.Text);
+  Prcod_produto.Text := CodigoProduto;
 
-  if trim(Prcod_produto.Text) <> '' then
+  if CodigoProduto = '' then
   begin
-    dao.Geral2('select nom_produto from produto where cod_produto=' +
-      QuotedStr(Prcod_produto.Text));
-    if dao.q2.RecordCount > 0 then
-      lbNomeProduto.Caption := dao.Q2.fieldbyname('nom_produto').AsString
-    else
-    begin
-      dao.msg('Registro n„o Encontrado!');
-      Prcod_produto.Text := '';
+    lbNomeProduto.Caption := '...';
+    Exit;
+  end;
+
+  if not FMFUN.verificaNumerico(CodigoProduto) then
+  begin
+    dao.msg('Informe somente numeros no codigo do produto!');
+    Prcod_produto.Clear;
+    if Prcod_produto.CanFocus then
       Prcod_produto.SetFocus;
-      Exit;
-    end;
+    Exit;
+  end;
+
+  dao.Geral2('select nom_produto from produto where cod_produto=' +
+    QuotedStr(CodigoProduto));
+  if dao.q2.RecordCount > 0 then
+    lbNomeProduto.Caption := dao.Q2.fieldbyname('nom_produto').AsString
+  else
+  begin
+    dao.msg('Registro n√£o Encontrado!');
+    Prcod_produto.Clear;
+    if Prcod_produto.CanFocus then
+      Prcod_produto.SetFocus;
   end;
 end;
 
+procedure Tfr_ultimas_vendas.Prcod_produtoKeyPress(Sender: TObject;
+  var Key: Char);
+begin
+  if not (Key in [#8, '0'..'9']) then
+    Key := #0;
+end;
 procedure Tfr_ultimas_vendas.q_produtoAfterOpen(DataSet: TDataSet);
 begin
   if q_produto.IsEmpty then
@@ -317,6 +367,7 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
   //guardar os valores antigos
@@ -348,7 +399,11 @@ begin
   try
     Fr_localizar.ShowModal;
   finally
-    Fr_localizar.Free;
+    if Assigned(Fr_localizar) then
+    begin
+      Fr_localizar.Free;
+      Fr_localizar := nil;
+    end;
   end;
 
   chamou_form := chamou_form_old;
@@ -436,4 +491,3 @@ begin
 end;
 
 end.
-
