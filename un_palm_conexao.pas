@@ -886,7 +886,7 @@ end;
 procedure TFrPalmConexao.FormCreate(Sender: TObject);
 begin
   if not Aviso_Palm then
-    FrPalmConexao.Caption := 'Pedidos Enviados pelos Representantes';
+    Self.Caption := 'Pedidos Enviados pelos Representantes';
 end;
 
 procedure TFrPalmConexao.dgPedidoDrawColumnCell(Sender: TObject;

@@ -4,8 +4,8 @@ object Fr_opc_relatorios: TFr_opc_relatorios
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'Op'#231#245'es'
-  ClientHeight = 1768
-  ClientWidth = 644
+  ClientHeight = 1838
+  ClientWidth = 660
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -10244,15 +10244,19 @@ object Fr_opc_relatorios: TFr_opc_relatorios
     Left = 0
     Top = 0
     Width = 644
-    Height = 1768
+    Height = 1794
     ActivePage = TabSheet1
     Align = alClient
     MultiLine = True
     TabOrder = 0
     SkinData.SkinSection = 'PAGECONTROL'
+    ExplicitWidth = 660
+    ExplicitHeight = 1768
     object TabSheet1: TsTabSheet
       SkinData.CustomColor = False
       SkinData.CustomFont = False
+      ExplicitWidth = 652
+      ExplicitHeight = 1740
       object gbContasTipo: TsGroupBox
         Left = 0
         Top = 535
@@ -10261,6 +10265,7 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         TabOrder = 8
         SkinData.SkinSection = 'GROUPBOX'
+        ExplicitWidth = 652
         object Prfinalizado: TsRadioButton
           Left = 3
           Top = 14
@@ -10319,6 +10324,7 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         TabOrder = 5
         SkinData.SkinSection = 'GROUPBOX'
+        ExplicitWidth = 652
         object zzfaturado: TsRadioButton
           Left = 3
           Top = 14
@@ -10376,6 +10382,7 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Caption = 'Ordenar:'
         TabOrder = 6
         SkinData.SkinSection = 'GROUPBOX'
+        ExplicitWidth = 652
         object RadioButton7: TsRadioButton
           Left = 3
           Top = 14
@@ -10417,6 +10424,7 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         TabOrder = 4
         Visible = False
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object PRmostrar_produto_estoque_zerado: TsCheckBox
           Left = 10
           Top = 5
@@ -10452,6 +10460,7 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         BevelOuter = bvLowered
         TabOrder = 2
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object Lbl_cidade: TsLabel
           Left = 11
           Top = 9
@@ -10568,6 +10577,7 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         BevelOuter = bvLowered
         TabOrder = 1
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object Label38: TsLabel
           Left = 8
           Top = 11
@@ -10682,6 +10692,7 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Caption = 'Ordenar:'
         TabOrder = 7
         SkinData.SkinSection = 'GROUPBOX'
+        ExplicitWidth = 652
         object Alfabeticamente: TsRadioButton
           Left = 3
           Top = 14
@@ -10720,6 +10731,7 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         BevelOuter = bvLowered
         TabOrder = 3
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object Label4: TsLabel
           Left = 8
           Top = 11
@@ -10834,6 +10846,7 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         TabOrder = 9
         SkinData.SkinSection = 'GROUPBOX'
+        ExplicitWidth = 652
         object Label5: TsLabel
           Left = 17
           Top = 8
@@ -10921,6 +10934,7 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         BevelOuter = bvLowered
         TabOrder = 10
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object Label3: TsLabel
           Left = 8
           Top = 11
@@ -11027,25 +11041,6 @@ object Fr_opc_relatorios: TFr_opc_relatorios
           BoundLabel.UseSkinColor = True
         end
       end
-      object Pa_botoes: TsPanel
-        Left = 0
-        Top = 1696
-        Width = 636
-        Height = 44
-        Align = alBottom
-        TabOrder = 11
-        SkinData.SkinSection = 'PANEL'
-        object bt_imprimir: TsBitBtn
-          Left = 260
-          Top = 6
-          Width = 100
-          Height = 31
-          Caption = 'Imprimir'
-          TabOrder = 0
-          OnClick = bt_imprimirClick
-          SkinData.SkinSection = 'BUTTON'
-        end
-      end
       object pn_microregiao: TsPanel
         Left = 0
         Top = 789
@@ -11054,8 +11049,9 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         BevelInner = bvRaised
         BevelOuter = bvLowered
-        TabOrder = 12
+        TabOrder = 11
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object sLabel1: TsLabel
           Left = 11
           Top = 9
@@ -11172,6 +11168,7 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         TabOrder = 0
         Visible = False
         SkinData.SkinSection = 'GROUPBOX'
+        ExplicitWidth = 652
         object rbAtivo: TsRadioButton
           Left = 3
           Top = 14
@@ -11237,8 +11234,9 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         BevelInner = bvRaised
         BevelOuter = bvLowered
-        TabOrder = 13
+        TabOrder = 12
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object Lbl_cliente: TsLabel
           Left = 8
           Top = 9
@@ -11353,8 +11351,9 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         BevelInner = bvRaised
         BevelOuter = bvLowered
-        TabOrder = 14
+        TabOrder = 13
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object lbContaCorrente: TsLabel
           Left = 167
           Top = 13
@@ -11469,9 +11468,10 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         BevelInner = bvRaised
         BevelOuter = bvLowered
-        TabOrder = 15
+        TabOrder = 14
         Visible = False
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object Lbl_produto: TsLabel
           Left = 9
           Top = 10
@@ -11595,8 +11595,9 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         BevelInner = bvRaised
         BevelOuter = bvLowered
-        TabOrder = 16
+        TabOrder = 15
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object Lbl_fornecedor: TsLabel
           Left = 6
           Top = 12
@@ -11711,8 +11712,9 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         BevelInner = bvRaised
         BevelOuter = bvLowered
-        TabOrder = 17
+        TabOrder = 16
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object Lbl_cod_fiscal: TsLabel
           Left = 5
           Top = 13
@@ -11779,8 +11781,9 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Height = 76
         Align = alTop
         Caption = 'Plano De Contas'
-        TabOrder = 18
+        TabOrder = 17
         SkinData.SkinSection = 'GROUPBOX'
+        ExplicitWidth = 652
         object Lbnom_plano_contas_N1: TsLabel
           Left = 64
           Top = 15
@@ -11921,8 +11924,9 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         BevelInner = bvRaised
         BevelOuter = bvLowered
-        TabOrder = 19
+        TabOrder = 18
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object LbNom_Grupo: TsLabel
           Left = 167
           Top = 13
@@ -12036,9 +12040,10 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         BevelInner = bvRaised
         BevelOuter = bvLowered
-        TabOrder = 47
+        TabOrder = 46
         Visible = False
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object LbNom_Pais: TsLabel
           Left = 167
           Top = 13
@@ -12150,9 +12155,10 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Width = 636
         Height = 66
         Align = alTop
-        TabOrder = 20
+        TabOrder = 19
         Visible = False
         SkinData.SkinSection = 'GROUPBOX'
+        ExplicitWidth = 652
         object sLabel3: TsLabel
           Left = 67
           Top = 16
@@ -12344,8 +12350,9 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Width = 636
         Height = 50
         Align = alTop
-        TabOrder = 21
+        TabOrder = 20
         SkinData.SkinSection = 'GROUPBOX'
+        ExplicitWidth = 652
         object Label1: TsLabel
           Left = 51
           Top = 9
@@ -12493,9 +12500,10 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         BevelInner = bvRaised
         BevelOuter = bvLowered
-        TabOrder = 22
+        TabOrder = 21
         Visible = False
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object Label9: TsLabel
           Left = 9
           Top = 13
@@ -12565,8 +12573,9 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         BevelInner = bvRaised
         BevelOuter = bvLowered
-        TabOrder = 23
+        TabOrder = 22
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object Lb_marca: TsLabel
           Left = 11
           Top = 12
@@ -12680,8 +12689,9 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         BevelInner = bvRaised
         BevelOuter = bvLowered
-        TabOrder = 24
+        TabOrder = 23
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object Lbl_empresa: TsLabel
           Left = 11
           Top = 11
@@ -12749,8 +12759,9 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         BevelInner = bvRaised
         BevelOuter = bvLowered
-        TabOrder = 25
+        TabOrder = 24
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object Label7: TsLabel
           Left = 8
           Top = 11
@@ -12813,8 +12824,9 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         BevelInner = bvRaised
         BevelOuter = bvLowered
-        TabOrder = 26
+        TabOrder = 25
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object Lbl_uf: TsLabel
           Left = 13
           Top = 10
@@ -12883,8 +12895,9 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         BevelInner = bvRaised
         BevelOuter = bvLowered
-        TabOrder = 27
+        TabOrder = 26
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object sLabel2: TsLabel
           Left = 11
           Top = 9
@@ -12998,9 +13011,10 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Height = 62
         Align = alTop
         Caption = 'Ordenar:'
-        TabOrder = 28
+        TabOrder = 27
         Visible = False
         SkinData.SkinSection = 'GROUPBOX'
+        ExplicitWidth = 652
         object rgAlfabeticamente: TsRadioButton
           Left = 3
           Top = 14
@@ -13054,9 +13068,10 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Height = 39
         Align = alTop
         Caption = 'Cliente'
-        TabOrder = 29
+        TabOrder = 28
         Visible = False
         SkinData.SkinSection = 'GROUPBOX'
+        ExplicitWidth = 652
         object rbbloqueado: TsRadioButton
           Left = 3
           Top = 14
@@ -13131,9 +13146,10 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         BevelInner = bvRaised
         BevelOuter = bvLowered
-        TabOrder = 30
+        TabOrder = 29
         Visible = False
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object lbCategoria: TsLabel
           Left = 167
           Top = 13
@@ -13247,9 +13263,10 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         BevelInner = bvRaised
         BevelOuter = bvLowered
-        TabOrder = 31
+        TabOrder = 30
         Visible = False
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object lbSubCategoria: TsLabel
           Left = 167
           Top = 13
@@ -13373,9 +13390,10 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Height = 39
         Align = alTop
         Caption = 'Movimenta'#231#227'o'
-        TabOrder = 32
+        TabOrder = 31
         Visible = False
         SkinData.SkinSection = 'GROUPBOX'
+        ExplicitWidth = 652
         object rbAcerto: TsRadioButton
           Left = 3
           Top = 14
@@ -13431,9 +13449,10 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Height = 39
         Align = alTop
         Caption = 'Supervis'#227'o'
-        TabOrder = 33
+        TabOrder = 32
         Visible = False
         SkinData.SkinSection = 'GROUPBOX'
+        ExplicitWidth = 652
         object rbComSupervisao: TsRadioButton
           Left = 3
           Top = 14
@@ -13474,9 +13493,10 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Height = 39
         Align = alTop
         Caption = 'Tipo de Produto'
-        TabOrder = 34
+        TabOrder = 33
         Visible = False
         SkinData.SkinSection = 'GROUPBOX'
+        ExplicitWidth = 652
         object rbRevenda: TsRadioButton
           Left = 3
           Top = 14
@@ -13515,9 +13535,10 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         BevelInner = bvRaised
         BevelOuter = bvLowered
-        TabOrder = 35
+        TabOrder = 34
         Visible = False
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object sLabel4: TsLabel
           Left = 8
           Top = 11
@@ -13579,8 +13600,9 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Height = 39
         Align = alTop
         Caption = 'Ordenar:'
-        TabOrder = 36
+        TabOrder = 35
         SkinData.SkinSection = 'GROUPBOX'
+        ExplicitWidth = 652
         object rbTotalVendas: TsRadioButton
           Left = 3
           Top = 14
@@ -13608,8 +13630,9 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         BevelInner = bvRaised
         BevelOuter = bvLowered
-        TabOrder = 37
+        TabOrder = 36
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object sLabel8: TsLabel
           Left = 8
           Top = 11
@@ -13723,9 +13746,10 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         BevelInner = bvRaised
         BevelOuter = bvLowered
-        TabOrder = 38
+        TabOrder = 37
         Visible = False
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object sLabel11: TsLabel
           Left = 13
           Top = 10
@@ -13901,9 +13925,10 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         BevelInner = bvRaised
         BevelOuter = bvLowered
-        TabOrder = 39
+        TabOrder = 38
         Visible = False
         SkinData.SkinSection = 'PANEL'
+        ExplicitWidth = 652
         object sLabel13: TsLabel
           Left = 8
           Top = 11
@@ -13948,9 +13973,10 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Width = 636
         Height = 31
         Align = alTop
-        TabOrder = 40
+        TabOrder = 39
         Visible = False
         SkinData.SkinSection = 'GROUPBOX'
+        ExplicitWidth = 652
         object sLabel14: TsLabel
           Left = 6
           Top = 10
@@ -14001,7 +14027,7 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Height = 39
         Align = alTop
         ParentBackground = False
-        TabOrder = 41
+        TabOrder = 40
         SkinData.SkinSection = 'GROUPBOX'
         Columns = 3
         ItemIndex = 2
@@ -14009,6 +14035,7 @@ object Fr_opc_relatorios: TFr_opc_relatorios
           'Funcion'#225'rio'
           'Representante'
           'Todos')
+        ExplicitWidth = 652
       end
       object gbCSV: TsGroupBox
         Left = 0
@@ -14016,9 +14043,10 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Width = 636
         Height = 50
         Align = alTop
-        TabOrder = 42
+        TabOrder = 41
         Visible = False
         SkinData.SkinSection = 'GROUPBOX'
+        ExplicitWidth = 652
         object ckCSV: TCheckBox
           Left = 16
           Top = 24
@@ -14036,7 +14064,7 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Align = alTop
         Caption = 'Ordernar'
         ParentBackground = False
-        TabOrder = 43
+        TabOrder = 42
         Visible = False
         SkinData.SkinSection = 'GROUPBOX'
         Columns = 5
@@ -14047,6 +14075,7 @@ object Fr_opc_relatorios: TFr_opc_relatorios
           'C'#243'digo'
           'Descri'#231#227'o'
           'Ordem Tipo Cat'#225'logo')
+        ExplicitWidth = 652
       end
       object gbConsumidorFinal: TsGroupBox
         Left = 0
@@ -14055,9 +14084,10 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Height = 39
         Align = alTop
         Caption = 'Consumidor Final'
-        TabOrder = 44
+        TabOrder = 43
         Visible = False
         SkinData.SkinSection = 'GROUPBOX'
+        ExplicitWidth = 652
         object rbTodosConsumidorFinal: TsRadioButton
           Left = 3
           Top = 14
@@ -14098,9 +14128,10 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Height = 50
         Align = alTop
         Caption = 'M'#234's'
-        TabOrder = 45
+        TabOrder = 44
         Visible = False
         SkinData.SkinSection = 'GROUPBOX'
+        ExplicitWidth = 652
         object cbMes: TComboBox
           Left = 18
           Top = 19
@@ -14123,9 +14154,10 @@ object Fr_opc_relatorios: TFr_opc_relatorios
         Width = 636
         Height = 50
         Align = alTop
-        TabOrder = 46
+        TabOrder = 45
         Visible = False
         SkinData.SkinSection = 'GROUPBOX'
+        ExplicitWidth = 652
         object ckSomenteMovimetacao: TCheckBox
           Left = 16
           Top = 24
@@ -14135,6 +14167,40 @@ object Fr_opc_relatorios: TFr_opc_relatorios
           TabOrder = 0
         end
       end
+    end
+  end
+  object ScrollBar1: TScrollBar
+    Left = 644
+    Top = 0
+    Width = 16
+    Height = 1794
+    Align = alRight
+    Kind = sbVertical
+    PageSize = 0
+    TabOrder = 1
+    ExplicitLeft = 636
+    ExplicitTop = 1719
+    ExplicitHeight = 49
+  end
+  object Pa_botoes: TsPanel
+    Left = 0
+    Top = 1794
+    Width = 660
+    Height = 44
+    Align = alBottom
+    TabOrder = 2
+    SkinData.SkinSection = 'PANEL'
+    ExplicitTop = 1696
+    ExplicitWidth = 652
+    object bt_imprimir: TsBitBtn
+      Left = 260
+      Top = 6
+      Width = 100
+      Height = 31
+      Caption = 'Imprimir'
+      TabOrder = 0
+      OnClick = bt_imprimirClick
+      SkinData.SkinSection = 'BUTTON'
     end
   end
   object fR_RELATORIO: TfrxReport

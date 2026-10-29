@@ -56,6 +56,14 @@ type
       anexo1: string = ''; anexo2: string = '');
   end;
 
+  TTelaScroll = class(TScrollBox)
+  public
+    FForm: TForm;
+    FormaW: Integer;
+    FormaH: Integer;
+    procedure Resize; override;
+  end;
+
   TFRPRI = class(TForm)
     ISMTPmail: TIdSMTP;
     IMmail: TIdMessage;
@@ -214,7 +222,7 @@ type
     Button1: TButton;
     PlanodeContas2: TMenuItem;
     ProdutosDescontoEspecial1: TMenuItem;
-    Panel4: tsPanel;
+    pnBotoes: TsPanel;
     sbClientes: TsSpeedButton;
     sbVendas: TsSpeedButton;
     sbContasPagar: TsSpeedButton;
@@ -439,6 +447,8 @@ type
     qEmailsIncorretosemail: TStringField;
     F1: TMenuItem;
     sbVendasSimplificada: TsSpeedButton;
+    pgJanelas: TPageControl;
+    pnlMenuAba: TPanel;
     procedure JvXPBar1Items0Click(Sender: TObject);
     procedure JvXPBar1Items1Click(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -545,6 +555,7 @@ type
     procedure PedidosxPrateleira1Click(Sender: TObject);
     procedure RelaodePedidosImportadosdoSistemaPalm1Click(Sender: TObject);
     procedure TmPedidoPalmTimer(Sender: TObject);
+    procedure PedidosMLClick(Sender: TObject);
     procedure tmHoraTimer(Sender: TObject);
     procedure ChecarRetornosEmail;
     procedure CriarAbaEmailsIncorretos;
@@ -616,6 +627,19 @@ type
     procedure S3Click(Sender: TObject);
     procedure sbTransmissaoClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    function AbrirTela(AClasse: TFormClass): TForm;
+    procedure pgJanelasDrawTab(Control: TCustomTabControl; TabIndex: Integer; const ARect: TRect; Active: Boolean);
+    procedure FormResize(Sender: TObject);
+    procedure pgJanelasChange(Sender: TObject);
+    procedure AtualizarMenuAba;
+    procedure LimparMenuAba;
+    procedure PosicionarJanelas;
+    procedure MenuAbaClick(Sender: TObject);
+    procedure AppMessage(var Msg: TMsg; var Handled: Boolean);
+    procedure FormKeyDownAbas(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure FormaFechada(Sender: TObject; var Action: TCloseAction);
+    procedure pgJanelasMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     procedure V1Click(Sender: TObject);
     procedure c2Click(Sender: TObject);
     procedure C3Click(Sender: TObject);
@@ -689,6 +713,8 @@ type
     procedure ChecarCertificado;
     procedure ChecarEstoqueMinimo;
     procedure ChecarAvisoPedidosExternos;
+    procedure ChecarAvisoPedidosML;
+    procedure AvisoPedidosMLClick(Sender: TObject);
     procedure AbrirTelaPedidosExternos(const AAvisoPalm: Boolean);
     procedure AvisoPedidosExternosClick(Sender: TObject);
     procedure ChecarAvisoAtualizacao;
@@ -828,7 +854,7 @@ type
 
 const
   ////////////////////////////////////////////////////////////
-  versao: ShortString = '2.01.04';
+  versao: ShortString = '2.01.07';
   ///////////////////////////////////////////////////////////
 var
 
@@ -899,7 +925,7 @@ uses UnUsu, Un_PDV,
   NFE_dll_TLB, nfe_v110, Un_ncm, Un_nfe_envio_lote, un_nfe_transmissao,
   un_email_envio, un_alterar_senha, Un_nfe_danfe, Un_plano_contas,
   Un_nfe_arquivos, Un_status_emissor, Un_vendas_industria2, Un_categoria, un_subcategoria,
-  un_infoatu, Un_recibo, un_palm_conexao, un_nfe_complementar,
+  un_infoatu, Un_recibo, un_palm_conexao, un_pedidos_ml, un_nfe_complementar,
   Un_mala_direta, un_transf_valores, Un_frete_combinado,
   Un_etiquetas_produtos, un_etiquetas_multiplos_produtos, un_olap_plano_conta, un_olap_vendas,
   Un_calcular_salarios, Un_calcular_comissoes, Un_plano_contas_consulta,
@@ -914,6 +940,27 @@ uses UnUsu, Un_PDV,
   Un_representantes_clientes, un_email_nfe, Un_etapas_producao,
   Un_Error_Logger,
   un_entrada_producao, un_alterar_preco, Un_pedido_simplificado, Un_nfce_simplificado;
+
+// caption do formulario de relatorios = caption do item de menu que o chamou
+procedure AplicaCaptionOpc(Sender: TObject);
+var
+  s: string;
+begin
+  s := '';
+  if Sender is TMenuItem then
+    s := TMenuItem(Sender).Caption
+  else if Sender is TButton then
+    s := TButton(Sender).Caption;
+  s := StringReplace(s, '&', '', [rfReplaceAll]);
+  if (s <> '') and Assigned(Fr_opc_relatorios) then
+  begin
+    Fr_opc_relatorios.Caption := s;
+    // a aba (guia) mostra o caption criado antes: atualiza tambem
+    if (Fr_opc_relatorios.Parent <> nil) and (Fr_opc_relatorios.Parent.Parent is TTabSheet) then
+      TTabSheet(Fr_opc_relatorios.Parent.Parent).Caption := s;
+  end;
+end;
+
 
 function PainelAvisosLateral(AForm: TFRPRI): TsPanel; forward;
 procedure AtualizarPainelAvisosLateral(AForm: TFRPRI); forward;
@@ -1019,6 +1066,16 @@ begin
   begin
     close;
     Key := #0;
+  end;
+  // Enter avanca para o proximo campo (como Tab); memo e botoes mantem o Enter proprio
+  if Key = #13 then
+  begin
+    if Assigned(ActiveControl) and (ActiveControl is TWinControl) and
+      not (ActiveControl is TCustomMemo) and not (ActiveControl is TButtonControl) then
+    begin
+      Key := #0;
+      SelectNext(TWinControl(ActiveControl), True, True);
+    end;
   end;
 end;
 
@@ -1163,35 +1220,23 @@ end;
 
 procedure TFRPRI.Cliente1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_Cliente, Fr_Cliente);
+  Fr_Cliente := TFr_Cliente(AbrirTela(TFr_Cliente));
     SetaAcesso(Fr_Cliente.Caption);
-    Fr_Cliente.ShowModal;
-  finally
-    Fr_Cliente.Free;
-  end;
+Fr_Cliente.Show;
 end;
 
 procedure TFRPRI.Fornecedores1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_fornecedor, Fr_fornecedor);
+  Fr_fornecedor := TFr_fornecedor(AbrirTela(TFr_fornecedor));
 	SetaAcesso(Fr_fornecedor.Caption);
-    Fr_fornecedor.ShowModal;
-  finally
-    Fr_fornecedor.Free;
-  end;
+Fr_fornecedor.Show;
 end;
 
 procedure TFRPRI.CotaesdePreo1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_Cotacao, Fr_Cotacao);
+  Fr_Cotacao := TFr_Cotacao(AbrirTela(TFr_Cotacao));
 	SetaAcesso(Fr_Cotacao.Caption);
-    Fr_Cotacao.ShowModal;
-  finally
-    Fr_Cotacao.Free;
-  end;
+Fr_Cotacao.Show;
 end;
 
 procedure TFRPRI.ransportadora1Click(Sender: TObject);
@@ -1207,14 +1252,10 @@ end;
 
 procedure TFRPRI.Cidade1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_cidades, Fr_cidades);
+  Fr_cidades := TFr_cidades(AbrirTela(TFr_cidades));
 	SetaAcesso(Fr_cidades.Caption);
     Fr_cidades.tipo := '1';
-    Fr_cidades.ShowModal;
-  finally
-    Fr_cidades.Free;
-  end;
+Fr_cidades.Show;
 end;
 
 procedure TFRPRI.checar_configuracao;
@@ -1275,25 +1316,17 @@ end;
 
 procedure TFRPRI.Grupos1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_grupo, Fr_grupo);
+  Fr_grupo := TFr_grupo(AbrirTela(TFr_grupo));
 	SetaAcesso(Fr_grupo.Caption);
-    Fr_grupo.ShowModal;
-  finally
-    Fr_grupo.Free;
-  end;
+Fr_grupo.Show;
 end;
 
 procedure TFRPRI.EntradadeMercadorias1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_entrada, Fr_entrada);
+  Fr_entrada := TFr_entrada(AbrirTela(TFr_entrada));
 	SetaAcesso(Fr_entrada.Caption);
     Fr_entrada.servico := False;
-    Fr_entrada.ShowModal;
-  finally
-    Fr_entrada.Free;
-  end;
+Fr_entrada.Show;
 end;
 
 function TFRPRI.valida_doc(documento: string;
@@ -1317,12 +1350,8 @@ end;
 
 procedure TFRPRI.CadastrodeMatrizFilial1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_Empresa, Fr_Empresa);
-    Fr_Empresa.ShowModal;
-  finally
-    Fr_Empresa.Free;
-  end;
+  Fr_Empresa := TFr_Empresa(AbrirTela(TFr_Empresa));
+Fr_Empresa.Show;
 end;
 
 function DashMoneyBR(AValue: Double): string;
@@ -2388,13 +2417,9 @@ end;
 
 procedure TFRPRI.e1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfrm_nfe_email, frm_nfe_email);
+  frm_nfe_email := Tfrm_nfe_email(AbrirTela(Tfrm_nfe_email));
     SetaAcesso(frm_nfe_email.Caption);	
-    frm_nfe_email.ShowModal;
-  finally
-    frm_nfe_email.Free;
-  end;
+frm_nfe_email.Show;
 end;
 
 function TFRPRI.DtaSerDt: TDateTime;
@@ -2406,47 +2431,31 @@ end;
 
 procedure TFRPRI.CadastrodeUsurios1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFRUSU, FRUSU);
+  FRUSU := TFRUSU(AbrirTela(TFRUSU));
 	SetaAcesso(FRUSU.Caption);
-    FRUSU.ShowModal;
-  finally
-    FRUSU.Free;
-  end;
+FRUSU.Show;
 end;
 
 
 procedure TFRPRI.LogdoSistema1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_log, Fr_log);
+  Fr_log := TFr_log(AbrirTela(TFr_log));
 	SetaAcesso(Fr_log.Caption);
-    Fr_log.ShowModal;
-  finally
-    Fr_log.Free;
-  end;
+Fr_log.Show;
 end;
 
 procedure TFRPRI.ImprimirEtiquetasCodigodeBarras1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_eti_codbarras, Fr_eti_codbarras);
+  Fr_eti_codbarras := TFr_eti_codbarras(AbrirTela(TFr_eti_codbarras));
 	SetaAcesso(Fr_eti_codbarras.Caption);
-    Fr_eti_codbarras.ShowModal;
-  finally
-    Fr_eti_codbarras.Free;
-  end;
+Fr_eti_codbarras.Show;
 end;
 
 procedure TFRPRI.PropriedadesdoSistema1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_configuracao, Fr_configuracao);
+  Fr_configuracao := TFr_configuracao(AbrirTela(TFr_configuracao));
 	SetaAcesso(Fr_configuracao.Caption);
-    Fr_configuracao.ShowModal;
-  finally
-    Fr_configuracao.Free;
-  end;
+Fr_configuracao.Show;
 end;
 
 procedure TFRPRI.habilita_menus(cod_usu: string);
@@ -2557,24 +2566,16 @@ end;
 
 procedure TFRPRI.amanho1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_tamanho, Fr_tamanho);
+  Fr_tamanho := TFr_tamanho(AbrirTela(TFr_tamanho));
 	SetaAcesso(Fr_tamanho.Caption);
-    Fr_tamanho.ShowModal;
-  finally
-    Fr_tamanho.Free;
-  end;
+Fr_tamanho.Show;
 end;
 
 procedure TFRPRI.Coleo1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_colecao, Fr_colecao);
+  Fr_colecao := TFr_colecao(AbrirTela(TFr_colecao));
 	SetaAcesso(Fr_colecao.Caption);
-    Fr_colecao.ShowModal;
-  finally
-    Fr_colecao.Free;
-  end;
+Fr_colecao.Show;
 end;
 
 procedure TFRPRI.ativa_configuracao;
@@ -2674,15 +2675,15 @@ end;
 procedure TFRPRI.sbRelatVendasClick(Sender: TObject);
 begin
   if VendasPadroSimplificada1.Visible then
-    VendasPadroSimplificada1Click(self)
+    VendasPadroSimplificada1Click(VendasPadroSimplificada1)
   else
     ShowMessage('Seu Perfil de Usuário não está habilitado!');
 end;
 
 procedure TFRPRI.sbRelatComissoesClick(Sender: TObject);
 begin
-  if Detalhado1.Visible then
-    Detalhado1Click(self);
+  if D2.Visible then
+    D2Click(D2);
 end;
 
 procedure TFRPRI.FormShow(Sender: TObject);
@@ -2912,24 +2913,16 @@ end;
 
 procedure TFRPRI.ContasaReceber1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_contas_receber, fr_contas_receber);
+  fr_contas_receber := TFr_contas_receber(AbrirTela(TFr_contas_receber));
 	SetaAcesso(fr_contas_receber.Caption);
-    fr_contas_receber.ShowModal;
-  finally
-    fr_contas_receber.Free;
-  end;
+fr_contas_receber.Show;
 end;
 
 procedure TFRPRI.Contasapagar1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_contas_pagar, Fr_contas_pagar);
+  Fr_contas_pagar := TFr_contas_pagar(AbrirTela(TFr_contas_pagar));
 	SetaAcesso(Fr_contas_pagar.Caption);
-    Fr_contas_pagar.ShowModal;
-  finally
-    Fr_contas_pagar.Free;
-  end;
+Fr_contas_pagar.Show;
 end;
 
 procedure TFRPRI.AcertodeEstoque1Click(Sender: TObject);
@@ -2939,38 +2932,29 @@ end;
 
 procedure TFRPRI.PosiodeEstoque1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'relatorio_estoque_simples';
 	SetaAcesso('relatorio_estoque_simples');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.PosiodeEstoquecomCusto1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'relatorio_estoque_custo';
 	SetaAcesso('relatorio_estoque_custo');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.PosiodeEstoquecomPreodeVenda1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'relatorio_estoque_completo';
 	SetaAcesso('relatorio_estoque_completo');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 
 end;
 
@@ -3750,13 +3734,9 @@ end;
 
 procedure TFRPRI.A1Click(Sender: TObject);
 begin
-   try
-    Application.CreateForm(TFmAlterarPreco, FmAlterarPreco);
+   FmAlterarPreco := TFmAlterarPreco(AbrirTela(TFmAlterarPreco));
 	SetaAcesso(FmAlterarPreco.Caption);
-    FmAlterarPreco.ShowModal;
-  finally
-    FmAlterarPreco.Free;
-  end;
+FmAlterarPreco.Show;
  end;
 
 procedure TFRPRI.AbreExcel(var Modo: Variant; nome_arq: ShortString;
@@ -3854,14 +3834,9 @@ end;
 
 procedure TFRPRI.F1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_PDV, Fr_PDV);
-    SetaAcesso(Fr_PDV.Caption);
-    Fr_PDV.ShowModal;
-  finally
-    if Assigned(Fr_PDV) then
-      Fr_PDV.Free;
-  end;
+  Fr_PDV := TFr_PDV(AbrirTela(TFr_PDV));
+  SetaAcesso(Fr_PDV.Caption);
+  Fr_PDV.Show;
 end;
 
 procedure TFRPRI.FontCel(Modo: Variant; Tab, cor, tamanho, Negrito: Integer;
@@ -4093,85 +4068,63 @@ end;
 
 procedure TFRPRI.Cores1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_cor, Fr_cor);
+  Fr_cor := TFr_cor(AbrirTela(TFr_cor));
 	SetaAcesso(Fr_cor.Caption);
-    Fr_cor.ShowModal;
-  finally
-    Fr_cor.Free;
-  end;
+Fr_cor.Show;
 end;
 
 procedure TFRPRI.Produto1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
 	SetaAcesso('relatorio_cliente');
     tipo_relatorio := 'relatorio_cliente';
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.VendasporPeriodo1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'vendas_periodo_cliente';
 	SetaAcesso('vendas_periodo_cliente');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.RelaodeNotasporPeriodo1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'relatorio_notas_entrada';
 	SetaAcesso('relatorio_notas_entrada');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.PosiodeEstoqueporFornecedor1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'relatorio_estoque_completo';
 	SetaAcesso('relatorio_estoque_completo');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.VendasporFornecedorcomCusto1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'vendas_fornecedor_custo';
 	SetaAcesso('vendas_fornecedor_custo');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.VendasporPerodoAgrupadodorData1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'vendas_periodo_data';
 	SetaAcesso('vendas_periodo_data');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.NumTab(Modo: Variant; num: Integer; texto: string);
@@ -4188,46 +4141,30 @@ end;
 
 procedure TFRPRI.ChequeTerceiros1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_cheque_terceiros, Fr_cheque_terceiros);
+  Fr_cheque_terceiros := TFr_cheque_terceiros(AbrirTela(TFr_cheque_terceiros));
 	SetaAcesso(Fr_cheque_terceiros.Caption);
-    Fr_cheque_terceiros.ShowModal;
-  finally
-    Fr_cheque_terceiros.Free;
-  end;
+Fr_cheque_terceiros.Show;
 end;
 
 procedure TFRPRI.E2Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfrm_estrutura_produto, frm_estrutura_produto);
+  frm_estrutura_produto := Tfrm_estrutura_produto(AbrirTela(Tfrm_estrutura_produto));
 	SetaAcesso(frm_estrutura_produto.Caption);
-    frm_estrutura_produto.ShowModal;
-  finally
-    frm_estrutura_produto.Free;
-  end;
+frm_estrutura_produto.Show;
 end;
 
 procedure TFRPRI.E3Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfr_etapas_producao, fr_etapas_producao);
+  fr_etapas_producao := Tfr_etapas_producao(AbrirTela(Tfr_etapas_producao));
 	SetaAcesso(fr_etapas_producao.Caption);
-    fr_etapas_producao.ShowModal;
-  finally
-    fr_etapas_producao.Free;
-  end;
+fr_etapas_producao.Show;
 end;
 
 procedure TFRPRI.E4Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfrm_entrada_producao, frm_entrada_producao);
+  frm_entrada_producao := Tfrm_entrada_producao(AbrirTela(Tfrm_entrada_producao));
 	SetaAcesso(frm_entrada_producao.Caption);
-    frm_entrada_producao.ShowModal;
-  finally
-    frm_entrada_producao.Free;
-  end;
+frm_entrada_producao.Show;
 end;
 
 procedure TFRPRI.EmissoCheques1Click(Sender: TObject);
@@ -4244,148 +4181,99 @@ end;
 
 procedure TFRPRI.Representante1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_representante, Fr_representante);
+  Fr_representante := TFr_representante(AbrirTela(TFr_representante));
 	SetaAcesso(Fr_representante.Caption);
-    Fr_representante.ShowModal;
-  finally
-    Fr_representante.Free;
-  end;
+Fr_representante.Show;
 end;
 
 procedure TFRPRI.CFOP1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_CFOP, Fr_CFOP);
+  Fr_CFOP := TFr_CFOP(AbrirTela(TFr_CFOP));
 	SetaAcesso(Fr_CFOP.Caption);
-    Fr_CFOP.ShowModal;
-  finally
-    Fr_CFOP.Free;
-  end;
+Fr_CFOP.Show;
 end;
 
 procedure TFRPRI.Unidades1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_tabela_unidade, Fr_tabela_unidade);
+  Fr_tabela_unidade := TFr_tabela_unidade(AbrirTela(TFr_tabela_unidade));
 	SetaAcesso(Fr_tabela_unidade.Caption);
-    Fr_tabela_unidade.ShowModal;
-  finally
-    Fr_tabela_unidade.Free;
-  end;
+Fr_tabela_unidade.Show;
 end;
 
 procedure TFRPRI.Banco1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfr_banco, fr_banco);
+  fr_banco := Tfr_banco(AbrirTela(Tfr_banco));
 	SetaAcesso(fr_banco.Caption);
-    fr_banco.ShowModal;
-  finally
-    fr_banco.Free;
-  end;
+fr_banco.Show;
 end;
 
 procedure TFRPRI.ContaCorrente1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_conta_corrente, Fr_conta_corrente);
+  Fr_conta_corrente := TFr_conta_corrente(AbrirTela(TFr_conta_corrente));
 	SetaAcesso(Fr_conta_corrente.Caption);
-    Fr_conta_corrente.ShowModal;
-  finally
-    Fr_conta_corrente.Free;
-  end;
+Fr_conta_corrente.Show;
 end;
 
 procedure TFRPRI.CategoriaEstoque1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_categoria_estoque, Fr_categoria_estoque);
+  Fr_categoria_estoque := TFr_categoria_estoque(AbrirTela(TFr_categoria_estoque));
 	SetaAcesso(Fr_categoria_estoque.Caption);
-    Fr_categoria_estoque.ShowModal;
-  finally
-    Fr_categoria_estoque.Free;
-  end;
+Fr_categoria_estoque.Show;
 end;
 
 procedure TFRPRI.PrazodePagamento1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_prazo_pagamento, Fr_prazo_pagamento);
+  Fr_prazo_pagamento := TFr_prazo_pagamento(AbrirTela(TFr_prazo_pagamento));
 	SetaAcesso(Fr_prazo_pagamento.Caption);
-    Fr_prazo_pagamento.ShowModal;
-  finally
-    Fr_prazo_pagamento.Free;
-  end;
+Fr_prazo_pagamento.Show;
 end;
 
 procedure TFRPRI.CadastroCrdito1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_parametro_credito, Fr_parametro_credito);
+  Fr_parametro_credito := TFr_parametro_credito(AbrirTela(TFr_parametro_credito));
 	SetaAcesso(Fr_parametro_credito.Caption);
-    Fr_parametro_credito.ShowModal;
-  finally
-    Fr_parametro_credito.Free;
-  end;
+Fr_parametro_credito.Show;
 end;
 
 procedure TFRPRI.Veiculo1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfr_veiculo, fr_veiculo);
+  fr_veiculo := Tfr_veiculo(AbrirTela(Tfr_veiculo));
 	SetaAcesso(fr_veiculo.Caption);
-    fr_veiculo.ShowModal;
-  finally
-    fr_veiculo.Free;
-  end;
+fr_veiculo.Show;
 end;
 
 procedure TFRPRI.Motorista1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_motorista, Fr_motorista);
+  Fr_motorista := TFr_motorista(AbrirTela(TFr_motorista));
 	SetaAcesso(Fr_motorista.Caption);
-    Fr_motorista.ShowModal;
-  finally
-    Fr_motorista.Free;
-  end;
+Fr_motorista.Show;
 end;
 
 procedure TFRPRI.N11Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'produtos_capa';
 	SetaAcesso('produtos_capa');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.N12Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'produtos_capa_11';
 	SetaAcesso('produtos_capa_11');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.ConsignaesemAberto1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'relatorio_consignacao';
 	SetaAcesso('relatorio_consignacao');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.configuraRD(fonteTamanho: TSize; tipoImpressora: TModelo;
@@ -4416,14 +4304,11 @@ end;
 
 procedure TFRPRI.PosioEstoqueFornecedorSimplificado1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'relatorio_estoque_simplificado';
 	SetaAcesso('relatorio_estoque_simplificado');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -4458,49 +4343,36 @@ end;
 
 procedure TFRPRI.VendasporMarca1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'vendas_periodo_marca';
 	SetaAcesso('vendas_periodo_marca');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.ChequedeTerceiros2Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'cheque_terceiros';
 	SetaAcesso('cheque_terceiros');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.RelaodeNotasdeEntradacompleto1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'relatorio_notas_entrada_detalhado';
 	SetaAcesso('relatorio_notas_entrada_detalhado');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.Marcas1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_marcas, Fr_marcas);
+  Fr_marcas := TFr_marcas(AbrirTela(TFr_marcas));
 	SetaAcesso(Fr_marcas.Caption);
-    Fr_marcas.ShowModal;
-  finally
-    Fr_marcas.Free;
-  end;
+Fr_marcas.Show;
 end;
 
 procedure TFRPRI.habilitaCamposAreaAtuacao(CodAtuacao: string);
@@ -4526,98 +4398,72 @@ end;
 
 procedure TFRPRI.MontagemdeCarga1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_montagem_carga, Fr_montagem_carga);
+  Fr_montagem_carga := TFr_montagem_carga(AbrirTela(TFr_montagem_carga));
     mform := 'montagem_carga';
 	SetaAcesso(Fr_montagem_carga.Caption);
-    Fr_montagem_carga.ShowModal;
-  finally
-    Fr_montagem_carga.Free;
-  end;
+Fr_montagem_carga.Show;
 end;
 
 procedure TFRPRI.ControledeFretesTransportadora1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'controle_fretes_transportadora';
 	SetaAcesso('controle_fretes_transportadora');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.OrdemdeCompra1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFmOrdemCompra, FmOrdemCompra);
+  FmOrdemCompra := TFmOrdemCompra(AbrirTela(TFmOrdemCompra));
 	SetaAcesso(FmOrdemCompra.Caption);
-    FmOrdemCompra.ShowModal;
-  finally
-    FmOrdemCompra.Free;
-  end;
+FmOrdemCompra.Show;
 end;
 
 procedure TFRPRI.ClientesDetalhado1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'relatorio_cliente_completo';
 	SetaAcesso('relatorio_cliente_completo');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.ransferenciasporperiodo1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'relatorio_transferencia';
 	SetaAcesso('relatorio_transferencia');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.VendasporPerodoAgrupadoporVendedor1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'vendas_periodo_vendedor';
 	SetaAcesso('vendas_periodo_vendedor');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.PautadeVendascomEstoque1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'pauta_vendas_est';
 	SetaAcesso('pauta_vendas_est');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 
 end;
 
 procedure TFRPRI.VendasPadroSimplificada1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'vendas_padrao';
 	SetaAcesso('vendas_padrao');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.RelatoriodeSolicitaodeCompraatravesdeestoqueMnimo1Click
@@ -4636,73 +4482,53 @@ end;
 
 procedure TFRPRI.ClientesporRepresentante1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_relatorio_cliente_vendedor, Fr_relatorio_cliente_vendedor);
+  Fr_relatorio_cliente_vendedor := TFr_relatorio_cliente_vendedor(AbrirTela(TFr_relatorio_cliente_vendedor));
     tipo_relatorio := 'cliente_vendedor'; // relatorio de comissão por venda
 	SetaAcesso('cliente_vendedor');
-    Fr_relatorio_cliente_vendedor.ShowModal;
-  finally
-    Fr_relatorio_cliente_vendedor.Free;
-  end;
+Fr_relatorio_cliente_vendedor.Show;
 end;
 
 procedure TFRPRI.RankingClientesSimplificado1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'ranking_cliente_simplificado';
 	SetaAcesso('ranking_cliente_simplificado');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.RankingProdutosClick(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'ranking_produtos';
   	SetaAcesso('ranking_produtos');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.RelatrioAuxiliardeCompra1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'relatorio_auxiliar_compra';
 	SetaAcesso('relatorio_auxiliar_compra');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.RelatriodeAniversariantes1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'relatorio_aniversariantes';
 	SetaAcesso('relatorio_aniversariantes');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.PrPedido1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_pre_pedido, Fr_pre_pedido);
+  Fr_pre_pedido := TFr_pre_pedido(AbrirTela(TFr_pre_pedido));
 	SetaAcesso(Fr_pre_pedido.Caption);
-    Fr_pre_pedido.ShowModal;
-  finally
-    Fr_pre_pedido.Free;
-  end;
+Fr_pre_pedido.Show;
 end;
 
 function TFRPRI.pAssinarXML(pathDocXML, tipDocXML, titCertificado: WideString;
@@ -5018,37 +4844,27 @@ end;
 
 procedure TFRPRI.NCM1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfr_ncm, fr_ncm);
+  fr_ncm := Tfr_ncm(AbrirTela(Tfr_ncm));
 	SetaAcesso(fr_ncm.Caption);
-    fr_ncm.ShowModal;
-  finally
-    fr_ncm.Free;
-  end;
+fr_ncm.Show;
 end;
 
 procedure TFRPRI.Simplificado1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'comissao_venda'; // relatorio de comissão por venda
 	SetaAcesso('comissao_venda');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.Detalhado1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'comissoes';
 	SetaAcesso('comissoes');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 function TFRPRI.HabilitaMenu(Menu: string): Boolean;
@@ -5224,11 +5040,11 @@ end;
 procedure TFRPRI.sbFecharClick(Sender: TObject);
 begin
   Panel3.Visible := False;
-  sbFechar.Parent := Panel4;
-  sbAbrir.Parent := Panel4;
+  sbFechar.Parent := pnBotoes;
+  sbAbrir.Parent := pnBotoes;
   sbFechar.Left := 3;
   sbAbrir.Left := sbFechar.Left + sbFechar.Width + 2;
-  sbFechar.Top := Panel4.Height - sbFechar.Height - 2;
+  sbFechar.Top := pnBotoes.Height - sbFechar.Height - 2;
   sbAbrir.Top := sbFechar.Top;
   sbAbrir.Visible := True;
   sbFechar.Visible := True;
@@ -5239,11 +5055,11 @@ end;
 procedure TFRPRI.SBAbrirClick(Sender: TObject);
 begin
   Panel3.Visible := True;
-  sbFechar.Parent := Panel4;
-  sbAbrir.Parent := Panel4;
+  sbFechar.Parent := pnBotoes;
+  sbAbrir.Parent := pnBotoes;
   sbFechar.Left := 3;
   sbAbrir.Left := sbFechar.Left + sbFechar.Width + 2;
-  sbFechar.Top := Panel4.Height - sbFechar.Height - 2;
+  sbFechar.Top := pnBotoes.Height - sbFechar.Height - 2;
   sbAbrir.Top := sbFechar.Top;
   sbAbrir.Visible := True;
   sbFechar.Visible := True;
@@ -5630,14 +5446,11 @@ end;
 
 procedure TFRPRI.ProdutosxNCM1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'produto_ncm';
 	SetaAcesso('produto_ncm');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 
@@ -5866,13 +5679,9 @@ end;
 
 procedure TFRPRI.AlterarSenha1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfm_alterar_senha, fm_alterar_senha);
+  fm_alterar_senha := Tfm_alterar_senha(AbrirTela(Tfm_alterar_senha));
 	SetaAcesso(fm_alterar_senha.Caption);
-    fm_alterar_senha.ShowModal;
-  finally
-    fm_alterar_senha.Free;
-  end;
+fm_alterar_senha.Show;
 end;
 
 procedure TFRPRI.Vendas3Click(Sender: TObject);
@@ -5889,29 +5698,21 @@ begin
     end;
   end;
 
-  try
-    Application.CreateForm(TFr_vendas_industria2, Fr_vendas_industria2);
+  Fr_vendas_industria2 := TFr_vendas_industria2(AbrirTela(TFr_vendas_industria2));
     mform := 'vendas_industria';
     Fr_vendas_industria2.Caption := 'Pedidos - Vendas';
 	SetaAcesso(Fr_vendas_industria2.Caption);
     Fr_vendas_industria2.venda := True;
-    Fr_vendas_industria2.ShowModal;
-  finally
-    Fr_vendas_industria2.Free;
-  end;
+Fr_vendas_industria2.Show;
 end;
 
 procedure TFRPRI.VendasSimplificado1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_pedido_simplificado, Fr_pedido_simplificado);
+  Fr_pedido_simplificado := TFr_pedido_simplificado(AbrirTela(TFr_pedido_simplificado));
     mform := 'pedido_simplificado';
     Fr_pedido_simplificado.Caption := 'Pedidos - Vendas Simplificado';
     SetaAcesso(Fr_pedido_simplificado.Caption);
-    Fr_pedido_simplificado.ShowModal;
-  finally
-    Fr_pedido_simplificado.Free;
-  end;
+Fr_pedido_simplificado.Show;
 end;
 
 procedure TFRPRI.VendasNFCeSimplificado1Click(Sender: TObject);
@@ -5930,188 +5731,132 @@ end;
 
 procedure TFRPRI.RemessaseDevolues1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_vendas_industria2, Fr_vendas_industria2);
+  Fr_vendas_industria2 := TFr_vendas_industria2(AbrirTela(TFr_vendas_industria2));
     mform := 'vendas_devolucoes';
     Fr_vendas_industria2.Caption := 'Pedidos - Devoluções e Remessas';
     Fr_vendas_industria2.venda := False;
 	SetaAcesso(Fr_vendas_industria2.Caption);
-    Fr_vendas_industria2.ShowModal;
-  finally
-    Fr_vendas_industria2.Free;
-  end;
+Fr_vendas_industria2.Show;
 end;
 
 procedure TFRPRI.EnviodeLote1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfm_nfe_envio_lote, fm_nfe_envio_lote);
+  fm_nfe_envio_lote := Tfm_nfe_envio_lote(AbrirTela(Tfm_nfe_envio_lote));
 	SetaAcesso(fm_nfe_envio_lote.Caption);
-    fm_nfe_envio_lote.ShowModal;
-  finally
-    fm_nfe_envio_lote.Free;
-  end;
+fm_nfe_envio_lote.Show;
 end;
 
 procedure TFRPRI.DANFe1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfm_nfe_danfe, fm_nfe_danfe);
+  fm_nfe_danfe := Tfm_nfe_danfe(AbrirTela(Tfm_nfe_danfe));
 	SetaAcesso(fm_nfe_danfe.Caption);
-    fm_nfe_danfe.ShowModal;
-  finally
-    fm_nfe_danfe.Free;
-  end;
+fm_nfe_danfe.Show;
 end;
 
 procedure TFRPRI.PlanodeContas1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfr_plano_contas, fr_plano_contas);
+  fr_plano_contas := Tfr_plano_contas(AbrirTela(Tfr_plano_contas));
 	SetaAcesso(fr_plano_contas.Caption);
-    fr_plano_contas.ShowModal;
-  finally
-    fr_plano_contas.Free;
-  end;
+fr_plano_contas.Show;
 end;
 
 procedure TFRPRI.GerarArquivosparaContabilidade1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfm_nfe_arquivos, fm_nfe_arquivos);
+  fm_nfe_arquivos := Tfm_nfe_arquivos(AbrirTela(Tfm_nfe_arquivos));
 	SetaAcesso(fm_nfe_arquivos.Caption);
-    fm_nfe_arquivos.ShowModal;
-  finally
-    fm_nfe_arquivos.Free;
-  end;
+fm_nfe_arquivos.Show;
 end;procedure TFRPRI.StatusEmissor1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_status_emissor, Fr_status_emissor);
+  Fr_status_emissor := TFr_status_emissor(AbrirTela(TFr_status_emissor));
 	SetaAcesso(Fr_status_emissor.Caption);
-    Fr_status_emissor.ShowModal;
-  finally
-    Fr_status_emissor.Free;
-  end;
+Fr_status_emissor.Show;
 end;
 
 procedure TFRPRI.Novo1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'comissoes_novo';
 	SetaAcesso('comissoes_novo');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 
 end;
 
 procedure TFRPRI.NovoDetalhado1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'comissoes_novo_detalhado';
 	SetaAcesso('comissoes_novo_detalhado');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.RegistrodePedidosDesfaturados1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'relatorio_pedidos_desfaturados';
 	SetaAcesso('relatorio_pedidos_desfaturados');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.HistricodeMovimentaodeProduto1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'relatorio_movimentacao_produto';
 	SetaAcesso('relatorio_movimentacao_produto');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.ContasaPagar2Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'contas_pagar';
 	SetaAcesso('contas_pagar');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.Contasareceber2Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'contas_receber';
 	SetaAcesso('contas_receber');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.ProdutosClculodoPreodeVenda1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'produto_calculo_preco_venda';
 	SetaAcesso('produto_calculo_preco_venda');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.CategoriadeProdutos1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_categoria, Fr_categoria);
+  Fr_categoria := TFr_categoria(AbrirTela(TFr_categoria));
 	SetaAcesso(Fr_categoria.Caption);
-    Fr_categoria.ShowModal;
-  finally
-    Fr_categoria.Free;
-  end;
+Fr_categoria.Show;
 end;
 
 procedure TFRPRI.SubCategoriadeProdutos1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_subcategoria, Fr_subcategoria);
+  Fr_subcategoria := TFr_subcategoria(AbrirTela(TFr_subcategoria));
 	SetaAcesso(Fr_subcategoria.Caption);
-    Fr_subcategoria.ShowModal;
-  finally
-    Fr_subcategoria.Free;
-  end;
+Fr_subcategoria.Show;
 end;
 
 procedure TFRPRI.transportadora1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'relatorio_transportadora';
 	SetaAcesso('relatorio_transportadora');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.Button1Click(Sender: TObject);
@@ -6422,13 +6167,9 @@ end;
 
 procedure TFRPRI.EmissoRecibos1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_recibo, Fr_recibo);
+  Fr_recibo := TFr_recibo(AbrirTela(TFr_recibo));
 	SetaAcesso(Fr_recibo.Caption);
-    Fr_recibo.ShowModal;
-  finally
-    Fr_recibo.Free;
-  end;
+Fr_recibo.Show;
 end;
 
 procedure TFRPRI.ImportarPedidoPalm;
@@ -6648,32 +6389,28 @@ end;
 
 procedure TFRPRI.PedidosxPrateleira1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'prateleira';
 	SetaAcesso('prateleira');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.RelaodePedidosImportadosdoSistemaPalm1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'palm';
 	SetaAcesso('palm');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.TmPedidoPalmTimer(Sender: TObject);
 begin
   if (Tipo_usuario = '3') or (Tipo_usuario = '5') then
+  begin
     CheckPedidoPalm;
+  end;
 end;
 
 procedure TFRPRI.GerarComissaoDescontoDiario(const ARepresentantesRanking: string);
@@ -6847,70 +6584,48 @@ end;
 
 procedure TFRPRI.NFComplementar1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfr_nfe_complementar, fr_nfe_complementar);
+  fr_nfe_complementar := Tfr_nfe_complementar(AbrirTela(Tfr_nfe_complementar));
 	SetaAcesso(fr_nfe_complementar.caption);
-    fr_nfe_complementar.ShowModal;
-  finally
-    fr_nfe_complementar.Free;
-  end;
+fr_nfe_complementar.Show;
 end;
 
 procedure TFRPRI.MalaDiretaPromoes1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFmMalaDireta, FmMalaDireta);
+  FmMalaDireta := TFmMalaDireta(AbrirTela(TFmMalaDireta));
 	SetaAcesso(FmMalaDireta.caption);
-    FmMalaDireta.ShowModal;
-  finally
-    FmMalaDireta.Free;
-  end;
+FmMalaDireta.Show;
 end;
 
 procedure TFRPRI.ransfernciadeValoresentreContas1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFm_Transf_Valores, Fm_Transf_Valores);
+  Fm_Transf_Valores := TFm_Transf_Valores(AbrirTela(TFm_Transf_Valores));
 	SetaAcesso(Fm_Transf_Valores.caption);
-    Fm_Transf_Valores.ShowModal;
-  finally
-    Fm_Transf_Valores.Free;
-  end;
+Fm_Transf_Valores.Show;
 end;
 
 procedure TFRPRI.Extrato1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'Extrato';
 	SetaAcesso('Extrato');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.PlanodeContas2Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'Plano Contas Lista';
 	SetaAcesso('Plano Contas Lista');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.BaixarFretesCombinados1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfr_frete_combinado, fr_frete_combinado);
+  fr_frete_combinado := Tfr_frete_combinado(AbrirTela(Tfr_frete_combinado));
 	SetaAcesso(fr_frete_combinado.caption);
-    fr_frete_combinado.ShowModal;
-  finally
-    fr_frete_combinado.Free;
-  end;
+fr_frete_combinado.Show;
 end;
 
 procedure TFRPRI.ProdutosEtiquetas1Click(Sender: TObject);
@@ -6921,106 +6636,72 @@ end;
 
 procedure TFRPRI.PlanodeContas3Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfr_plano_contas_consulta, fr_plano_contas_consulta);
+  fr_plano_contas_consulta := Tfr_plano_contas_consulta(AbrirTela(Tfr_plano_contas_consulta));
     fr_plano_contas_consulta.Pagos := False;
 	SetaAcesso(fr_plano_contas_consulta.caption);
-    fr_plano_contas_consulta.ShowModal;
-  finally
-    fr_plano_contas_consulta.Free;
-  end;
+fr_plano_contas_consulta.Show;
 end;
 
 procedure TFRPRI.Vendas4Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(tfr_olap_vendas, fr_olap_vendas);
+  fr_olap_vendas := tfr_olap_vendas(AbrirTela(tfr_olap_vendas));
 	SetaAcesso(fr_olap_vendas.caption);
-    fr_olap_vendas.ShowModal;
-  finally
-    fr_olap_vendas.Free;
-  end;
+fr_olap_vendas.Show;
 end;
 
 procedure TFRPRI.CalcularSalrios1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFmCalcularSalario, FmCalcularSalario);
+  FmCalcularSalario := TFmCalcularSalario(AbrirTela(TFmCalcularSalario));
 	SetaAcesso(FmCalcularSalario.caption);
-    FmCalcularSalario.ShowModal;
-  finally
-    FmCalcularSalario.Free;
-  end;
+FmCalcularSalario.Show;
 end;
 
 procedure TFRPRI.CalcularComisses1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFmCalcularComissao, FmCalcularComissao);
+  FmCalcularComissao := TFmCalcularComissao(AbrirTela(TFmCalcularComissao));
 	SetaAcesso(FmCalcularSalario.caption);
-    FmCalcularComissao.ShowModal;
-  finally
-    FmCalcularComissao.Free;
-  end;
+FmCalcularComissao.Show;
 end;
 
 procedure TFRPRI.PosiodeEstoqueInventrio1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'relatorio_estoque_inventario';
 	SetaAcesso('relatorio_estoque_inventario');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.NovoSimplificado1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'comissoes_novo_simplificado';
 	SetaAcesso('comissoes_novo_simplificado');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.GradedeComisses1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfrm_grade_comissao, frm_grade_comissao);
+  frm_grade_comissao := Tfrm_grade_comissao(AbrirTela(Tfrm_grade_comissao));
 	SetaAcesso(frm_grade_comissao.Caption);
-    frm_grade_comissao.ShowModal;
-  finally
-    frm_grade_comissao.Free;
-  end;
+frm_grade_comissao.Show;
 end;
 
 procedure TFRPRI.CAContasLiquidadas1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfr_plano_contas_consulta, fr_plano_contas_consulta);
+  fr_plano_contas_consulta := Tfr_plano_contas_consulta(AbrirTela(Tfr_plano_contas_consulta));
     fr_plano_contas_consulta.Pagos := True;
     fr_plano_contas_consulta.Caption := 'Contas Líquidadas.';
 	SetaAcesso(fr_plano_contas_consulta.Caption);
-    fr_plano_contas_consulta.ShowModal;
-  finally
-    fr_plano_contas_consulta.Free;
-  end;
+fr_plano_contas_consulta.Show;
 end;
 
 procedure TFRPRI.AcertodeEstoque2Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfr_acerto_estoque, fr_acerto_estoque);
+  fr_acerto_estoque := Tfr_acerto_estoque(AbrirTela(Tfr_acerto_estoque));
 	SetaAcesso(fr_acerto_estoque.Caption);
-    fr_acerto_estoque.ShowModal;
-  finally
-    fr_acerto_estoque.Free;
-  end;
+fr_acerto_estoque.Show;
 end;
 
 procedure TFRPRI.TmContaVencidaTimer(Sender: TObject);
@@ -7031,49 +6712,36 @@ end;
 
 procedure TFRPRI.C8Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'cr_baixadas';
 	SetaAcesso('cr_baixadas');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.C9Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'ranking_vendas_completo';
   	SetaAcesso(tipo_relatorio);
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.CAClculoPLR1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfr_calculo_plr_consulta, fr_calculo_plr_consulta);
+  fr_calculo_plr_consulta := Tfr_calculo_plr_consulta(AbrirTela(Tfr_calculo_plr_consulta));
 	SetaAcesso(fr_calculo_plr_consulta.caption);
-    fr_calculo_plr_consulta.ShowModal;
-  finally
-    fr_calculo_plr_consulta.Free;
-  end;
+fr_calculo_plr_consulta.Show;
 end;
 
 procedure TFRPRI.Representantes1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'relatorio_representante';
 	SetaAcesso('relatorio_representante');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 function TFRPRI.BuscaEndereco(cep: string): TStringList;
@@ -7290,14 +6958,11 @@ end;
 
 procedure TFRPRI.RelaodePedidosDigiadospeloVendedor1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'pedidos_vendedor';
 	SetaAcesso('pedidos_vendedor');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 {
@@ -7406,26 +7071,20 @@ end;
 
 procedure TFRPRI.Fornecedor1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'Fornecedor';
 	SetaAcesso('Relatorio Fornecedor');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.ProdutosDescontoEspecial1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'produto_desconto_especial';
 	SetaAcesso('produto_desconto_especial');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.ZeraProdutoWeb;
@@ -7491,13 +7150,9 @@ end;
 
 procedure TFRPRI.FormasdePagamento1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_forma_pagamento, Fr_forma_pagamento);
+  Fr_forma_pagamento := TFr_forma_pagamento(AbrirTela(TFr_forma_pagamento));
 	SetaAcesso(Fr_forma_pagamento.Caption);
-    Fr_forma_pagamento.ShowModal;
-  finally
-    Fr_forma_pagamento.Free;
-  end;
+Fr_forma_pagamento.Show;
 end;
 
 procedure TFRPRI.estedeImagensdeProdutos1Click(Sender: TObject);
@@ -7514,61 +7169,43 @@ end;
 
 procedure TFRPRI.Cobrana1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     // tipo_relatorio := 'contas_receber';
     tipo_relatorio := 'cobrança';
 	SetaAcesso('cobrança');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.LerRetornoCobrana1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TfmLerRetornoCobranca, fmLerRetornoCobranca);
+  fmLerRetornoCobranca := TfmLerRetornoCobranca(AbrirTela(TfmLerRetornoCobranca));
 	SetaAcesso(fmLerRetornoCobranca.Caption);
-    fmLerRetornoCobranca.ShowModal;
-  finally
-    fmLerRetornoCobranca.Free;
-  end;
+fmLerRetornoCobranca.Show;
 end;
 
 procedure TFRPRI.EnviarAvisosaosRepresentantes1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_Aviso_Representantes_Avulso, Fr_Aviso_Representantes_Avulso);
+  Fr_Aviso_Representantes_Avulso := TFr_Aviso_Representantes_Avulso(AbrirTela(TFr_Aviso_Representantes_Avulso));
 	SetaAcesso(Fr_Aviso_Representantes_Avulso.Caption);
-    Fr_Aviso_Representantes_Avulso.ShowModal;
-  finally
-    Fr_Aviso_Representantes_Avulso.Free;
-  end;
+Fr_Aviso_Representantes_Avulso.Show;
 end;
 
 procedure TFRPRI.AlterarLayout1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TfmAlterarLayout, fmAlterarLayout);
+  fmAlterarLayout := TfmAlterarLayout(AbrirTela(TfmAlterarLayout));
 	SetaAcesso(fmAlterarLayout.Caption);
-    fmAlterarLayout.ShowModal;
-  finally
-    fmAlterarLayout.Free;
-  end;
+fmAlterarLayout.Show;
 end;
 
 procedure TFRPRI.RepresentantesFuncionriosCC1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     // tipo_relatorio := 'contas_receber';
     tipo_relatorio := 'lista_func_cc';
 	SetaAcesso('lista_func_cc');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.frxReport1GetValue(const VarName: string; var Value: Variant);
@@ -7579,35 +7216,23 @@ end;
 
 procedure TFRPRI.EnviarRemessa1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfrm_remessa_boleto, frm_remessa_boleto);
+  frm_remessa_boleto := Tfrm_remessa_boleto(AbrirTela(Tfrm_remessa_boleto));
 	SetaAcesso(frm_remessa_boleto.caption);
-    frm_remessa_boleto.ShowModal;
-  finally
-    frm_remessa_boleto.Free;
-  end;
+frm_remessa_boleto.Show;
 end;
 
 procedure TFRPRI.MotivosdeCancelamentosdeNFes1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_motivo_nfe_cancel, Fr_motivo_nfe_cancel);
+  Fr_motivo_nfe_cancel := TFr_motivo_nfe_cancel(AbrirTela(TFr_motivo_nfe_cancel));
 	SetaAcesso(Fr_motivo_nfe_cancel.caption);
-    Fr_motivo_nfe_cancel.ShowModal;
-  finally
-    Fr_motivo_nfe_cancel.Free;
-  end;
+Fr_motivo_nfe_cancel.Show;
 end;
 
 procedure TFRPRI.SPEDFiscalGerarArquivo1Click(Sender: TObject);
 begin
 
-  { try
-    Application.CreateForm(Tfm_sped, fm_sped);
-    fm_sped.ShowModal;
-    finally
-    fm_sped.Free;
-    end; }
+  { fm_sped := Tfm_sped(AbrirTela(Tfm_sped));
+fm_sped.Show; }
 end;
 
 procedure TFRPRI.Simples1Click(Sender: TObject);
@@ -7648,121 +7273,88 @@ end;
 procedure TFRPRI.ProdutosCdigodeBarras1Click(Sender: TObject);
 begin
 
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'produtos_codigo_barra';
 	SetaAcesso('produtos_codigo_barra');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.ProdutosCatlogo1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'produtos_catalogo';
     SetaAcesso('produtos_catalogo');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.P1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'pauta_venda';
 	SetaAcesso('pauta_venda');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.P2Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'pauta_venda_categoria';
 	SetaAcesso('pauta_venda_categoria');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.n1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'comissao_comparativo';
 	SetaAcesso('comissao_comparativo');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.c1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'comparativo_tablet';
 	SetaAcesso('comparativo_tablet');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.S1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_produto_nao_revenda, Fr_produto_nao_revenda);
+  Fr_produto_nao_revenda := TFr_produto_nao_revenda(AbrirTela(TFr_produto_nao_revenda));
 	SetaAcesso(Fr_produto_nao_revenda.Caption);
-    Fr_produto_nao_revenda.ShowModal;
-  finally
-    Fr_produto_nao_revenda.Free;
-  end;
+Fr_produto_nao_revenda.Show;
 end;
 
 procedure TFRPRI.M2Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_entrada, Fr_entrada);
+  Fr_entrada := TFr_entrada(AbrirTela(TFr_entrada));
     Fr_entrada.servico := True;
 	SetaAcesso(Fr_entrada.Caption);
-    Fr_entrada.ShowModal;
-  finally
-    Fr_entrada.Free;
-  end;
+Fr_entrada.Show;
 
 end;
 
 procedure TFRPRI.S2Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'supervisao';
 	SetaAcesso('supervisao');
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.S3Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFrImpostos, FrImpostos);
+  FrImpostos := TFrImpostos(AbrirTela(TFrImpostos));
 	SetaAcesso(FrImpostos.Caption);
-    FrImpostos.ShowModal;
-  finally
-    FrImpostos.Free;
-  end;
+FrImpostos.Show;
 end;
 
 procedure TFRPRI.sbTransmissaoClick(Sender: TObject);
@@ -7801,9 +7393,405 @@ begin
 
 end;
 
+function TFRPRI.AbrirTela(AClasse: TFormClass): TForm;
+var
+  TS: TTabSheet;
+  F: TForm;
+  Scroll: TTelaScroll;
+  k: Integer;
+begin
+  F := AClasse.Create(Self);
+  TS := TTabSheet.Create(pgJanelas);
+  TS.PageControl := pgJanelas;
+  TS.Caption := F.Caption;
+  F.OnClose := FormaFechada;
+  // posicao fixa: evita o form se centralizar sozinho ao ser mostrado
+  F.Position := poDesigned;
+  // a tela fica num scroll box: se for maior que a area da aba, aparecem as barras de rolagem
+  Scroll := TTelaScroll.Create(TS);
+  Scroll.FForm := F;
+  // tamanho de projeto da tela: area menor -> rola no tamanho original; maior -> preenche
+  Scroll.FormaW := F.Width;
+  Scroll.FormaH := F.Height;
+  Scroll.Parent := TS;
+  Scroll.Align := alClient;
+  Scroll.BorderStyle := bsNone;
+  Scroll.AutoScroll := False;
+  F.BorderStyle := bsNone;
+  F.Parent := Scroll;
+  F.Align := alNone;
+  F.Left := 0;
+  F.Top := 0;
+  // paineis alClient vao para o fim da ordem: os paineis alTop sao alinhados antes deles
+  for k := F.ControlCount - 1 downto 0 do
+    if F.Controls[k].Align = alClient then
+      F.Controls[k].BringToFront;
+  // dimensiona a tela pela area da aba (rolagem so se a area for menor que o projeto)
+  Scroll.Resize;
+  Scroll.VertScrollBar.Position := 0;
+  pgDashboard.Visible := False;
+  pgJanelas.Visible := True;
+  PosicionarJanelas;
+  pgJanelas.BringToFront;
+  pgJanelas.ActivePage := TS;
+  AtualizarMenuAba;
+  Result := F;
+end;
+
+procedure TFRPRI.pgJanelasDrawTab(Control: TCustomTabControl; TabIndex: Integer; const ARect: TRect; Active: Boolean);
+var
+  XRect: TRect;
+begin
+  with Control.Canvas do
+  begin
+    if Active then
+      Brush.Color := clWindow
+    else
+      Brush.Color := clBtnFace;
+    FillRect(ARect);
+    Font.Color := clWindowText;
+    TextOut(ARect.Left + 8, ARect.Top + 4, TPageControl(Control).Pages[TabIndex].Caption);
+    // X de fechar, no canto direito da aba
+    XRect.Left := ARect.Right - 22;
+    XRect.Top := ARect.Top + 2;
+    XRect.Right := ARect.Right - 4;
+    XRect.Bottom := ARect.Bottom - 2;
+    DrawText(Control.Canvas.Handle, 'x', 1, XRect, DT_CENTER or DT_VCENTER or DT_SINGLELINE);
+  end;
+end;
+
+procedure TFRPRI.FormResize(Sender: TObject);
+begin
+  // mantem a camada de abas (e a faixa de menu) cobrindo a area cliente
+  if pgJanelas.Visible then
+    PosicionarJanelas;
+end;
+
+procedure TTelaScroll.Resize;
+var
+  H: Integer;
+begin
+  inherited Resize;
+  if not Assigned(FForm) then
+    Exit;
+  FForm.Align := alNone;
+  // altura acompanha a janela (rodape sempre visivel); largura minima = tamanho original
+  H := ClientHeight;
+  if H < 300 then
+    H := FormaH;
+  if ClientWidth > FormaW then
+    FForm.SetBounds(0, 0, ClientWidth, H)
+  else
+    FForm.SetBounds(0, 0, FormaW, H);
+  HorzScrollBar.Range := FForm.Width;
+  VertScrollBar.Range := 0;
+end;
+
+function FormDaAba(TS: TTabSheet): TForm;
+var
+  k, j: Integer;
+begin
+  // procura o form dentro da aba: direto, ou dentro do scroll box da aba
+  Result := nil;
+  if TS = nil then
+    Exit;
+  for k := 0 to TS.ControlCount - 1 do
+  begin
+    if TS.Controls[k] is TForm then
+    begin
+      Result := TForm(TS.Controls[k]);
+      Exit;
+    end;
+    if TS.Controls[k] is TScrollBox then
+      for j := 0 to TScrollBox(TS.Controls[k]).ControlCount - 1 do
+        if TScrollBox(TS.Controls[k]).Controls[j] is TForm then
+        begin
+          Result := TForm(TScrollBox(TS.Controls[k]).Controls[j]);
+          Exit;
+        end;
+  end;
+end;
+
+function CloneMenuItem(Src: TMenuItem; Dono: TComponent): TMenuItem;
+var
+  i: Integer;
+begin
+  // copia o item (inclusive subitens) mantendo os OnClick do form de origem
+  Result := TMenuItem.Create(Dono);
+  Result.Caption := Src.Caption;
+  Result.ShortCut := Src.ShortCut;
+  Result.OnClick := Src.OnClick;
+  Result.Enabled := Src.Enabled;
+  Result.Visible := Src.Visible;
+  Result.Checked := Src.Checked;
+  Result.Tag := Src.Tag;
+  Result.Hint := Src.Hint;
+  for i := 0 to Src.Count - 1 do
+    Result.Add(CloneMenuItem(Src.Items[i], Dono));
+end;
+
+procedure TFRPRI.pgJanelasChange(Sender: TObject);
+begin
+  AtualizarMenuAba;
+end;
+
+procedure TFRPRI.LimparMenuAba;
+begin
+  while pnlMenuAba.ControlCount > 0 do
+    pnlMenuAba.Controls[0].Free;
+  pnlMenuAba.Visible := False;
+  pnlMenuAba.Parent := nil;
+end;
+
+procedure TFRPRI.PosicionarJanelas;
+begin
+  // as abas ocupam toda a area cliente; a faixa de menu fica dentro de cada aba
+  pgJanelas.SetBounds(0, pnBotoes.Height, ClientWidth, ClientHeight - pnBotoes.Height);
+end;
+
+procedure TFRPRI.AtualizarMenuAba;
+var
+  F: TForm;
+  i, j, x: Integer;
+  Btn: TButton;
+  Pop: TPopupMenu;
+  Item: TMenuItem;
+  TS: TTabSheet;
+begin
+  LimparMenuAba;
+
+  F := nil;
+  if Assigned(pgJanelas.ActivePage) then
+    F := FormDaAba(pgJanelas.ActivePage);
+
+  if Assigned(F) and Assigned(F.Menu) then
+  begin
+    TS := TTabSheet(pgJanelas.ActivePage);
+    x := 4;
+    for i := 0 to F.Menu.Items.Count - 1 do
+    begin
+      Item := F.Menu.Items[i];
+      Btn := TButton.Create(pnlMenuAba);
+      Btn.Parent := pnlMenuAba;
+      Btn.Caption := StringReplace(Item.Caption, '&', '', [rfReplaceAll]);
+      Btn.Left := x;
+      Btn.Top := 2;
+      Btn.Height := 22;
+      Btn.Width := 24 + 7 * Length(Btn.Caption);
+      // cada item de topo vira um botao; o clique abre um popup com os subitens
+      Pop := TPopupMenu.Create(Btn);
+      for j := 0 to Item.Count - 1 do
+        Pop.Items.Add(CloneMenuItem(Item.Items[j], Btn));
+      Btn.OnClick := MenuAbaClick;
+      x := x + Btn.Width + 4;
+    end;
+    if pnlMenuAba.ControlCount > 0 then
+    begin
+      // faixa de menu dentro da propria aba, acima do form
+      pnlMenuAba.Parent := TS;
+      pnlMenuAba.Align := alTop;
+      pnlMenuAba.Height := 26;
+      F.Parent.SendToBack;
+      pnlMenuAba.BringToFront;
+      pnlMenuAba.Visible := True;
+    end;
+  end;
+
+  PosicionarJanelas;
+end;
+
+procedure TFRPRI.MenuAbaClick(Sender: TObject);
+var
+  P: TPoint;
+  k: Integer;
+begin
+  // o popup do botao e o TPopupMenu que ele possui (filho do botao)
+  if not (Sender is TWinControl) then
+    Exit;
+  for k := 0 to TWinControl(Sender).ComponentCount - 1 do
+    if TWinControl(Sender).Components[k] is TPopupMenu then
+    begin
+      P := TWinControl(Sender).ClientToScreen(Point(0, TWinControl(Sender).Height));
+      TPopupMenu(TWinControl(Sender).Components[k]).Popup(P.X, P.Y);
+      Exit;
+    end;
+end;
+
+procedure LogAtalho(const S: string);
+var
+  Arq: TextFile;
+begin
+  // log de diagnostico (temporario) dos atalhos
+  try
+    AssignFile(Arq, 'C:\Tomasi Sistemas\Orbi\Logs\debug_atalho.txt');
+    if FileExists('C:\Tomasi Sistemas\Orbi\Logs\debug_atalho.txt') then
+      Append(Arq)
+    else
+      Rewrite(Arq);
+    WriteLn(Arq, FormatDateTime('hh:nn:ss', Now) + ' ' + S);
+    CloseFile(Arq);
+  except
+  end;
+end;
+
+function FindShortCutItem(Item: TMenuItem; SC: TShortCut): TMenuItem;
+var
+  i: Integer;
+begin
+  Result := nil;
+  if (SC <> 0) and (Item.ShortCut = SC) then
+  begin
+    Result := Item;
+    Exit;
+  end;
+  for i := 0 to Item.Count - 1 do
+  begin
+    Result := FindShortCutItem(Item.Items[i], SC);
+    if Assigned(Result) then
+      Exit;
+  end;
+end;
+
+procedure TFRPRI.AppMessage(var Msg: TMsg; var Handled: Boolean);
+var
+  F: TForm;
+  i: Integer;
+  Shift: TShiftState;
+  SC: TShortCut;
+  Item: TMenuItem;
+begin
+  // dispara o item de menu da tela ativa pelo atalho, antes do foco da tela
+  if (Msg.message <> WM_KEYDOWN) and (Msg.message <> WM_SYSKEYDOWN) then
+    Exit;
+  LogAtalho('tecla vk=' + IntToStr(Integer(Msg.wParam)) +
+    ' ativa=' + BoolToStr(GetActiveWindow = Handle, True) +
+    ' ctrl=' + BoolToStr(GetKeyState(VK_CONTROL) < 0, True) +
+    ' visivel=' + BoolToStr(pgJanelas.Visible, True) +
+    ' abas=' + IntToStr(pgJanelas.PageCount));
+  if GetActiveWindow <> Handle then
+    Exit;
+  if not (pgJanelas.Visible and Assigned(pgJanelas.ActivePage)) then
+    Exit;
+  F := FormDaAba(pgJanelas.ActivePage);
+  if not Assigned(F) then
+  begin
+    LogAtalho('sem form na aba: controles=' + IntToStr(pgJanelas.ActivePage.ControlCount));
+    Exit;
+  end;
+  if not Assigned(F.Menu) then
+    Exit;
+  LogAtalho('form=' + F.ClassName + ' itens=' + IntToStr(F.Menu.Items.Count));
+
+  Shift := [];
+  if GetKeyState(VK_CONTROL) < 0 then
+    Include(Shift, ssCtrl);
+  if GetKeyState(VK_SHIFT) < 0 then
+    Include(Shift, ssShift);
+  if GetKeyState(VK_MENU) < 0 then
+    Include(Shift, ssAlt);
+  SC := ShortCut(Word(Msg.wParam), Shift);
+  LogAtalho('SC=' + IntToStr(SC));
+  if SC = 0 then
+    Exit;
+
+  for i := 0 to F.Menu.Items.Count - 1 do
+  begin
+    Item := FindShortCutItem(F.Menu.Items[i], SC);
+    if Assigned(Item) and Item.Enabled and Assigned(Item.OnClick) then
+    begin
+      Handled := True;
+      Item.Click;
+      Exit;
+    end;
+  end;
+end;
+
+procedure TFRPRI.FormKeyDownAbas(Sender: TObject; var Key: Word; Shift: TShiftState);
+var
+  F: TForm;
+  i: Integer;
+  Item: TMenuItem;
+begin
+  // atalhos do menu da aba ativa (KeyPreview do form principal)
+  if not (pgJanelas.Visible and Assigned(pgJanelas.ActivePage)) then
+    Exit;
+  F := FormDaAba(pgJanelas.ActivePage);
+  if not Assigned(F) then
+    Exit;
+  if not Assigned(F.Menu) then
+    Exit;
+  for i := 0 to F.Menu.Items.Count - 1 do
+  begin
+    Item := FindShortCutItem(F.Menu.Items[i], ShortCut(Key, Shift));
+    if Assigned(Item) and Item.Enabled and Assigned(Item.OnClick) then
+    begin
+      Key := 0;
+      Item.Click;
+      Exit;
+    end;
+  end;
+end;
+
+procedure TFRPRI.FormaFechada(Sender: TObject; var Action: TCloseAction);
+begin
+  // a aba ativa esta sendo fechada: remove os botoes de menu dela
+  if (pgJanelas.ActivePage <> nil) and (TObject(FormDaAba(pgJanelas.ActivePage)) = Sender) then
+    LimparMenuAba;
+  Action := caFree;
+end;
+
+procedure TFRPRI.pgJanelasMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+var
+  idx: Integer;
+  TS: TTabSheet;
+  TR: TRect;
+  Fechar: Boolean;
+  F: TForm;
+begin
+  idx := pgJanelas.IndexOfTabAt(X, Y);
+  if idx < 0 then
+    Exit;
+  TR := pgJanelas.TabRect(idx);
+  // botao do meio fecha a aba; botao esquerdo fecha se clicar no X
+  Fechar := (Button = mbMiddle) or ((Button = mbLeft) and (X >= TR.Right - 22));
+  if not Fechar then
+    Exit;
+  TS := pgJanelas.Pages[idx];
+  if idx = pgJanelas.ActivePageIndex then
+    LimparMenuAba;
+  F := FormDaAba(TS);
+  if Assigned(F) then
+    F.Free;
+  TS.Free;
+  AtualizarMenuAba;
+  if pgJanelas.PageCount = 0 then
+  begin
+    pgJanelas.Visible := False;
+    pgDashboard.Visible := True;
+  end;
+end;
+
 procedure TFRPRI.FormCreate(Sender: TObject);
 begin
     Screen.OnActiveControlChange := ChangeControl;
+  pnlMenuAba := TPanel.Create(Self);
+  pnlMenuAba.Align := alNone;
+  pnlMenuAba.BevelOuter := bvNone;
+  pnlMenuAba.Color := clBtnFace;
+  pnlMenuAba.Caption := '';
+  pnlMenuAba.Height := 26;
+  pnlMenuAba.Visible := False;
+  pgJanelas.OnMouseDown := pgJanelasMouseDown;
+  Application.OnMessage := AppMessage;
+  OnKeyDown := FormKeyDownAbas;
+  pgJanelas.OnChange := pgJanelasChange;
+  pgJanelas.OwnerDraw := True;
+  pgJanelas.OnDrawTab := pgJanelasDrawTab;
+  pgJanelas.TabWidth := 180;
+  OnResize := FormResize;
+  pgJanelas.Parent := Self;
+  pgJanelas.Visible := False;
   tsVendas.TabVisible := False;
   tsClientesNaoAtendidos.TabVisible := False;
   tsTotais.TabVisible := False;
@@ -7828,60 +7816,43 @@ end;
 
 procedure TFRPRI.V1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'vendas_geral';
 	SetaAcesso(tipo_relatorio);
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.c2Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFmCalcular13Salario, FmCalcular13Salario);
+  FmCalcular13Salario := TFmCalcular13Salario(AbrirTela(TFmCalcular13Salario));
 	SetaAcesso(FmCalcular13Salario.Caption);
-    FmCalcular13Salario.ShowModal;
-  finally
-    FmCalcular13Salario.Free;
-  end;
+FmCalcular13Salario.Show;
 end;
 
 procedure TFRPRI.C3Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'ranking_cliente';
 	SetaAcesso(tipo_relatorio);
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.C6Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfr_controle_visitas, fr_controle_visitas);
+  fr_controle_visitas := Tfr_controle_visitas(AbrirTela(Tfr_controle_visitas));
 	SetaAcesso(fr_controle_visitas.caption);
-    fr_controle_visitas.ShowModal;
-  finally
-    fr_controle_visitas.Free;
-  end;
+fr_controle_visitas.Show;
 end;
 
 procedure TFRPRI.c7Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'clientes_produtos';
 	SetaAcesso(tipo_relatorio);
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.tmConectTimer(Sender: TObject);
@@ -7892,13 +7863,9 @@ end;
 
 procedure TFRPRI.EnviarPedidosClick(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfm_vendor_enviar_pedidos, fm_vendor_enviar_pedidos);
+  fm_vendor_enviar_pedidos := Tfm_vendor_enviar_pedidos(AbrirTela(Tfm_vendor_enviar_pedidos));
 	SetaAcesso(fm_vendor_enviar_pedidos.caption);
-    fm_vendor_enviar_pedidos.ShowModal;
-  finally
-    fm_vendor_enviar_pedidos.Free;
-  end;
+fm_vendor_enviar_pedidos.Show;
 end;
 
 procedure TFRPRI.sbEnviarPedidosClick(Sender: TObject);
@@ -7913,36 +7880,25 @@ end;
 
 procedure TFRPRI.t1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'televendas';
 	SetaAcesso(tipo_relatorio);
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.produto_completoClick(Sender: TObject);
 begin
-  Fr_produtos := TFr_produtos.Create(Application);
-  try
+  Fr_produtos := TFr_produtos(AbrirTela(TFr_produtos));
     SetaAcesso(Fr_produtos.Caption);
-    Fr_produtos.ShowModal;
-  finally
-    FreeAndNil(Fr_produtos);
-  end;
+Fr_produtos.Show;
 end;
 
 procedure TFRPRI.S4Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfrm_produtos_simplificado, frm_produtos_simplificado);
+  frm_produtos_simplificado := Tfrm_produtos_simplificado(AbrirTela(Tfrm_produtos_simplificado));
 	SetaAcesso(frm_produtos_simplificado.Caption);
-    frm_produtos_simplificado.ShowModal;
-  finally
-    frm_produtos_simplificado.Free;
-  end;
+frm_produtos_simplificado.Show;
 end;
 
 procedure TFRPRI.SetaAcesso(nomeForm: string);
@@ -7970,25 +7926,18 @@ end;
 
 procedure TFRPRI.S5Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfrm_controle_status_pedido, frm_controle_status_pedido);
+  frm_controle_status_pedido := Tfrm_controle_status_pedido(AbrirTela(Tfrm_controle_status_pedido));
 	SetaAcesso(frm_controle_status_pedido.Caption);
-    frm_controle_status_pedido.ShowModal;
-  finally
-    frm_controle_status_pedido.Free;
-  end;
+frm_controle_status_pedido.Show;
 end;
 
 procedure TFRPRI.S6Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'ranking_vendas';
   	SetaAcesso(tipo_relatorio);
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.AvisoContasPagarDiario;
@@ -7998,62 +7947,52 @@ end;
 
 procedure TFRPRI.T2Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFrPalmConexao, FrPalmConexao);
+  FrPalmConexao := TFrPalmConexao(AbrirTela(TFrPalmConexao));
     FrPalmConexao.Aviso_Palm := True;
 	SetaAcesso(FrPalmConexao.Caption);
-    FrPalmConexao.ShowModal;
-  finally
-    FrPalmConexao.Free;
-  end;
+FrPalmConexao.Show;
 end;
 
 procedure TFRPRI.N21Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'produtos_capa_20_5';
 	SetaAcesso(tipo_relatorio);
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.N22Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'produtos_capa_24_6';
 	SetaAcesso(tipo_relatorio);
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.N2Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFrPalmConexao, FrPalmConexao);
+  FrPalmConexao := TFrPalmConexao(AbrirTela(TFrPalmConexao));
     FrPalmConexao.Aviso_Palm := False;
 	SetaAcesso(FrPalmConexao.Caption);
-    FrPalmConexao.ShowModal;
-  finally
-    FrPalmConexao.Free;
-  end;
+FrPalmConexao.Show;
+end;
+
+procedure TFRPRI.PedidosMLClick(Sender: TObject);
+begin
+  FrPedidosML := TFrPedidosML(AbrirTela(TFrPedidosML));
+  SetaAcesso(FrPedidosML.Caption);
+  FrPedidosML.Show;
 end;
 
 procedure TFRPRI.N61Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'produtos_capa_6';
 	SetaAcesso(tipo_relatorio);
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.AbrirTelaPedidosExternos(const AAvisoPalm: Boolean);
@@ -8235,6 +8174,7 @@ begin
       lista.Free;
     end;
   end;
+  AtualizarPainelAvisosLateral(Self);
 end;
 
 function PainelAvisosLateral(AForm: TFRPRI): TsPanel;
@@ -8262,7 +8202,7 @@ end;
 
 procedure AtualizarPainelAvisosLateral(AForm: TFRPRI);
 var
-  pnlColuna, pnlAtualizacao, pnlPedidos, pnlEstoque, pnlCert, pnlEmail: TsPanel;
+  pnlColuna, pnlAtualizacao, pnlPedidos, pnlPedidosML, pnlEstoque, pnlCert, pnlEmail: TsPanel;
   TopAviso: Integer;
 begin
   pnlColuna := TsPanel(AForm.FindComponent('pnlAvisosLateral'));
@@ -8271,9 +8211,13 @@ begin
 
   pnlAtualizacao := TsPanel(AForm.FindComponent('pnlAtualizacaoAviso'));
   pnlPedidos := TsPanel(AForm.FindComponent('pnlPedidosAviso'));
+  pnlPedidosML := TsPanel(AForm.FindComponent('pnlPedidosMLAviso'));
   pnlEstoque := TsPanel(AForm.FindComponent('pnlEstoqueAviso'));
+  pnlCert := TsPanel(AForm.FindComponent('pnlCertAviso'));
   pnlColuna.Visible := (Assigned(pnlAtualizacao) and pnlAtualizacao.Visible) or
+    (Assigned(pnlCert) and pnlCert.Visible) or
     (Assigned(pnlPedidos) and pnlPedidos.Visible) or
+    (Assigned(pnlPedidosML) and pnlPedidosML.Visible) or
     (Assigned(pnlEstoque) and pnlEstoque.Visible);
 
   if not pnlColuna.Visible then
@@ -8291,6 +8235,15 @@ begin
       Inc(TopAviso, pnlAtualizacao.Height);
   end;
 
+  if Assigned(pnlCert) then
+  begin
+    pnlCert.Parent := pnlColuna;
+    pnlCert.Align := alNone;
+    pnlCert.SetBounds(0, TopAviso, pnlColuna.ClientWidth, 92);
+    if pnlCert.Visible then
+      Inc(TopAviso, pnlCert.Height);
+  end;
+
   if Assigned(pnlPedidos) then
   begin
     pnlPedidos.Parent := pnlColuna;
@@ -8298,6 +8251,15 @@ begin
     pnlPedidos.SetBounds(0, TopAviso, pnlColuna.ClientWidth, 92);
     if pnlPedidos.Visible then
       Inc(TopAviso, pnlPedidos.Height);
+  end;
+
+  if Assigned(pnlPedidosML) then
+  begin
+    pnlPedidosML.Parent := pnlColuna;
+    pnlPedidosML.Align := alNone;
+    pnlPedidosML.SetBounds(0, TopAviso, pnlColuna.ClientWidth, 70);
+    if pnlPedidosML.Visible then
+      Inc(TopAviso, pnlPedidosML.Height);
   end;
 
   if Assigned(pnlEstoque) then
@@ -8667,6 +8629,114 @@ begin
   end;
 end;
 
+procedure TFRPRI.AvisoPedidosMLClick(Sender: TObject);
+begin
+  PedidosMLClick(Sender);
+end;
+
+procedure TFRPRI.ChecarAvisoPedidosML;
+var
+  pnl: TsPanel;
+  lblTit: TsLabel;
+  lblMsg: TsLabel;
+  shp: TShape;
+  QML: TFDQuery;
+  qtd: Integer;
+  erroML: string;
+begin
+  erroML := '';
+  pnl := TsPanel(FindComponent('pnlPedidosMLAviso'));
+  if not Assigned(pnl) then
+  begin
+    pnl := TsPanel.Create(Self);
+    pnl.Name := 'pnlPedidosMLAviso';
+    pnl.Caption := '';
+    pnl.Parent := PainelAvisosLateral(Self);
+    pnl.Align := alTop;
+    pnl.Width := 340;
+    pnl.Height := 70;
+    pnl.Color := clInfoBk;
+    pnl.ParentBackground := False;
+    pnl.Visible := False;
+    pnl.TabOrder := 10;
+    pnl.SkinData.SkinSection := 'PANEL';
+    pnl.Cursor := crHandPoint;
+    pnl.OnClick := AvisoPedidosMLClick;
+
+    shp := TShape.Create(pnl);
+    shp.Name := 'shpPedidosMLAviso';
+    shp.Parent := pnl;
+    shp.Align := alLeft;
+    shp.Width := 5;
+    shp.Brush.Color := clTeal;
+    shp.Pen.Style := psClear;
+
+    lblTit := TsLabel.Create(pnl);
+    lblTit.Name := 'lblPedidosMLAvisoTitulo';
+    lblTit.Parent := pnl;
+    lblTit.Left := 12;
+    lblTit.Top := 6;
+    lblTit.Caption := 'PEDIDOS MERCADO LIVRE';
+    lblTit.ParentFont := False;
+    lblTit.Font.Color := clTeal;
+    lblTit.Font.Style := [fsBold];
+    lblTit.Cursor := crHandPoint;
+    lblTit.OnClick := AvisoPedidosMLClick;
+
+    lblMsg := TsLabel.Create(pnl);
+    lblMsg.Name := 'lblPedidosMLAvisoMsg';
+    lblMsg.Parent := pnl;
+    lblMsg.Left := 12;
+    lblMsg.Top := 28;
+    lblMsg.AutoSize := False;
+    lblMsg.WordWrap := False;
+    lblMsg.Width := pnl.Width - 16;
+    lblMsg.Height := 16;
+    lblMsg.ParentFont := False;
+    lblMsg.Font.Color := clTeal;
+    lblMsg.Cursor := crHandPoint;
+    lblMsg.OnClick := AvisoPedidosMLClick;
+  end;
+
+  pnl := TsPanel(FindComponent('pnlPedidosMLAviso'));
+  lblMsg := TsLabel(pnl.FindComponent('lblPedidosMLAvisoMsg'));
+
+  QML := TFDQuery.Create(nil);
+  try
+    try
+      QML.Connection := dao.CN;
+      QML.SQL.Text :=
+        'select count(*) as qtd from ml_pedido m ' +
+        'inner join vendas1 v on v.numdoc = m.numdoc ' +
+        'where v.faturado = 0 ' +
+        '  and cast(m.data_fechamento as date) >= (current_date - 30)';
+      QML.Open;
+      qtd := QML.FieldByName('qtd').AsInteger;
+    except
+      on E: Exception do
+      begin
+        qtd := 0;
+        erroML := E.Message;
+      end;
+    end;
+  finally
+    QML.Free;
+  end;
+
+  if erroML <> '' then
+  begin
+    pnl.Visible := True;
+    if Assigned(lblMsg) then
+      lblMsg.Caption := 'Erro ML: ' + erroML;
+    Exit;
+  end;
+
+  pnl.Visible := qtd > 0;
+  pnl.Hint := IntToStr(qtd);
+  if Assigned(lblMsg) then
+    lblMsg.Caption := IntToStr(qtd) + ' pedido(s) A FATURAR. Clique para visualizar.';
+end;
+
 procedure TFRPRI.ChecarRevisaoVeiculo;
 var
   avisos: TStringList;
@@ -8716,6 +8786,7 @@ begin
 
   ChecarCertificado;
   ChecarAvisoPedidosExternos;
+  ChecarAvisoPedidosML;
   ChecarEstoqueMinimo;
   AtualizarPainelAvisosLateral(Self);
   ChecarRevisaoVeiculo;
@@ -8727,95 +8798,69 @@ end;
 
 procedure TFRPRI.D1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'metas_diarias';
 	SetaAcesso(tipo_relatorio);
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.D2Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'comissoes_desconto';
 	SetaAcesso(tipo_relatorio);
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.M4Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'metas_mensais';
 	SetaAcesso(tipo_relatorio);
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.cliente_preClick(Sender: TObject);
 begin
-  try
-    Application.CreateForm(Tfr_pre_cadastro, fr_pre_cadastro);
+  fr_pre_cadastro := Tfr_pre_cadastro(AbrirTela(Tfr_pre_cadastro));
 	SetaAcesso(fr_pre_cadastro.caption);
-    fr_pre_cadastro.ShowModal;
-  finally
-    fr_pre_cadastro.Free;
-  end;
+fr_pre_cadastro.Show;
 end;
 
 procedure TFRPRI.AtuacaoClick(Sender: TObject);
 begin
-  { try
-    Application.CreateForm(TFrMapaAtuacao, FrMapaAtuacao);
-    FrMapaAtuacao.ShowModal;
-    finally
-    FrMapaAtuacao.Free;
-    end; }
+  { FrMapaAtuacao := TFrMapaAtuacao(AbrirTela(TFrMapaAtuacao));
+FrMapaAtuacao.Show; }
 end;
 
 procedure TFRPRI.R1Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'relatorio_cidade';
 	SetaAcesso(tipo_relatorio);
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.p3Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'produtos_vendas';
 	SetaAcesso(tipo_relatorio);
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.T3Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'televendas_cidade';
 	SetaAcesso(tipo_relatorio);
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.Button2Click(Sender: TObject);
@@ -8875,36 +8920,25 @@ end;
 
 procedure TFRPRI.T4Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_opc_relatorios, Fr_opc_relatorios);
+  Fr_opc_relatorios := TFr_opc_relatorios(AbrirTela(TFr_opc_relatorios));
+  AplicaCaptionOpc(Sender);
     tipo_relatorio := 'teto_faturamento';
 	SetaAcesso(tipo_relatorio);
-    Fr_opc_relatorios.ShowModal;
-  finally
-    Fr_opc_relatorios.Free;
-  end;
+Fr_opc_relatorios.Show;
 end;
 
 procedure TFRPRI.T5Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_telas, Fr_telas);
+  Fr_telas := TFr_telas(AbrirTela(TFr_telas));
 	SetaAcesso(Fr_telas.caption);
-    Fr_telas.ShowModal;
-  finally
-    Fr_telas.Free;
-  end;
+Fr_telas.Show;
 end;
 
 procedure TFRPRI.r3Click(Sender: TObject);
 begin
-  try
-    Application.CreateForm(TFr_representantes_clientes, Fr_representantes_clientes);
+  Fr_representantes_clientes := TFr_representantes_clientes(AbrirTela(TFr_representantes_clientes));
 	SetaAcesso(Fr_representantes_clientes.caption);
-    Fr_representantes_clientes.ShowModal;
-  finally
-    Fr_representantes_clientes.Free;
-  end;
+Fr_representantes_clientes.Show;
 end;
 
 end.

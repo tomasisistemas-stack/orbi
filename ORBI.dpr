@@ -88,6 +88,7 @@ uses
   un_infoatu in 'un_infoatu.pas' {fmInfoAtu},
   Un_recibo in 'Un_recibo.pas' {Fr_recibo},
   un_palm_conexao in 'un_palm_conexao.pas' {FrPalmConexao},
+  un_pedidos_ml in 'un_pedidos_ml.pas' {FrPedidosML},
   un_nfe_complementar in 'un_nfe_complementar.pas' {fr_nfe_complementar},
   Un_mala_direta in 'Un_mala_direta.pas' {FmMalaDireta},
   un_transf_valores in 'un_transf_valores.pas' {Fm_Transf_Valores},
@@ -177,8 +178,8 @@ var
   titulo: string;
 
 begin
-
-{  if WindowsSuportaChromium then
+{
+  if WindowsSuportaChromium then
   begin
     GlobalCEFApp := TCefApplication.Create;
     if not GlobalCEFApp.StartMainProcess then
@@ -188,15 +189,16 @@ begin
     end;
   end
   else
-    GlobalCEFApp := nil;  }
+    GlobalCEFApp := nil;
+ }
 
+  handle := FindWindow('tfrlog', nil);
+  if handle <> 0 then
+  begin
+    showmessage('Atenção Sistema já Rodando no Computador!!!');
+    Application.Terminate;
+  end;
 
-  {  handle:= FindWindow('tfrlog', nil);
-    if handle <> 0 then
-    begin
-       showmessage('Atenção Sistema já Rodando no Computador!!!');
-       Application.Terminate;
-     end;}
   InstalarLoggerErros('ORBI');
   fm_splash := Tfm_splash.Create(Application);
   fm_splash.Show; //Inicializa o Splash
@@ -232,8 +234,8 @@ begin
   FRLOG.ShowModal;
 
   Application.Run;
-   {
-  if GlobalCEFApp <> nil then
-    GlobalCEFApp.Free;
-   }
+
+{  if GlobalCEFApp <> nil then
+    GlobalCEFApp.Free;}
+
 end.

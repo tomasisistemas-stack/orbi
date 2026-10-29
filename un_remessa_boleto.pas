@@ -1506,6 +1506,7 @@ begin
   for I := 0 to AClientes.Count - 1 do
   begin
     if Assigned(Fr_Cliente) then
+      if Assigned(Fr_Cliente) then Fr_Cliente.ActiveControl := nil;
       FreeAndNil(Fr_Cliente);
     Application.CreateForm(TFr_Cliente, Fr_Cliente);
     try
@@ -1513,6 +1514,7 @@ begin
       Fr_Cliente.cliente := AClientes[I];
       Fr_Cliente.ShowModal;
     finally
+      if Assigned(Fr_Cliente) then Fr_Cliente.ActiveControl := nil;
       FreeAndNil(Fr_Cliente);
     end;
   end;

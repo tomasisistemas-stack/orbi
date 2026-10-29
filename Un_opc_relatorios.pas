@@ -490,6 +490,19 @@ uses
   DB, Un_splash, Un_Cliente, FireDAC.Comp.Client;
 
 {$R *.dfm}
+// a janela acompanha a area visivel da aba: o rodape fica sempre visivel e o conteudo rola pelo ScrollBar1
+procedure AlturaJanela(H: Integer);
+var
+  Area: Integer;
+begin
+  Area := 0;
+  if Fr_opc_relatorios.Parent is TWinControl then
+    Area := TWinControl(Fr_opc_relatorios.Parent).ClientHeight;
+  if Area > 0 then
+    H := Area;
+  Fr_opc_relatorios.Height := H;
+end;
+
 { TFr_opc_relatorios }
 
 function FiltroClienteMediaValorPedido(AValor: Double): string;
@@ -1454,11 +1467,11 @@ begin
   pn_pedido.Visible := false;
   rgTipoRep.Visible := false;
   // listagens Produtos, Clientes e etc
-  Fr_opc_relatorios.Height := 700;
+  AlturaJanela(700);
   if tipo_relatorio = 'relatorio_aniversariantes' then
   begin
     GBdata_aniver.Visible := true;
-    Fr_opc_relatorios.Height := 245;
+    AlturaJanela(245);
   end;
   if tipo_relatorio = 'lista_func_cc' then
   begin
@@ -1505,7 +1518,7 @@ begin
     vendedor.Visible := true;
     supervisor.Visible := true;
     gbCSV.Visible := true;
-    Fr_opc_relatorios.Height := 700;
+    AlturaJanela(700);
     if (Tipo_usuario = '0') or (Representante_usuario <> '') then
     begin
       Prcod_representante.Text := Representante_usuario;
@@ -1532,7 +1545,7 @@ begin
     grupo.Visible := true;
     fornecedor.Visible := true;
     ordenar2.Visible := true;
-    Fr_opc_relatorios.Height := 480;
+    AlturaJanela(480);
     rgAtivo.Visible := true;
     uf_origem_destino.Visible := true;
   end
@@ -1546,7 +1559,7 @@ begin
     grupo.Visible := true;
     fornecedor.Visible := true;
     ordenar2.Visible := true;
-    Fr_opc_relatorios.Height := 480;
+    AlturaJanela(480);
     rgAtivo.Visible := true;
     uf_origem_destino.Visible := true;
   end
@@ -1563,7 +1576,7 @@ begin
     supervisor.Visible := false;
     fornecedor.Visible := false;
     ordenar2.Visible := true;
-    Fr_opc_relatorios.Height := 480;
+    AlturaJanela(480);
     rgAtivo.Visible := true;
   end
   else if tipo_relatorio = 'produto_calculo_preco_venda' then
@@ -1578,7 +1591,7 @@ begin
     grupo.Visible := true;
     subcategoria.Visible := true;
     categoria.Visible := true;
-    Fr_opc_relatorios.Height := 480;
+    AlturaJanela(480);
     pn_pedido.Visible := false;
     pnDesc.Visible := true;
     rgAtivo.Visible := true;
@@ -1594,7 +1607,7 @@ begin
     gbTipoProduto.Visible := true;
     fornecedor.Visible := true;
     ordenar2.Visible := true;
-    Fr_opc_relatorios.Height := 480;
+    AlturaJanela(480);
     rgAtivo.Visible := true;
   end
   else if (tipo_relatorio = 'pauta_venda_categoria') then
@@ -1608,7 +1621,7 @@ begin
     categoria.Visible := true;
     fornecedor.Visible := true;
     ordenar2.Visible := true;
-    Fr_opc_relatorios.Height := 480;
+    AlturaJanela(480);
     rgAtivo.Visible := true;
   end
   else if (tipo_relatorio = 'produtos_catalogo') then
@@ -1620,7 +1633,7 @@ begin
     produto.Visible := true;
     fornecedor.Visible := false;
     ordenar2.Visible := false;
-    Fr_opc_relatorios.Height := 300;
+    AlturaJanela(300);
     categoria.Visible := true;
     marca.Visible := true;
     subcategoria.Visible := true;
@@ -1635,7 +1648,7 @@ begin
     fornecedor.Visible := false;
     cliente.Visible := true;
     ordenar2.Visible := false;
-    Fr_opc_relatorios.Height := 300;
+    AlturaJanela(300);
     categoria.Visible := true;
     marca.Visible := true;
     subcategoria.Visible := true;
@@ -1651,7 +1664,7 @@ begin
     fornecedor.Visible := false;
     cliente.Visible := true;
     ordenar2.Visible := false;
-    Fr_opc_relatorios.Height := 300;
+    AlturaJanela(300);
     categoria.Visible := true;
     marca.Visible := true;
     subcategoria.Visible := true;
@@ -1666,7 +1679,7 @@ begin
     fornecedor.Visible := false;
     cliente.Visible := true;
     ordenar2.Visible := false;
-    Fr_opc_relatorios.Height := 300;
+    AlturaJanela(300);
     categoria.Visible := true;
     marca.Visible := true;
     subcategoria.Visible := true;
@@ -1681,7 +1694,7 @@ begin
     fornecedor.Visible := false;
     cliente.Visible := true;
     ordenar2.Visible := false;
-    Fr_opc_relatorios.Height := 300;
+    AlturaJanela(300);
     categoria.Visible := true;
     marca.Visible := true;
     subcategoria.Visible := true;
@@ -1692,7 +1705,7 @@ begin
     grupo.Visible := true;
     fornecedor.Visible := true;
     ordenar2.Visible := true;
-    Fr_opc_relatorios.Height := 480;
+    AlturaJanela(480);
     rgAtivo.Visible := true;
   end
   else if tipo_relatorio = 'cobrança' then
@@ -1746,11 +1759,11 @@ begin
     end;
     gbMovimentacao.Visible:= true;
 
-    Fr_opc_relatorios.Height := 750;
+    AlturaJanela(750);
   end
   else if tipo_relatorio = 'contas_receber' then
   begin
-    Fr_opc_relatorios.Height := 600;
+    AlturaJanela(600);
     pn_mesoregiao.Visible := true;
     pn_microregiao.Visible := true;
     cidade.Visible := true;
@@ -1782,7 +1795,7 @@ begin
   end
   else if tipo_relatorio = 'contas_pagar' then
   begin
-    Fr_opc_relatorios.Height := 600;
+    AlturaJanela(600);
     vendedor.Visible := true;
     gbPlanoConta.Visible := true;
     pnDesc.Visible := true;
@@ -1796,7 +1809,7 @@ begin
   end
   else if tipo_relatorio = 'relatorio_movimentacao_produto' then
   begin
-    Fr_opc_relatorios.Height := 600;
+    AlturaJanela(600);
     grTipoData.Visible := false;
     Gbdata.Visible := true;
     produto.Visible := true;
@@ -1850,7 +1863,7 @@ begin
     gbTipoProduto.Visible := true;
     rgAtivo.Visible := true;
     p1.Visible := true;
-    Fr_opc_relatorios.Height := 600;
+    AlturaJanela(600);
   end
   else if tipo_relatorio = 'relatorio_estoque_inventario' then
   begin
@@ -1861,7 +1874,7 @@ begin
     rgAtivo.Visible := true;
     ProdutoVendedor;
     gbTipoProduto.Visible := true;
-    Fr_opc_relatorios.Height := 300;
+    AlturaJanela(300);
   end
   else if tipo_relatorio = 'relatorio_estoque_custo' then
   begin
@@ -1872,7 +1885,7 @@ begin
     ProdutoVendedor;
     gbTipoProduto.Visible := true;
     rgAtivo.Visible := true;
-    Fr_opc_relatorios.Height := 300;
+    AlturaJanela(300);
   end
   else if tipo_relatorio = 'relatorio_estoque_completo' then
   begin
@@ -1921,7 +1934,7 @@ begin
     Gbdata.Visible := true;
     p2.Visible := true;
     gbSupervisao.Visible := true;
-    Fr_opc_relatorios.Height := 540;
+    AlturaJanela(540);
     loja.Visible := true;
     cliente.Visible := true;
     if Tipo_usuario = '9' then
@@ -1937,7 +1950,7 @@ begin
     Gbdata.Visible := true;
     cliente.Visible := true;
     loja.Visible := true;
-    Fr_opc_relatorios.Height := 500;
+    AlturaJanela(500);
   end
   else if tipo_relatorio = 'vendas_periodo_vendedor' then
   begin
@@ -1995,7 +2008,7 @@ begin
       rbNaoConsumidorFinal.Checked := True;
     end;
 
-    Fr_opc_relatorios.Height := 700;
+    AlturaJanela(700);
   end
   else if tipo_relatorio = 'vendas_padrao' then
   begin
@@ -2042,7 +2055,7 @@ begin
       rbNaoConsumidorFinal.Checked := True;
     end;
 
-    Fr_opc_relatorios.Height := 700;
+    AlturaJanela(700);
   end
   else if tipo_relatorio = 'vendas_geral' then
   begin
@@ -2072,7 +2085,7 @@ begin
     fop.Visible := true;
     uf.Visible := true;
     produto.Visible := true;
-    Fr_opc_relatorios.Height := 750;
+    AlturaJanela(750);
 
     if Tipo_usuario = '9' then
     begin
@@ -2178,7 +2191,7 @@ begin
     end;
 
     gbSupervisao.Visible := false;
-    Fr_opc_relatorios.Height := 400;
+    AlturaJanela(400);
   end
   else if tipo_relatorio = 'comissoes' then
   begin
@@ -2559,7 +2572,7 @@ begin
   begin
     Gbdata.Visible := true;
     OrdenarRanking.Visible := true;
-    Fr_opc_relatorios.Height := 500;
+    AlturaJanela(500);
     vendedor.Visible := true;
     uf.Visible := true;
     supervisor.Visible := true;
@@ -2580,7 +2593,7 @@ begin
   begin
     Gbdata.Visible := true;
     OrdenarRanking.Visible := true;
-    // Fr_opc_relatorios.Height := 200;
+    // AlturaJanela(200);
     vendedor.Visible := true;
     supervisor.Visible := false;
   end
@@ -2593,7 +2606,7 @@ begin
     transportadora.Visible := true;
     pn_pedido.Visible := true;
     ordenar2.Visible := true;
-    Fr_opc_relatorios.Height := 500;
+    AlturaJanela(500);
   end
   else if tipo_relatorio = 'relatorio_notas_entrada' then
   begin
@@ -7009,6 +7022,7 @@ begin
       dm.q_cliente.EnableControls;
       qGeo.Free;
       if CriouFormCliente then
+        if Assigned(Fr_Cliente) then Fr_Cliente.ActiveControl := nil;
         FreeAndNil(Fr_Cliente);
     end;
   end;

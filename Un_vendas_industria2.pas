@@ -293,7 +293,7 @@ type
     mmVendas2ESTOQUE_MINIMO: TFloatField;
     mmVendas2QTD_RESERVADO: TFloatField;
     mmVendas2DESCONTO: TFloatField;
-    MainMenu1: TMainMenu;
+    MainMenuVendas: TMainMenu;
     Funes1: TMenuItem;
     ImprimirEtiquetadeTransporte1: TMenuItem;
     HistoricodeCompradoCliente1: TMenuItem;
@@ -507,6 +507,9 @@ type
     qrGravaXml: TFDQuery;
     q_xml: TFDQuery;
     ds_xml: TDataSource;
+    tab_mercadoria_ml: TsTabSheet;
+    q_ml_pedido: TFDQuery;
+    ds_ml_pedido: TDataSource;
     Label49: tsLabel;
     Probservacoes_nota: TsRichEdit;
     sGroupBox3: TsGroupBox;
@@ -664,6 +667,8 @@ type
     procedure BtnAltFormaPrazoClick(Sender: TObject);
     procedure BtnBoletoClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure AjustaGradeItens(Sender: TObject);
+    procedure AjustaPagina(Sender: TObject);
     procedure Mecod_produtoChange(Sender: TObject);
     procedure Mecod_produtoEnter(Sender: TObject);
     procedure PrCONTA_BOLETOButtonClick(Sender: TObject);
@@ -778,6 +783,9 @@ type
     procedure SpeedButton1Click(Sender: TObject);
     procedure btnImpXMLDevClick(Sender: TObject);
 
+    procedure Pc_vendasChange(Sender: TObject);
+    procedure AtualizaAbaML;
+    procedure PrnumdocChange(Sender: TObject);
   private
     procedure AtualizarCamposDevolucao;
     procedure readonly_false(prefixo: ShortString);
@@ -5749,6 +5757,10 @@ begin
 
   desconto_primeira_parcela := (valor_total * (desconto_especial_cliente / 100));
 
+  // abate das parcelas as taxas do Mercado Livre (taxa ML + taxa de frete)
+  dao.Geral2('select coalesce(sum(coalesce(taxa_ml, 0) + coalesce(taxa_frete, 0)), 0) as taxas from ml_pedido where numdoc = ' + nr_documento);
+  valor_total := valor_total - dao.q2.fieldbyname('taxas').AsFloat;
+
   if dao.q1.fieldbyname('total').AsInteger = 0 then
   begin
 
@@ -7311,7 +7323,9 @@ begin
       Fr_Cliente.cliente := Prcod_cliente.Text;
       Fr_Cliente.ShowModal;
     finally
+      Fr_Cliente.ActiveControl := nil;
       Fr_Cliente.Free;
+      Fr_Cliente := nil;
     end;
     Result := false;
   end
@@ -7465,9 +7479,9 @@ begin
 
   // preenchendo o combo box com os campos desejados para pesquisar.
   if mform = 'vendas_devolucoes' then
-    SetLength(Campos_combo, 11)
+    SetLength(Campos_combo, 12)
   else
-    SetLength(Campos_combo, 10);
+    SetLength(Campos_combo, 11);
 
   Campos_combo[0] := 'Numero';
   Campos_combo[1] := 'NFE';
@@ -7479,12 +7493,13 @@ begin
   Campos_combo[7] := 'Cidade';
   Campos_combo[8] := 'Vendedor';
   Campos_combo[9] := 'Televendas';
+  Campos_combo[10] := 'OC';
 
   if mform = 'vendas_devolucoes' then
-    Campos_combo[10] := 'Fornecedor';
+    Campos_combo[11] := 'Fornecedor';
   if mform = 'vendas_devolucoes' then
   begin
-    for i := 0 to 10 do
+    for i := 0 to 11 do
     begin
       valor_combo := Campos_combo[i];
       Fr_localizar.CBcampos.Items.Add(Campos_combo[i]);
@@ -7492,7 +7507,7 @@ begin
   end
   else
   begin
-    for i := 0 to 9 do
+    for i := 0 to 10 do
     begin
       valor_combo := Campos_combo[i];
       Fr_localizar.CBcampos.Items.Add(Campos_combo[i]);
@@ -13956,6 +13971,14 @@ begin
       if SameText(ActiveControl.Name, 'Probservacoes_pedido') or SameText(ActiveControl.Name, 'Probservacoes_nota') then
         Exit;
 
+    // memo, grade e botoes mantem o Enter proprio (quebra de linha, selecao, clique)
+    if (ActiveControl is TCustomMemo) or (ActiveControl is TCustomGrid) or (ActiveControl is TButtonControl) then
+      Exit;
+
+    // codigo do produto: o Enter busca o produto (leitor de codigo de barras)
+    if SameText(ActiveControl.Name, 'Mecod_produto') then
+      Exit;
+
     Key := #0;
     SelectNext(TWinControl(ActiveControl), True, True);
   end;
@@ -14001,6 +14024,7 @@ var
   end;
 
 begin
+  AjustaGradeItens(Sender);
   ValidarDesc := true;
   BtnEnviarPedido.Visible := FRPRI.sbTransmissao.Visible;
   btnExportaFrente.Visible := FRPRI.Frente_Caixa;
@@ -15037,9 +15061,97 @@ begin
   end;
 end;
 
-procedure TFr_vendas_industria2.FormCreate(Sender: TObject);
+var
+  scrPainel: TScrollBox;
+
+procedure TFr_vendas_industria2.AjustaGradeItens(Sender: TObject);
+var
+  alt, gh: Integer;
 begin
+  if not Assigned(scrPainel) then
+    Exit;
+  // a tela filha mantem o tamanho original: a grade e o painel dividem o espaco da aba;
+  // o painel de produto rola dentro do scroll box
+  alt := tab_mercadorias.ClientHeight;
+  // o painel de produto mantem a sua altura; a grade ocupa o resto da aba
+  gh := alt - Panel3.Height;
+  if gh < 120 then
+    gh := 120;
+  DBGrid1.Height := gh;
+  scrPainel.Height := alt - gh;
+  if scrPainel.Height < 60 then
+    scrPainel.Height := 60;
+  Panel3.Width := tab_mercadorias.ClientWidth;
+  scrPainel.VertScrollBar.Range := Panel3.Height;
+  scrPainel.HorzScrollBar.Range := Panel3.Width;
+end;
+
+procedure TFr_vendas_industria2.AjustaPagina(Sender: TObject);
+var
+  lar, alt: Integer;
+begin
+  if not (Sender is TScrollBox) then
+    Exit;
+  // tamanho de projeto e minimo; acima disso a pagina acompanha a janela
+  lar := TScrollBox(Sender).ClientWidth;
+  alt := TScrollBox(Sender).ClientHeight;
+  if lar < 1272 then
+    lar := 1272;
+  if alt < 674 then
+    alt := 674;
+  Gbdados.SetBounds(0, 0, lar, 241);
+  Pc_vendas.SetBounds(0, 241, lar, alt - 241 - 36 - 19);
+  GroupBox2.SetBounds(0, alt - 36 - 19, lar, 36);
+  sbvendas.SetBounds(0, alt - 19, lar, 19);
+end;
+
+procedure TFr_vendas_industria2.FormCreate(Sender: TObject);
+var
+  sbPagina: TScrollBox;
+begin
+  // a pagina inteira de Pedidos rola dentro da tela filha, que mantem o tamanho original
+  sbPagina := TScrollBox.Create(Self);
+  sbPagina.Parent := Self;
+  sbPagina.Align := alClient;
+  sbPagina.BorderStyle := bsNone;
+  sbPagina.AutoScroll := True;
+  sbPagina.OnResize := AjustaPagina;
+  // layout de projeto: posicoes fixas (241 + 378 + 36 + 19 = 674 px)
+  Gbdados.Align := alNone;
+  Gbdados.Left := 0;
+  Gbdados.Top := 0;
+  Gbdados.Width := 1272;
+  Gbdados.Parent := sbPagina;
+  Pc_vendas.Align := alNone;
+  Pc_vendas.Left := 0;
+  Pc_vendas.Top := 241;
+  Pc_vendas.Width := 1272;
+  Pc_vendas.Height := 378;
+  Pc_vendas.Parent := sbPagina;
+  GroupBox2.Align := alNone;
+  GroupBox2.Left := 0;
+  GroupBox2.Top := 619;
+  GroupBox2.Width := 1272;
+  GroupBox2.Parent := sbPagina;
+  sbvendas.Align := alNone;
+  sbvendas.Left := 0;
+  sbvendas.Top := 655;
+  sbvendas.Width := 1272;
+  sbvendas.Parent := sbPagina;
+  AjustaPagina(sbPagina);
   FMFUN.ACBrBoleto1.Cedente.TipoInscricao := pJuridica;
+  tab_mercadorias.OnResize := AjustaGradeItens;
+  tab_mercadorias.OnShow := AjustaGradeItens;
+  scrPainel := TScrollBox.Create(Self);
+  scrPainel.Parent := tab_mercadorias;
+  scrPainel.Align := alBottom;
+  scrPainel.BorderStyle := bsNone;
+  scrPainel.AutoScroll := False;
+  Panel3.Parent := scrPainel;
+  Panel3.Align := alNone;
+  Panel3.Left := 0;
+  Panel3.Top := 0;
+  AjustaGradeItens(Sender);
 
   Mepreco.DecimalPlaces := CasasDecimais;
   Meqtd.DecimalPlaces := 2;
@@ -15678,7 +15790,9 @@ begin
       Fr_Cliente.cliente := Prcod_cliente.Text;
       Fr_Cliente.ShowModal;
     finally
+      Fr_Cliente.ActiveControl := nil;
       Fr_Cliente.Free;
+      Fr_Cliente := nil;
     end;
     Exit;
   end;
@@ -17543,7 +17657,9 @@ begin
       Fr_Cliente.cliente := Prcod_cliente.Text;
       Fr_Cliente.ShowModal;
     finally
+      Fr_Cliente.ActiveControl := nil;
       Fr_Cliente.Free;
+      Fr_Cliente := nil;
     end;
   end;
 end;
@@ -18954,7 +19070,39 @@ begin
 
 end;
 
+procedure TFr_vendas_industria2.AtualizaAbaML;
+var
+  numdoc: Integer;
+begin
+  numdoc := StrToIntDef(Prnumdoc.Text, 0);
+  try
+    q_ml_pedido.Close;
+    q_ml_pedido.SQL.Text :=
+      'select id, order_id, pack_id, shipment_id, ' +
+      '  case when status = ''paid'' then ''PAGO'' else status end as status, buyer_id, buyer_name, ' +
+      'total_amount, paid_amount, numdoc, import_status, import_error, ' +
+      'atualizado_em, data_fechamento, taxa_ml, taxa_frete ' +
+      'from ml_pedido where numdoc = ' + IntToStr(numdoc) + ' ' +
+      'order by id desc';
+    q_ml_pedido.Open;
+    tab_mercadoria_ml.TabVisible := (numdoc > 0) and (not q_ml_pedido.IsEmpty);
+  except
+    tab_mercadoria_ml.TabVisible := False;
+  end;
+
+  if (not tab_mercadoria_ml.TabVisible) and (Pc_vendas.ActivePage = tab_mercadoria_ml) then
+    Pc_vendas.ActivePage := tab_mercadorias;
+end;
+
+procedure TFr_vendas_industria2.Pc_vendasChange(Sender: TObject);
+begin
+  if Pc_vendas.ActivePage = tab_mercadoria_ml then
+    AtualizaAbaML;
+end;
+
+procedure TFr_vendas_industria2.PrnumdocChange(Sender: TObject);
+begin
+  AtualizaAbaML;
+end;
+
 end.
-
-
-

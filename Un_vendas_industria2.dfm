@@ -14,7 +14,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
   Font.Name = 'Tahoma'
   Font.Style = []
   KeyPreview = True
-  Menu = MainMenu1
+  Menu = MainMenuVendas
   OldCreateOrder = False
   ObjectMenuItem = CancelamentoAvulso1
   ParentBiDiMode = False
@@ -427,6 +427,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       Font.Style = []
       ParentFont = False
       TabOrder = 0
+      OnChange = PrnumdocChange
       SkinData.SkinSection = 'EDIT'
       BoundLabel.Indent = 0
       BoundLabel.Font.Charset = DEFAULT_CHARSET
@@ -1587,6 +1588,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
     ActivePage = tab_mercadorias
     Align = alClient
     TabOrder = 2
+    OnChange = Pc_vendasChange
     SkinData.SkinSection = 'PAGECONTROL'
     object tab_mercadorias: TsTabSheet
       Caption = '&1) Mercadorias'
@@ -1594,9 +1596,9 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       SkinData.CustomFont = False
       object pnWait: TPanel
         Left = 0
-        Top = 0
+        Top = 180
         Width = 1264
-        Height = 180
+        Height = 0
         Align = alClient
         BevelInner = bvLowered
         TabOrder = 2
@@ -1607,7 +1609,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         Top = 0
         Width = 1264
         Height = 180
-        Align = alClient
+        Align = alTop
         Color = clWhite
         DataSource = dsVendas2
         DefaultDrawing = False
@@ -9073,6 +9075,404 @@ object Fr_vendas_industria2: TFr_vendas_industria2
         Visible = False
       end
     end
+    object tab_mercadoria_ml: TsTabSheet
+      Caption = '&7) Mercado Livre'
+      TabVisible = False
+      SkinData.CustomColor = True
+      SkinData.CustomFont = False
+      object lb_ml_order_id: TsLabel
+        Left = 16
+        Top = 19
+        Width = 48
+        Height = 13
+        Caption = 'Pedido ML'
+      end
+      object lb_ml_pack_id: TsLabel
+        Left = 380
+        Top = 19
+        Width = 22
+        Height = 13
+        Caption = 'Pack'
+      end
+      object lb_ml_shipment_id: TsLabel
+        Left = 744
+        Top = 19
+        Width = 26
+        Height = 13
+        Caption = 'Envio'
+      end
+      object lb_ml_status: TsLabel
+        Left = 16
+        Top = 55
+        Width = 31
+        Height = 13
+        Caption = 'Status'
+      end
+      object lb_ml_buyer_id: TsLabel
+        Left = 380
+        Top = 55
+        Width = 67
+        Height = 13
+        Caption = 'ID Comprador'
+      end
+      object lb_ml_buyer_name: TsLabel
+        Left = 744
+        Top = 55
+        Width = 53
+        Height = 13
+        Caption = 'Comprador'
+      end
+      object lb_ml_total_amount: TsLabel
+        Left = 16
+        Top = 91
+        Width = 51
+        Height = 13
+        Caption = 'Valor Total'
+      end
+      object lb_ml_paid_amount: TsLabel
+        Left = 380
+        Top = 91
+        Width = 51
+        Height = 13
+        Caption = 'Valor Pago'
+      end
+      object lb_ml_import_status: TsLabel
+        Left = 744
+        Top = 91
+        Width = 80
+        Height = 13
+        Caption = 'Situa'#231#227'o Import.'
+      end
+      object lb_ml_taxa_ml: TsLabel
+        Left = 16
+        Top = 127
+        Width = 40
+        Height = 13
+        Caption = 'Taxa ML'
+      end
+      object lb_ml_taxa_frete: TsLabel
+        Left = 380
+        Top = 127
+        Width = 53
+        Height = 13
+        Caption = 'Taxa Frete'
+      end
+      object lb_ml_data_fechamento: TsLabel
+        Left = 744
+        Top = 127
+        Width = 59
+        Height = 13
+        Caption = 'Fechamento'
+      end
+      object lb_ml_atualizado_em: TsLabel
+        Left = 16
+        Top = 163
+        Width = 67
+        Height = 13
+        Caption = 'Atualizado em'
+      end
+      object lb_ml_import_error: TsLabel
+        Left = 380
+        Top = 163
+        Width = 59
+        Height = 13
+        Caption = 'Erro Import.'
+      end
+      object db_ml_order_id: TsDBEdit
+        Left = 130
+        Top = 16
+        Width = 220
+        Height = 21
+        Color = clBtnFace
+        DataField = 'order_id'
+        DataSource = ds_ml_pedido
+        ReadOnly = True
+        TabOrder = 0
+        SkinData.SkinSection = 'EDIT'
+        BoundLabel.Indent = 0
+        BoundLabel.Font.Charset = DEFAULT_CHARSET
+        BoundLabel.Font.Color = clWindowText
+        BoundLabel.Font.Height = -11
+        BoundLabel.Font.Name = 'Tahoma'
+        BoundLabel.Font.Style = []
+        BoundLabel.Layout = sclLeft
+        BoundLabel.MaxWidth = 0
+        BoundLabel.UseSkinColor = True
+      end
+      object db_ml_pack_id: TsDBEdit
+        Left = 494
+        Top = 16
+        Width = 220
+        Height = 21
+        Color = clBtnFace
+        DataField = 'pack_id'
+        DataSource = ds_ml_pedido
+        ReadOnly = True
+        TabOrder = 1
+        SkinData.SkinSection = 'EDIT'
+        BoundLabel.Indent = 0
+        BoundLabel.Font.Charset = DEFAULT_CHARSET
+        BoundLabel.Font.Color = clWindowText
+        BoundLabel.Font.Height = -11
+        BoundLabel.Font.Name = 'Tahoma'
+        BoundLabel.Font.Style = []
+        BoundLabel.Layout = sclLeft
+        BoundLabel.MaxWidth = 0
+        BoundLabel.UseSkinColor = True
+      end
+      object db_ml_shipment_id: TsDBEdit
+        Left = 858
+        Top = 16
+        Width = 220
+        Height = 21
+        Color = clBtnFace
+        DataField = 'shipment_id'
+        DataSource = ds_ml_pedido
+        ReadOnly = True
+        TabOrder = 2
+        SkinData.SkinSection = 'EDIT'
+        BoundLabel.Indent = 0
+        BoundLabel.Font.Charset = DEFAULT_CHARSET
+        BoundLabel.Font.Color = clWindowText
+        BoundLabel.Font.Height = -11
+        BoundLabel.Font.Name = 'Tahoma'
+        BoundLabel.Font.Style = []
+        BoundLabel.Layout = sclLeft
+        BoundLabel.MaxWidth = 0
+        BoundLabel.UseSkinColor = True
+      end
+      object db_ml_status: TsDBEdit
+        Left = 130
+        Top = 52
+        Width = 220
+        Height = 21
+        Color = clBtnFace
+        DataField = 'status'
+        DataSource = ds_ml_pedido
+        ReadOnly = True
+        TabOrder = 3
+        SkinData.SkinSection = 'EDIT'
+        BoundLabel.Indent = 0
+        BoundLabel.Font.Charset = DEFAULT_CHARSET
+        BoundLabel.Font.Color = clWindowText
+        BoundLabel.Font.Height = -11
+        BoundLabel.Font.Name = 'Tahoma'
+        BoundLabel.Font.Style = []
+        BoundLabel.Layout = sclLeft
+        BoundLabel.MaxWidth = 0
+        BoundLabel.UseSkinColor = True
+      end
+      object db_ml_buyer_id: TsDBEdit
+        Left = 494
+        Top = 52
+        Width = 220
+        Height = 21
+        Color = clBtnFace
+        DataField = 'buyer_id'
+        DataSource = ds_ml_pedido
+        ReadOnly = True
+        TabOrder = 4
+        SkinData.SkinSection = 'EDIT'
+        BoundLabel.Indent = 0
+        BoundLabel.Font.Charset = DEFAULT_CHARSET
+        BoundLabel.Font.Color = clWindowText
+        BoundLabel.Font.Height = -11
+        BoundLabel.Font.Name = 'Tahoma'
+        BoundLabel.Font.Style = []
+        BoundLabel.Layout = sclLeft
+        BoundLabel.MaxWidth = 0
+        BoundLabel.UseSkinColor = True
+      end
+      object db_ml_buyer_name: TsDBEdit
+        Left = 858
+        Top = 52
+        Width = 220
+        Height = 21
+        Color = clBtnFace
+        DataField = 'buyer_name'
+        DataSource = ds_ml_pedido
+        ReadOnly = True
+        TabOrder = 5
+        SkinData.SkinSection = 'EDIT'
+        BoundLabel.Indent = 0
+        BoundLabel.Font.Charset = DEFAULT_CHARSET
+        BoundLabel.Font.Color = clWindowText
+        BoundLabel.Font.Height = -11
+        BoundLabel.Font.Name = 'Tahoma'
+        BoundLabel.Font.Style = []
+        BoundLabel.Layout = sclLeft
+        BoundLabel.MaxWidth = 0
+        BoundLabel.UseSkinColor = True
+      end
+      object db_ml_total_amount: TsDBEdit
+        Left = 130
+        Top = 88
+        Width = 220
+        Height = 21
+        Color = clBtnFace
+        DataField = 'total_amount'
+        DataSource = ds_ml_pedido
+        ReadOnly = True
+        TabOrder = 6
+        SkinData.SkinSection = 'EDIT'
+        BoundLabel.Indent = 0
+        BoundLabel.Font.Charset = DEFAULT_CHARSET
+        BoundLabel.Font.Color = clWindowText
+        BoundLabel.Font.Height = -11
+        BoundLabel.Font.Name = 'Tahoma'
+        BoundLabel.Font.Style = []
+        BoundLabel.Layout = sclLeft
+        BoundLabel.MaxWidth = 0
+        BoundLabel.UseSkinColor = True
+      end
+      object db_ml_paid_amount: TsDBEdit
+        Left = 494
+        Top = 88
+        Width = 220
+        Height = 21
+        Color = clBtnFace
+        DataField = 'paid_amount'
+        DataSource = ds_ml_pedido
+        ReadOnly = True
+        TabOrder = 7
+        SkinData.SkinSection = 'EDIT'
+        BoundLabel.Indent = 0
+        BoundLabel.Font.Charset = DEFAULT_CHARSET
+        BoundLabel.Font.Color = clWindowText
+        BoundLabel.Font.Height = -11
+        BoundLabel.Font.Name = 'Tahoma'
+        BoundLabel.Font.Style = []
+        BoundLabel.Layout = sclLeft
+        BoundLabel.MaxWidth = 0
+        BoundLabel.UseSkinColor = True
+      end
+      object db_ml_import_status: TsDBEdit
+        Left = 858
+        Top = 88
+        Width = 220
+        Height = 21
+        Color = clBtnFace
+        DataField = 'import_status'
+        DataSource = ds_ml_pedido
+        ReadOnly = True
+        TabOrder = 8
+        SkinData.SkinSection = 'EDIT'
+        BoundLabel.Indent = 0
+        BoundLabel.Font.Charset = DEFAULT_CHARSET
+        BoundLabel.Font.Color = clWindowText
+        BoundLabel.Font.Height = -11
+        BoundLabel.Font.Name = 'Tahoma'
+        BoundLabel.Font.Style = []
+        BoundLabel.Layout = sclLeft
+        BoundLabel.MaxWidth = 0
+        BoundLabel.UseSkinColor = True
+      end
+      object db_ml_taxa_ml: TsDBEdit
+        Left = 130
+        Top = 124
+        Width = 220
+        Height = 21
+        Color = clBtnFace
+        DataField = 'taxa_ml'
+        DataSource = ds_ml_pedido
+        ReadOnly = True
+        TabOrder = 9
+        SkinData.SkinSection = 'EDIT'
+        BoundLabel.Indent = 0
+        BoundLabel.Font.Charset = DEFAULT_CHARSET
+        BoundLabel.Font.Color = clWindowText
+        BoundLabel.Font.Height = -11
+        BoundLabel.Font.Name = 'Tahoma'
+        BoundLabel.Font.Style = []
+        BoundLabel.Layout = sclLeft
+        BoundLabel.MaxWidth = 0
+        BoundLabel.UseSkinColor = True
+      end
+      object db_ml_taxa_frete: TsDBEdit
+        Left = 494
+        Top = 124
+        Width = 220
+        Height = 21
+        Color = clBtnFace
+        DataField = 'taxa_frete'
+        DataSource = ds_ml_pedido
+        ReadOnly = True
+        TabOrder = 10
+        SkinData.SkinSection = 'EDIT'
+        BoundLabel.Indent = 0
+        BoundLabel.Font.Charset = DEFAULT_CHARSET
+        BoundLabel.Font.Color = clWindowText
+        BoundLabel.Font.Height = -11
+        BoundLabel.Font.Name = 'Tahoma'
+        BoundLabel.Font.Style = []
+        BoundLabel.Layout = sclLeft
+        BoundLabel.MaxWidth = 0
+        BoundLabel.UseSkinColor = True
+      end
+      object db_ml_data_fechamento: TsDBEdit
+        Left = 858
+        Top = 124
+        Width = 220
+        Height = 21
+        Color = clBtnFace
+        DataField = 'data_fechamento'
+        DataSource = ds_ml_pedido
+        ReadOnly = True
+        TabOrder = 11
+        SkinData.SkinSection = 'EDIT'
+        BoundLabel.Indent = 0
+        BoundLabel.Font.Charset = DEFAULT_CHARSET
+        BoundLabel.Font.Color = clWindowText
+        BoundLabel.Font.Height = -11
+        BoundLabel.Font.Name = 'Tahoma'
+        BoundLabel.Font.Style = []
+        BoundLabel.Layout = sclLeft
+        BoundLabel.MaxWidth = 0
+        BoundLabel.UseSkinColor = True
+      end
+      object db_ml_atualizado_em: TsDBEdit
+        Left = 130
+        Top = 160
+        Width = 220
+        Height = 21
+        Color = clBtnFace
+        DataField = 'atualizado_em'
+        DataSource = ds_ml_pedido
+        ReadOnly = True
+        TabOrder = 12
+        SkinData.SkinSection = 'EDIT'
+        BoundLabel.Indent = 0
+        BoundLabel.Font.Charset = DEFAULT_CHARSET
+        BoundLabel.Font.Color = clWindowText
+        BoundLabel.Font.Height = -11
+        BoundLabel.Font.Name = 'Tahoma'
+        BoundLabel.Font.Style = []
+        BoundLabel.Layout = sclLeft
+        BoundLabel.MaxWidth = 0
+        BoundLabel.UseSkinColor = True
+      end
+      object db_ml_import_error: TsDBEdit
+        Left = 494
+        Top = 160
+        Width = 220
+        Height = 21
+        Color = clBtnFace
+        DataField = 'import_error'
+        DataSource = ds_ml_pedido
+        ReadOnly = True
+        TabOrder = 13
+        SkinData.SkinSection = 'EDIT'
+        BoundLabel.Indent = 0
+        BoundLabel.Font.Charset = DEFAULT_CHARSET
+        BoundLabel.Font.Color = clWindowText
+        BoundLabel.Font.Height = -11
+        BoundLabel.Font.Name = 'Tahoma'
+        BoundLabel.Font.Style = []
+        BoundLabel.Layout = sclLeft
+        BoundLabel.MaxWidth = 0
+        BoundLabel.UseSkinColor = True
+      end
+    end
   end
   object GroupBox2: TsGroupBox
     Left = 0
@@ -10090,7 +10490,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
     Left = 152
     Top = 160
     Bitmap = {
-      494C01010100340A340A10001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010100500A500A10001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -10229,7 +10629,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       0000000000000000FFFF00000000000000000000000000000000000000000000
       000000000000}
   end
-  object MainMenu1: TMainMenu
+  object MainMenuVendas: TMainMenu
     Left = 208
     Top = 160
     object Funes1: TMenuItem
@@ -10241,7 +10641,6 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       end
       object HistoricodeCompradoCliente1: TMenuItem
         Caption = 'Historico de Compra do Cliente'
-        Visible = False
       end
       object ImprimirPedido1: TMenuItem
         Caption = 'Imprimir Pedido'
@@ -10264,25 +10663,21 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       object CrditoCliente1: TMenuItem
         Caption = 'Cr'#233'dito Cliente'
         ShortCut = 16500
-        Visible = False
       end
       object FaturamentoAvulso1: TMenuItem
         Caption = 'Faturamento Avulso'
         ShortCut = 16507
-        Visible = False
         OnClick = FaturamentoAvulso1Click
       end
       object DesfaturarPedido1: TMenuItem
         Caption = 'Desfaturar Pedido'
         ShortCut = 16503
-        Visible = False
         OnClick = DesfaturarPedido1Click
       end
       object CancelamentoAvulso1: TMenuItem
         Caption = 'Cancelamento Avulso'
         Enabled = False
         ShortCut = 16504
-        Visible = False
         OnClick = CancelamentoAvulso1Click
       end
       object ImprimirPedidoDetalhado1: TMenuItem
@@ -10473,8 +10868,8 @@ object Fr_vendas_industria2: TFr_vendas_industria2
     OnGetValue = fR_RELATORIOGetValue
     OnStartReport = 'ReportOnStartReport'
     OnReportPrint = 'frxReportOnReportPrint'
-    Left = 352
-    Top = 160
+    Left = 360
+    Top = 184
     Datasets = <
       item
         DataSet = Dm.dst_configuracao
@@ -11600,8 +11995,8 @@ object Fr_vendas_industria2: TFr_vendas_industria2
   end
   object ds_nfe_ref: TDataSource
     DataSet = q_NFe_Ref
-    Left = 488
-    Top = 192
+    Left = 496
+    Top = 200
   end
   object ACBrNFe1: TACBrNFe
     Configuracoes.Geral.SSLLib = libCapicom
@@ -11733,5 +12128,25 @@ object Fr_vendas_industria2: TFr_vendas_industria2
     Filter = '*.xml'
     Left = 312
     Top = 576
+  end
+  object q_ml_pedido: TFDQuery
+    Connection = dao.CN
+    SQL.Strings = (
+      
+        'select id, order_id, pack_id, shipment_id, status, buyer_id, buy' +
+        'er_name,'
+      
+        '  total_amount, paid_amount, numdoc, import_status, import_error' +
+        ','
+      '  atualizado_em, data_fechamento, taxa_ml, taxa_frete'
+      'from ml_pedido'
+      'order by id desc')
+    Left = 400
+    Top = 600
+  end
+  object ds_ml_pedido: TDataSource
+    DataSet = q_ml_pedido
+    Left = 480
+    Top = 600
   end
 end

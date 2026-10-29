@@ -3662,16 +3662,20 @@ begin
     CTPAR := strtoint(PrQtd_parcelas.Text);
     i := 1;
     MDIAVEN := 0;
-    MVLRPAR := Fmfun.arredonda(q_entrada1.fieldbyname('total_mercadorias').AsFloat / CTPAR);
+    // le o total direto da entrada1 (q_entrada1 pode estar fechado neste ponto)
+    dao.Geral1('select total_mercadorias from entrada1 where nr_documento=' +
+      QuotedStr(PrNr_documento.Text) + ' and cod_fornecedor=' +
+      QuotedStr(Prcod_fornecedor.Text));
+    MVLRPAR := Fmfun.arredonda(dao.Q1.fieldbyname('total_mercadorias').AsFloat / CTPAR);
     MNEWVLR := MVLRPAR * CTPAR;
-    MVLRDIF := q_entrada1.fieldbyname('total_mercadorias').AsFloat - MNEWVLR;
+    MVLRDIF := dao.Q1.fieldbyname('total_mercadorias').AsFloat - MNEWVLR;
     sequencia := 1;
     CTPGT := 1;
     for i := 1 to CTPAR do
     begin
 
       if FLANOR = 'NOV' then
-        MNUMORI := q_entrada1.fieldbyname('nr_documento').AsString;
+        MNUMORI := PrNr_documento.Text;
 
       MDIAVEN := MDIAVEN + 30;
 
@@ -6452,5 +6456,6 @@ begin
 end;
 
 end.
+
 
 

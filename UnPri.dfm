@@ -22,12 +22,15 @@ object FRPRI: TFRPRI
   OnCreate = FormCreate
   OnKeyPress = FormKeyPress
   OnShow = FormShow
+  DesignSize = (
+    1028
+    597)
   PixelsPerInch = 96
   TextHeight = 13
   object Image1: TImage
     Left = 250
     Top = 82
-    Width = 438
+    Width = 778
     Height = 488
     Align = alClient
     Picture.Data = {
@@ -1946,7 +1949,7 @@ object FRPRI: TFRPRI
     OnClick = sbAbrirClick
     SkinData.SkinSection = 'SPEEDBUTTON'
   end
-  object Panel4: TsPanel
+  object pnBotoes: TsPanel
     Left = 0
     Top = 0
     Width = 1028
@@ -8313,7 +8316,7 @@ object FRPRI: TFRPRI
     Width = 1028
     Height = 8
     Align = alBottom
-    TabOrder = 0
+    TabOrder = 10
     SkinData.SkinSection = 'PANEL'
   end
   object Button1: TButton
@@ -8383,18 +8386,17 @@ object FRPRI: TFRPRI
     Left = 688
     Top = 82
     Width = 340
-    Height = 488
-    Align = alRight
+    Height = 92
     Color = clInfoBk
     ParentBackground = False
-    TabOrder = 7
+    TabOrder = 6
     Visible = False
     SkinData.SkinSection = 'PANEL'
     object shpCertAviso: TShape
       Left = 1
       Top = 1
       Width = 5
-      Height = 486
+      Height = 90
       Align = alLeft
       Brush.Color = clRed
       Pen.Style = psClear
@@ -8434,17 +8436,21 @@ object FRPRI: TFRPRI
   object pgDashboard: TPageControl
     Left = 250
     Top = 82
-    Width = 438
+    Width = 778
     Height = 488
-    ActivePage = tsVendas
+    ActivePage = tsClientesNaoAtendidos
     Align = alClient
-    TabOrder = 8
+    TabOrder = 7
     object tsVendas: TTabSheet
       Caption = 'Vendas'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object DashVendasRoot: TPanel
         Left = 0
         Top = 0
-        Width = 430
+        Width = 770
         Height = 460
         Align = alClient
         BevelOuter = bvNone
@@ -8452,7 +8458,7 @@ object FRPRI: TFRPRI
         ParentBackground = False
         TabOrder = 0
         object DashChartPanel: TPanel
-          Left = 30
+          Left = 370
           Top = 0
           Width = 400
           Height = 460
@@ -8502,7 +8508,7 @@ object FRPRI: TFRPRI
         object DashContentPanel: TPanel
           Left = 0
           Top = 0
-          Width = 30
+          Width = 370
           Height = 460
           Align = alClient
           BevelOuter = bvNone
@@ -8512,7 +8518,7 @@ object FRPRI: TFRPRI
           object DashTopo: TPanel
             Left = 0
             Top = 0
-            Width = 30
+            Width = 370
             Height = 72
             Align = alTop
             BevelOuter = bvNone
@@ -8559,7 +8565,7 @@ object FRPRI: TFRPRI
           object DashFiltros: TPanel
             Left = 0
             Top = 72
-            Width = 30
+            Width = 370
             Height = 44
             Align = alTop
             BevelOuter = bvNone
@@ -8656,7 +8662,7 @@ object FRPRI: TFRPRI
           object DashCards: TPanel
             Left = 0
             Top = 116
-            Width = 30
+            Width = 370
             Height = 144
             Align = alTop
             BevelOuter = bvNone
@@ -9075,7 +9081,7 @@ object FRPRI: TFRPRI
           object DashListaPanel: TPanel
             Left = 0
             Top = 260
-            Width = 30
+            Width = 370
             Height = 200
             Align = alClient
             BevelOuter = bvNone
@@ -9113,7 +9119,7 @@ object FRPRI: TFRPRI
             object DashGridPedidos: TStringGrid
               Left = 0
               Top = 0
-              Width = 30
+              Width = 370
               Height = 200
               Align = alClient
               ColCount = 6
@@ -9135,25 +9141,20 @@ object FRPRI: TFRPRI
     end
     object tsClientesNaoAtendidos: TTabSheet
       Caption = 'Clientes N'#227'o Atendidos'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 450
       object CliNaoRoot: TPanel
         Left = 0
         Top = 0
-        Width = 430
+        Width = 770
         Height = 460
         Align = alClient
         BevelOuter = bvNone
         Color = clWhite
         ParentBackground = False
         TabOrder = 0
-        ExplicitHeight = 450
         object CliNaoFiltros: TPanel
           Left = 0
           Top = 0
-          Width = 430
+          Width = 770
           Height = 48
           Align = alTop
           BevelOuter = bvNone
@@ -9229,14 +9230,13 @@ object FRPRI: TFRPRI
         object CliNaoGrid: TStringGrid
           Left = 0
           Top = 48
-          Width = 430
+          Width = 770
           Height = 412
           Align = alClient
           FixedCols = 0
           RowCount = 2
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowSelect]
           TabOrder = 1
-          ExplicitHeight = 402
           ColWidths = (
             80
             360
@@ -9251,22 +9251,21 @@ object FRPRI: TFRPRI
       ExplicitLeft = 0
       ExplicitTop = 0
       ExplicitWidth = 0
-      ExplicitHeight = 450
+      ExplicitHeight = 0
       object DashTotaisRoot: TPanel
         Left = 0
         Top = 0
-        Width = 430
+        Width = 770
         Height = 460
         Align = alClient
         BevelOuter = bvNone
         Color = clWhite
         ParentBackground = False
         TabOrder = 0
-        ExplicitHeight = 450
         object DashTotaisTopo: TPanel
           Left = 0
           Top = 0
-          Width = 430
+          Width = 770
           Height = 48
           Align = alTop
           BevelOuter = bvNone
@@ -9339,7 +9338,6 @@ object FRPRI: TFRPRI
           View3DOptions.Rotation = 360
           Align = alLeft
           TabOrder = 1
-          ExplicitHeight = 402
           DefaultCanvas = 'TGDIPlusCanvas'
           ColorPaletteIndex = 13
           object DashSeriesTotaisEmpresa: TPieSeries
@@ -9370,7 +9368,7 @@ object FRPRI: TFRPRI
         object DashChartTotaisStatus: TChart
           Left = 760
           Top = 48
-          Width = 246
+          Width = 10
           Height = 412
           Legend.Alignment = laBottom
           Title.Text.Strings = (
@@ -9378,7 +9376,6 @@ object FRPRI: TFRPRI
           View3D = False
           Align = alClient
           TabOrder = 2
-          ExplicitHeight = 402
           DefaultCanvas = 'TGDIPlusCanvas'
           ColorPaletteIndex = 13
           object DashSeriesTotaisStatus: TBarSeries
@@ -9396,22 +9393,21 @@ object FRPRI: TFRPRI
       ExplicitLeft = 0
       ExplicitTop = 0
       ExplicitWidth = 0
-      ExplicitHeight = 450
+      ExplicitHeight = 0
       object FinRoot: TPanel
         Left = 0
         Top = 0
-        Width = 430
+        Width = 770
         Height = 460
         Align = alClient
         BevelOuter = bvNone
         Color = clWhite
         ParentBackground = False
         TabOrder = 0
-        ExplicitHeight = 450
         object FinTopo: TPanel
           Left = 0
           Top = 0
-          Width = 430
+          Width = 770
           Height = 48
           Align = alTop
           BevelOuter = bvNone
@@ -9462,7 +9458,6 @@ object FRPRI: TFRPRI
           View3DOptions.Rotation = 360
           Align = alLeft
           TabOrder = 1
-          ExplicitHeight = 402
           DefaultCanvas = 'TGDIPlusCanvas'
           ColorPaletteIndex = 13
           object FinSeriesInadimplencia: TPieSeries
@@ -9493,14 +9488,13 @@ object FRPRI: TFRPRI
         object FinGridPanel: TPanel
           Left = 380
           Top = 48
-          Width = 50
+          Width = 390
           Height = 412
           Align = alClient
           BevelOuter = bvNone
           Color = clWhite
           ParentBackground = False
           TabOrder = 2
-          ExplicitHeight = 402
           object FinGridTitulo: TLabel
             Left = 8
             Top = 8
@@ -9518,7 +9512,7 @@ object FRPRI: TFRPRI
           object FinGrid: TStringGrid
             Left = 0
             Top = 0
-            Width = 50
+            Width = 390
             Height = 412
             Align = alClient
             ColCount = 6
@@ -9526,7 +9520,6 @@ object FRPRI: TFRPRI
             RowCount = 2
             Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowSelect]
             TabOrder = 0
-            ExplicitHeight = 402
             ColWidths = (
               70
               300
@@ -9543,11 +9536,11 @@ object FRPRI: TFRPRI
       ExplicitLeft = 0
       ExplicitTop = 0
       ExplicitWidth = 0
-      ExplicitHeight = 450
+      ExplicitHeight = 0
       object dbEmailsIncorretos: TDBGrid
         Left = 0
         Top = 0
-        Width = 430
+        Width = 770
         Height = 460
         Align = alClient
         DataSource = dsEmailsIncorretos
@@ -9562,6 +9555,24 @@ object FRPRI: TFRPRI
         OnTitleClick = dbEmailsIncorretosTitleClick
       end
     end
+  end
+  object pgJanelas: TPageControl
+    Left = 250
+    Top = 82
+    Width = 438
+    Height = 488
+    Anchors = [akLeft, akTop, akRight, akBottom]
+    TabOrder = 9
+    Visible = False
+  end
+  object pnlMenuAba: TPanel
+    Left = 0
+    Top = 0
+    Width = 200
+    Height = 30
+    BevelOuter = bvNone
+    TabOrder = 0
+    Visible = False
   end
   object ISMTPmail: TIdSMTP
     AuthType = satSASL
@@ -9798,6 +9809,10 @@ object FRPRI: TFRPRI
         object N2: TMenuItem
           Caption = '&WorbyRepres'
           OnClick = N2Click
+        end
+        object PedidosML1: TMenuItem
+          Caption = '&Mercado Livre'
+          OnClick = PedidosMLClick
         end
       end
       object EnviarPedidos: TMenuItem

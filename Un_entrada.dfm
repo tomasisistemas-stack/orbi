@@ -36,6 +36,10 @@ object Fr_entrada: TFr_entrada
       Caption = 'Dados da Entrada'
       SkinData.CustomColor = False
       SkinData.CustomFont = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object GroupBox1: TsGroupBox
         Left = 2
         Top = -3
@@ -1204,6 +1208,10 @@ object Fr_entrada: TFr_entrada
       ImageIndex = 1
       SkinData.CustomColor = False
       SkinData.CustomFont = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object GroupBox6: TsGroupBox
         Left = 12
         Top = 266
@@ -2195,6 +2203,10 @@ object Fr_entrada: TFr_entrada
       ImageIndex = 2
       SkinData.CustomColor = False
       SkinData.CustomFont = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object sDBGrid1: TDBGrid
         Left = 0
         Top = 0

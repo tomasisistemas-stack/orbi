@@ -1083,21 +1083,21 @@ procedure TFr_contas_receber.redimensionar(expandir: Boolean);
 var
   largura: Integer;
 begin
-  largura := Fr_contas_receber.Width;
+  largura := Self.Width;
   if expandir then
   begin
 
-    Fr_contas_receber.Width := 1250;
+    Self.Width := 1250;
 
-    Fr_contas_receber.Left :=
-      (Screen.DesktopWidth - Fr_contas_receber.Width) DIV 2;
+    Self.Left :=
+      (Screen.DesktopWidth - Self.Width) DIV 2;
 
   end
   else
   begin
-    Fr_contas_receber.Width := 610;
-    if largura <> Fr_contas_receber.Width then
-      Fr_contas_receber.Left := Fr_contas_receber.Left + 200;
+    Self.Width := 610;
+    if largura <> Self.Width then
+      Self.Left := Self.Left + 200;
   end;
 end;
 

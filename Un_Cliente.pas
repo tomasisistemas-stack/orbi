@@ -2228,7 +2228,7 @@ procedure TFr_Cliente.PrCPFExit(Sender: TObject);
 var
   passou: Boolean;
 begin
-  if ActiveControl.Name = 'BtCan' then
+  if (ActiveControl = nil) or (ActiveControl.Name = 'BtCan') then
     exit;
 
   if PrCPF.Text = '   .   .   -  ' then
@@ -2253,7 +2253,7 @@ procedure TFr_Cliente.PrCNPJExit(Sender: TObject);
 var
   passou: Boolean;
 begin
-  if ActiveControl.Name = 'BtCan' then
+  if (ActiveControl = nil) or (ActiveControl.Name = 'BtCan') then
     exit;
 
   if PrCNPJ.Text = '  .   .   /    -  ' then

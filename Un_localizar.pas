@@ -5749,6 +5749,12 @@ begin
     cmd1 := cmd_representante + cmd_fornecedor + cmd_cliente + cmd_cidades
       + cmd_televendas + cmd_aux;
   end
+  else if CBcampos.Text = 'OC' then
+  begin
+    cmd_aux := cmd_aux + 'where v1.num_oc = ' + QuotedStr(valor) + representante_cmd +#13+ ' order by orcamento desc, status, numdoc desc ';
+    cmd1 := cmd_representante + cmd_fornecedor + cmd_cliente + cmd_cidades
+      + cmd_televendas + cmd_aux;
+  end
   else if CBcampos.Text = 'CPF' then
   begin
     cmd_cliente := 'inner join cliente c1 on c1.cod_cliente = v1.cod_cliente '+#13;

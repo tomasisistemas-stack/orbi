@@ -527,7 +527,7 @@ object dao: Tdao
       'Database=orbi'
       'Password=123'
       'User_Name=postgres'
-      'Server=26.236.165.177'
+      'Server=172.16.1.250'
       'DriverID=PG')
     LoginPrompt = False
     Left = 496

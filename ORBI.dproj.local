@@ -285,5 +285,7 @@
     <File Path="Un_CEF_Cobrancas_Api.pas"/>
     <File Path="un_nfce_simplificado.pas"/>
     <File Path="un_nfce_simplificado.dfm"/>
+    <File Path="un_pedidos_ml.pas"/>
+    <File Path="un_pedidos_ml.dfm"/>
   </ProjectSortOrder>
 </BorlandProject>
