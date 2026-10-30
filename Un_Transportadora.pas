@@ -603,6 +603,8 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
   if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
@@ -731,6 +733,8 @@ var
   chamou_form_old, chamou_pesquisa_old: string;
 
 begin
+  if Assigned(Fr_localizar) and Fr_localizar.Visible then
+    Fr_localizar := nil; // ja esta aberto (chamada aninhada): cria nova instancia
   if not Assigned(Fr_localizar) then
   Application.CreateForm(TFr_localizar, Fr_localizar);
 
