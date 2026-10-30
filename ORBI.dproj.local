@@ -2,8 +2,8 @@
 <BorlandProject>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="PDV"/>
-    <File Path="Z:\PDV\Un_PDV.pas"/>
-    <File Path="Z:\PDV\Un_PDV.dfm"/>
+    <File Path="PDV\Un_PDV.pas"/>
+    <File Path="PDV\Un_PDV.dfm"/>
     <File Path="alterar_status_ordem_producao.pas"/>
     <File Path="alterar_status_ordem_producao.dfm"/>
     <File Path="alterar_status_pedido.pas"/>

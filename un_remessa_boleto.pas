@@ -1797,7 +1797,9 @@ begin
                       BoletoCEF.Titulo.PosVencimento.NumeroDias :=
                         StrToIntDef(BBFieldStr(Q, 'dias_protesto', ''), 0);
                     end;
-                    BoletoCEF.Titulo.TipoEspecie := '99';
+
+
+                    BoletoCEF.Titulo.TipoEspecie := '02';
                     BoletoCEF.Titulo.FlagAceite := 'N';
                     BoletoCEF.Titulo.DataEmissao := CEFDataApi(Date);
                     if UpperCase(Trim(BBFieldStr(Q, 'tip_pessoa', ''))) = 'J' then
