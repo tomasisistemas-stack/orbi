@@ -490,16 +490,9 @@ uses
   DB, Un_splash, Un_Cliente, FireDAC.Comp.Client;
 
 {$R *.dfm}
-// a janela acompanha a area visivel da aba: o rodape fica sempre visivel e o conteudo rola pelo ScrollBar1
+// altura do relatorio; a tela rola pela barra de rolagem da aba quando for maior que a janela
 procedure AlturaJanela(H: Integer);
-var
-  Area: Integer;
 begin
-  Area := 0;
-  if Fr_opc_relatorios.Parent is TWinControl then
-    Area := TWinControl(Fr_opc_relatorios.Parent).ClientHeight;
-  if Area > 0 then
-    H := Area;
   Fr_opc_relatorios.Height := H;
 end;
 

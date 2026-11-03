@@ -7450,11 +7450,11 @@ begin
       Brush.Color := clBtnFace;
     FillRect(ARect);
     Font.Color := clWindowText;
-    TextOut(ARect.Left + 8, ARect.Top + 4, TPageControl(Control).Pages[TabIndex].Caption);
-    // X de fechar, no canto direito da aba
-    XRect.Left := ARect.Right - 22;
+    TextOut(ARect.Left + 26, ARect.Top + 4, TPageControl(Control).Pages[TabIndex].Caption);
+    // X de fechar, no inicio da aba (antes do caption)
+    XRect.Left := ARect.Left + 4;
     XRect.Top := ARect.Top + 2;
-    XRect.Right := ARect.Right - 4;
+    XRect.Right := ARect.Left + 22;
     XRect.Bottom := ARect.Bottom - 2;
     DrawText(Control.Canvas.Handle, 'x', 1, XRect, DT_CENTER or DT_VCENTER or DT_SINGLELINE);
   end;
@@ -7477,14 +7477,15 @@ begin
   FForm.Align := alNone;
   // altura acompanha a janela (rodape sempre visivel); largura minima = tamanho original
   H := ClientHeight;
-  if H < 300 then
+  // janela menor que o projeto: a altura do projeto e mantida e a tela rola
+  if H < FormaH then
     H := FormaH;
   if ClientWidth > FormaW then
     FForm.SetBounds(0, 0, ClientWidth, H)
   else
     FForm.SetBounds(0, 0, FormaW, H);
   HorzScrollBar.Range := FForm.Width;
-  VertScrollBar.Range := 0;
+  VertScrollBar.Range := H;
 end;
 
 function FormDaAba(TS: TTabSheet): TForm;
@@ -7754,7 +7755,7 @@ begin
     Exit;
   TR := pgJanelas.TabRect(idx);
   // botao do meio fecha a aba; botao esquerdo fecha se clicar no X
-  Fechar := (Button = mbMiddle) or ((Button = mbLeft) and (X >= TR.Right - 22));
+  Fechar := (Button = mbMiddle) or ((Button = mbLeft) and (X <= TR.Left + 22));
   if not Fechar then
     Exit;
   TS := pgJanelas.Pages[idx];
