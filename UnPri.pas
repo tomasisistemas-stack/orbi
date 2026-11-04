@@ -62,6 +62,7 @@ type
     FormaW: Integer;
     FormaH: Integer;
     procedure Resize; override;
+    procedure WndProc(var Message: TMessage); override;
   end;
 
   TFRPRI = class(TForm)
@@ -7429,6 +7430,9 @@ begin
   // dimensiona a tela pela area da aba (rolagem so se a area for menor que o projeto)
   Scroll.Resize;
   Scroll.VertScrollBar.Position := 0;
+  Scroll.HorzScrollBar.Position := 0;
+  // ao mostrar a tela, o foco pode rolar a area para baixo: volta ao topo depois disso
+  PostMessage(Scroll.Handle, WM_USER + 100, 0, 0);
   pgDashboard.Visible := False;
   pgJanelas.Visible := True;
   PosicionarJanelas;
@@ -7465,6 +7469,19 @@ begin
   // mantem a camada de abas (e a faixa de menu) cobrindo a area cliente
   if pgJanelas.Visible then
     PosicionarJanelas;
+end;
+
+procedure TTelaScroll.WndProc(var Message: TMessage);
+begin
+  // pedido para voltar ao topo, enviado ao abrir a tela (depois que o foco ja rolou a area)
+  if Message.Msg = WM_USER + 100 then
+  begin
+    VertScrollBar.Position := 0;
+    HorzScrollBar.Position := 0;
+    Message.Result := 0;
+    Exit;
+  end;
+  inherited WndProc(Message);
 end;
 
 procedure TTelaScroll.Resize;

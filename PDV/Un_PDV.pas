@@ -73,6 +73,7 @@ type
     btDANFCe: TButton;
     btImprimir: TButton;
     procedure FormCreate(Sender: TObject);
+    procedure AjustaPaginaPDV(Sender: TObject);
     procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure edCodigoBarrasKeyPress(Sender: TObject; var Key: Char);
     procedure edCodigoBarrasKeyDown(Sender: TObject; var Key: Word;
@@ -268,8 +269,48 @@ begin
   PrcodPrazoExit(Self);
 end;
 
-procedure TFr_PDV.FormCreate(Sender: TObject);
+procedure TFr_PDV.AjustaPaginaPDV(Sender: TObject);
+var
+  lar, alt: Integer;
 begin
+  if not (Sender is TScrollBox) then
+    Exit;
+  // layout de projeto 1280 x 760; acima disso a pagina acompanha a janela
+  lar := TScrollBox(Sender).ClientWidth;
+  alt := TScrollBox(Sender).ClientHeight;
+  if lar < 1280 then
+    lar := 1280;
+  if alt < 760 then
+    alt := 760;
+  pnCabecalho.SetBounds(0, 0, lar, 64);
+  pnEntrada.SetBounds(0, 64, lar, 64);
+  pnItens.SetBounds(0, 128, lar - 350, alt - 128 - 80);
+  pnResumo.SetBounds(lar - 350, 128, 350, alt - 128 - 80);
+  pnRodape.SetBounds(0, alt - 80, lar, 80);
+end;
+
+procedure TFr_PDV.FormCreate(Sender: TObject);
+var
+  sbPagina: TScrollBox;
+begin
+  // a pagina do PDV rola dentro da tela filha, que mantem o tamanho original
+  sbPagina := TScrollBox.Create(Self);
+  sbPagina.Parent := Self;
+  sbPagina.Align := alClient;
+  sbPagina.BorderStyle := bsNone;
+  sbPagina.AutoScroll := True;
+  sbPagina.OnResize := AjustaPaginaPDV;
+  pnCabecalho.Align := alNone;
+  pnCabecalho.Parent := sbPagina;
+  pnEntrada.Align := alNone;
+  pnEntrada.Parent := sbPagina;
+  pnItens.Align := alNone;
+  pnItens.Parent := sbPagina;
+  pnResumo.Align := alNone;
+  pnResumo.Parent := sbPagina;
+  pnRodape.Align := alNone;
+  pnRodape.Parent := sbPagina;
+  AjustaPaginaPDV(sbPagina);
   FNFCe := nil;
   FNumDoc := '';
   FFaturado := False;
