@@ -15109,6 +15109,8 @@ procedure TFr_vendas_industria2.FormCreate(Sender: TObject);
 var
   sbPagina: TScrollBox;
 begin
+  // limpa a referencia da instancia anterior (ja liberada) antes de montar o layout
+  scrPainel := nil;
   // a pagina inteira de Pedidos rola dentro da tela filha, que mantem o tamanho original
   sbPagina := TScrollBox.Create(Self);
   sbPagina.Parent := Self;

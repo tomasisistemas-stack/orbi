@@ -2,7 +2,7 @@ object Fr_PDV: TFr_PDV
   Left = 0
   Top = 0
   Caption = 'Frente de Caixa - PDV'
-  ClientHeight = 760
+  ClientHeight = 753
   ClientWidth = 1280
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -150,7 +150,7 @@ object Fr_PDV: TFr_PDV
       Left = 12
       Top = 33
       Width = 214
-      Height = 27
+      Height = 25
       Color = clYellow
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -227,7 +227,6 @@ object Fr_PDV: TFr_PDV
       TabOrder = 4
       Text = '0,00'
       OnExit = edDescontoItemExit
-      OnKeyPress = edDescontoItemKeyPress
     end
     object edTotalItem: TEdit
       Left = 769
@@ -251,7 +250,7 @@ object Fr_PDV: TFr_PDV
     Left = 0
     Top = 128
     Width = 930
-    Height = 552
+    Height = 545
     Align = alClient
     Color = clWhite
     ParentBackground = False
@@ -260,7 +259,7 @@ object Fr_PDV: TFr_PDV
       Left = 1
       Top = 1
       Width = 928
-      Height = 550
+      Height = 543
       Align = alClient
       DataSource = dsItens
       Options = [dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit]
@@ -319,7 +318,7 @@ object Fr_PDV: TFr_PDV
     Left = 930
     Top = 128
     Width = 350
-    Height = 552
+    Height = 545
     Align = alRight
     Color = clNavy
     ParentBackground = False
@@ -687,7 +686,7 @@ object Fr_PDV: TFr_PDV
   end
   object pnRodape: TPanel
     Left = 0
-    Top = 680
+    Top = 673
     Width = 1280
     Height = 80
     Align = alBottom

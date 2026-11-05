@@ -855,7 +855,7 @@ type
 
 const
   ////////////////////////////////////////////////////////////
-  versao: ShortString = '2.01.07';
+  versao: ShortString = '2.01.08';
   ///////////////////////////////////////////////////////////
 var
 
@@ -3342,6 +3342,7 @@ begin
          Fr_vendas_industria2.q_cr1.Active and
          (not Fr_vendas_industria2.q_cr1.IsEmpty) then
       begin
+      Fr_vendas_industria2.PrCONTA_BOLETOExit(Fr_vendas_industria2);
       Fr_vendas_industria2.MontaArquivoCobrancaEnvio;
       if FMFUN.ACBrBoleto1.ListadeBoletos.Count > 0 then
       begin

@@ -80,8 +80,8 @@ type
       Shift: TShiftState);
     procedure edQuantidadeItemExit(Sender: TObject);
     procedure edPrecoItemExit(Sender: TObject);
-    procedure edDescontoItemKeyPress(Sender: TObject; var Key: Char);
     procedure edDescontoItemExit(Sender: TObject);
+    procedure ConfirmarItemPendente;
     procedure edDescontoGeralChange(Sender: TObject);
     procedure edDescontoGeralExit(Sender: TObject);
     procedure edRecebidoChange(Sender: TObject);
@@ -391,6 +391,8 @@ begin
 end;
 
 procedure TFr_PDV.FormKeyPress(Sender: TObject; var Key: Char);
+var
+  Proximo: TControl;
 begin
   if Key = #27 then
   begin
@@ -416,17 +418,14 @@ begin
       Exit;
     end;
 
-    { Estes campos possuem tratamento proprio para o Enter. }
-    if (ActiveControl = edCodigoBarras) or
-       (ActiveControl = edDescontoItem) or
-       (ActiveControl = Prcod_fop) or
-       (ActiveControl = Prcod_prazo_pgto) then
-      Exit;
-
     if Assigned(ActiveControl) and (ActiveControl is TWinControl) then
     begin
+      { Reenvia um Tab pela fila de mensagens, igual ao Tab do teclado, para
+        que a navegacao percorra toda a tela (inclusive entre paineis). }
       Key := #0;
-      SelectNext(TWinControl(ActiveControl), True, True);
+      Proximo := FindNextControl(ActiveControl, True, True, False);
+      if (Proximo is TWinControl) and TWinControl(Proximo).CanFocus then
+        TWinControl(Proximo).SetFocus;
     end;
   end;
 end;
@@ -443,14 +442,11 @@ begin
   end;
 end;
 
-procedure TFr_PDV.edDescontoItemKeyPress(Sender: TObject; var Key: Char);
+procedure TFr_PDV.ConfirmarItemPendente;
 var
   Quantidade, Preco: string;
   Desconto: string;
 begin
-  if Key <> #13 then
-    Exit;
-  Key := #0;
   if Trim(FPendenteCodigoProduto) = '' then
   begin
     edCodigoBarras.SetFocus;
@@ -482,6 +478,7 @@ begin
   if not ValidarDescontoItem(Desconto) then
     Exit;
   AtualizarTotalItemEdicao;
+  ConfirmarItemPendente;
 end;
 
 procedure TFr_PDV.PrepararEdicaoCodigo(const ACodigo: string);
@@ -1925,7 +1922,8 @@ begin
   begin
     FreeAndNil(FNFCe);
     LimparItens;
-    edCodigoBarras.SetFocus;
+    if edCodigoBarras.CanFocus then
+      edCodigoBarras.SetFocus;
   end;
 end;
 
@@ -1958,7 +1956,8 @@ begin
   AtualizarStatusPDV;
   CriarDocumento;
   AtualizarBotoesPDV;
-  edCodigoBarras.SetFocus;
+  if edCodigoBarras.CanFocus then
+    edCodigoBarras.SetFocus;
 end;
 
 procedure TFr_PDV.btLocalizarPedidoClick(Sender: TObject);
