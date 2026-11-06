@@ -15030,6 +15030,7 @@ begin
   BtnBoleto.Enabled := False;
   try
     try
+      PrCONTA_BOLETOExit(Self);
       MontaArquivoCobrancaEnvio;
     if FMFUN.ACBrBoleto1.ListadeBoletos.Count = 0 then
     begin
@@ -15109,8 +15110,6 @@ procedure TFr_vendas_industria2.FormCreate(Sender: TObject);
 var
   sbPagina: TScrollBox;
 begin
-  // limpa a referencia da instancia anterior (ja liberada) antes de montar o layout
-  scrPainel := nil;
   // a pagina inteira de Pedidos rola dentro da tela filha, que mantem o tamanho original
   sbPagina := TScrollBox.Create(Self);
   sbPagina.Parent := Self;
@@ -15809,6 +15808,7 @@ begin
   if not ChecarEmailCliente(Prcod_cliente.Text, 'nfe') then
     Exit;
 
+PrCONTA_BOLETOExit(Self);
   FRPRI.EnvioEmailNFE(Prnumdoc.Text, 'Saída');
 end;
 

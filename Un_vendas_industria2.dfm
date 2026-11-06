@@ -3883,6 +3883,10 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       ImageIndex = 1
       SkinData.CustomColor = True
       SkinData.CustomFont = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label36: TsLabel
         Left = 768
         Top = 127
@@ -4982,6 +4986,10 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       ImageIndex = 3
       SkinData.CustomColor = True
       SkinData.CustomFont = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Btinsere_cheque: TSpeedButton
         Left = 755
         Top = 200
@@ -5845,6 +5853,10 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       TabVisible = False
       SkinData.CustomColor = True
       SkinData.CustomFont = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object GroupBox1: TsGroupBox
         Left = 0
         Top = 281
@@ -6025,6 +6037,10 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       ImageIndex = 4
       SkinData.CustomColor = True
       SkinData.CustomFont = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pgNFE: TsPageControl
         Left = 0
         Top = 0
@@ -6038,6 +6054,10 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           Caption = 'Nota Fiscal Eletr'#244'nica'
           SkinData.CustomColor = True
           SkinData.CustomFont = False
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           object GroupBox9: TsGroupBox
             Left = 0
             Top = 0
@@ -7002,6 +7022,10 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           Caption = 'Carta de Corre'#231#227'o Eletr'#244'nica'
           SkinData.CustomColor = True
           SkinData.CustomFont = False
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           object gbCC: TsGroupBox
             Left = 0
             Top = 211
@@ -7346,6 +7370,10 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           TabVisible = False
           SkinData.CustomColor = True
           SkinData.CustomFont = False
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           object sDBGrid3: TDBGrid
             Left = 0
             Top = 0
@@ -7778,6 +7806,10 @@ object Fr_vendas_industria2: TFr_vendas_industria2
           TabVisible = False
           SkinData.CustomColor = True
           SkinData.CustomFont = False
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           object gbNumDocRef: TsGroupBox
             Left = 5
             Top = 16
@@ -7894,6 +7926,10 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       TabVisible = False
       SkinData.CustomColor = True
       SkinData.CustomFont = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object btnNfeDev: TSpeedButton
         Left = 372
         Top = 184
@@ -8770,6 +8806,10 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       TabVisible = False
       SkinData.CustomColor = True
       SkinData.CustomFont = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object sPanel7: TPanel
         Left = 0
         Top = 0
@@ -9080,6 +9120,10 @@ object Fr_vendas_industria2: TFr_vendas_industria2
       TabVisible = False
       SkinData.CustomColor = True
       SkinData.CustomFont = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lb_ml_order_id: TsLabel
         Left = 16
         Top = 19
@@ -10490,7 +10534,7 @@ object Fr_vendas_industria2: TFr_vendas_industria2
     Left = 152
     Top = 160
     Bitmap = {
-      494C01010100500A500A10001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010100540A540A10001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

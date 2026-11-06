@@ -482,6 +482,7 @@ var
   tipo_fonte: TTipoFonte;
   path: string;
   filtros_ranking_produtos: string;
+  filtros_vendas_padrao: string;
 
 implementation
 
@@ -6083,7 +6084,9 @@ begin
     else if VarName = 'dtafin' then
       Value := formatdatetime('dd/mm/yyyy', Prdta_final.date)
     else if VarName = 'TipUsu' then
-      Value := FRPRI.TipUsu;
+      Value := FRPRI.TipUsu
+    else if VarName = 'filtros' then
+      Value := filtros_vendas_padrao;
   end
   else if tipo_relatorio = 'ranking_produtos' then
   begin
@@ -8832,6 +8835,28 @@ end;
 procedure TFr_opc_relatorios.relatorio_vendas_padrao(c_fornecedor, c_loja, c_grupo, c_vendedor, c_marca: string);
 var
   cmd, cmd1, cmd2: string;
+  function DescricaoFiltro(const ATabela, ACampoCodigo, ACampoNome, AValores: string): string;
+  var
+    sql: string;
+  begin
+    Result := Trim(AValores);
+    if Result = '' then
+      exit;
+    sql := 'select string_agg(cast(' + ACampoCodigo + ' as varchar(30)) || ''-'' || ' + ACampoNome + ', '', '' order by ' + ACampoCodigo + ') as descricao ' +
+      'from ' + ATabela + ' where ' + ACampoCodigo + ' in (' + StringReplace(AValores, ';', ',', [rfReplaceAll]) + ')';
+    dao.Geral3(sql);
+    if (dao.q3.RecordCount > 0) and (Trim(dao.q3.FieldByName('descricao').AsString) <> '') then
+      Result := dao.q3.FieldByName('descricao').AsString;
+  end;
+
+  procedure AdicionaFiltro(var AFiltros: string; const ATitulo, ADescricao: string);
+  begin
+    if Trim(ADescricao) = '' then
+      exit;
+    if AFiltros <> '' then
+      AFiltros := AFiltros + ' | ';
+    AFiltros := AFiltros + ATitulo + ': ' + ADescricao;
+  end;
 begin
   cmd :=  'SELECT DISTINCT * '+
           'FROM ( '+
@@ -9052,6 +9077,44 @@ begin
     dao.msg('Não foi encontrado registro neste periodo!');
     exit;
   end;
+
+  filtros_vendas_padrao := '';
+  if Rb_filtro_faturamento.Checked then
+    AdicionaFiltro(filtros_vendas_padrao, 'Data por', 'Faturamento')
+  else
+    AdicionaFiltro(filtros_vendas_padrao, 'Data por', 'Emissão');
+  AdicionaFiltro(filtros_vendas_padrao, 'Empresa', DescricaoFiltro('empresa', 'cod_empresa', 'nom_empresa', c_loja));
+  AdicionaFiltro(filtros_vendas_padrao, 'Fornecedor', DescricaoFiltro('fornecedor', 'cod_fornecedor', 'razao_social', edFornecedor.Text));
+  AdicionaFiltro(filtros_vendas_padrao, 'Grupo', DescricaoFiltro('grupo', 'cod_grupo', 'nom_grupo', edGrupo.Text));
+  AdicionaFiltro(filtros_vendas_padrao, 'Marca', DescricaoFiltro('marcas', 'id', 'nom_marca', c_marca));
+  AdicionaFiltro(filtros_vendas_padrao, 'F. Pgto', DescricaoFiltro('fop', 'cod_fop', 'nom_fop', edfop.Text));
+  AdicionaFiltro(filtros_vendas_padrao, 'Cliente', DescricaoFiltro('cliente', 'cod_cliente', 'nom_cliente', edCliente.Text));
+  AdicionaFiltro(filtros_vendas_padrao, 'Cidade', DescricaoFiltro('cidades', 'cod_cidade', 'nom_cidade', edCidade.Text));
+  AdicionaFiltro(filtros_vendas_padrao, 'UF', Pruf.Text);
+  AdicionaFiltro(filtros_vendas_padrao, 'Micro-região', edMicroRegiao.Text);
+  AdicionaFiltro(filtros_vendas_padrao, 'Meso-região', edMesoRegiao.Text);
+  AdicionaFiltro(filtros_vendas_padrao, 'Representante', DescricaoFiltro('representante', 'id', 'nom_representante', edCodRepresentante.Text));
+  AdicionaFiltro(filtros_vendas_padrao, 'Supervisor', DescricaoFiltro('representante', 'id', 'nom_representante', edcodsupervisor.Text));
+  AdicionaFiltro(filtros_vendas_padrao, 'Pedido', edPedido.Text);
+  AdicionaFiltro(filtros_vendas_padrao, 'Bairro', edBairro.Text);
+  if zzfaturado.Checked then
+    AdicionaFiltro(filtros_vendas_padrao, 'Situação', 'Faturado')
+  else if zznao_faturado.Checked then
+    AdicionaFiltro(filtros_vendas_padrao, 'Situação', 'Não faturado')
+  else if zzdesativados.Checked then
+    AdicionaFiltro(filtros_vendas_padrao, 'Situação', 'Desativados')
+  else if zzfaturado_todos.Checked then
+    AdicionaFiltro(filtros_vendas_padrao, 'Situação', 'Todos (exceto desativados)')
+  else if zzorcamento.Checked then
+    AdicionaFiltro(filtros_vendas_padrao, 'Situação', 'Orçamento');
+  if rbSemSupervisao.Checked then
+    AdicionaFiltro(filtros_vendas_padrao, 'Supervisão', 'Sem supervisão');
+  if rbApenasSupervisao.Checked then
+    AdicionaFiltro(filtros_vendas_padrao, 'Supervisão', 'Apenas com supervisão');
+  if rbNaoConsumidorFinal.Checked then
+    AdicionaFiltro(filtros_vendas_padrao, 'Consumidor final', 'Não');
+  if rbApenasConsumidorFinal.Checked then
+    AdicionaFiltro(filtros_vendas_padrao, 'Consumidor final', 'Apenas');
 
   if not (fR_RELATORIO.LoadFromFile(path + 'Relatorios\vendas_padrao_ind.fr3')) then
   begin
