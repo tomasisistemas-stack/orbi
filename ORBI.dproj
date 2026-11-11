@@ -79,7 +79,7 @@
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-        <VerInfo_Release>8</VerInfo_Release>
+        <VerInfo_Release>9</VerInfo_Release>
         <VerInfo_MinorVer>1</VerInfo_MinorVer>
         <DCC_RemoteDebug>true</DCC_RemoteDebug>
         <DCC_OutputDRCFile>true</DCC_OutputDRCFile>
@@ -90,7 +90,7 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <DCC_Define>ORBI;$(DCC_Define)</DCC_Define>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=2.1.8.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=2.1.8.0;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=2.1.9.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=2.1.9.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">

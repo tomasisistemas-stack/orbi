@@ -228,7 +228,6 @@ type
     sbVendas: TsSpeedButton;
     sbContasPagar: TsSpeedButton;
     sbContasReceber: TsSpeedButton;
-    sbFechar: TsSpeedButton;
     sbProduto: TsSpeedButton;
     sbEntrada: TsSpeedButton;
     sbOrdemCompra: TsSpeedButton;
@@ -239,8 +238,6 @@ type
     LerRetornoCobrana1: TMenuItem;
     EnviarAvisosaosRepresentantes1: TMenuItem;
     AlterarLayout1: TMenuItem;
-    sbAbrir: TsSpeedButton;
-    Panel3: tsPanel;
     RepresentantesFuncionriosCC1: TMenuItem;
     NovoSimplificado1: TMenuItem;
     Cobrana2: TMenuItem;
@@ -266,7 +263,6 @@ type
     sbTransmissao: TsSpeedButton;
     V1: TMenuItem;
     c2: TMenuItem;
-    Shape1: TShape;
     C3: TMenuItem;
     EnviarPedidos: TMenuItem;
     sbEnviarPedidos: TsSpeedButton;
@@ -298,7 +294,6 @@ type
     ProdutosCapadeEmbalagem1: TMenuItem;
     E2: TMenuItem;
     S5: TMenuItem;
-    TreeView1: TTreeView;
     E3: TMenuItem;
     P4: TMenuItem;
     E4: TMenuItem;
@@ -523,10 +518,6 @@ type
     procedure NCM1Click(Sender: TObject);
     procedure Simplificado1Click(Sender: TObject);
     procedure Detalhado1Click(Sender: TObject);
-    procedure TreeView1DblClick(Sender: TObject);
-    procedure TreeView_Menu;
-    procedure sbFecharClick(Sender: TObject);
-    procedure SBAbrirClick(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
     procedure ProdutosxNCM1Click(Sender: TObject);
     procedure TmUpdateTimer(Sender: TObject);
@@ -629,6 +620,9 @@ type
     procedure sbTransmissaoClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     function AbrirTela(AClasse: TFormClass): TForm;
+    function AtivarTelaAberta(AClasse: TFormClass; AVenda: Boolean): TForm;
+    procedure RemoverAbaDaTela(F: TForm);
+    procedure ZerarRefGlobais(F: TForm);
     procedure pgJanelasDrawTab(Control: TCustomTabControl; TabIndex: Integer; const ARect: TRect; Active: Boolean);
     procedure FormResize(Sender: TObject);
     procedure pgJanelasChange(Sender: TObject);
@@ -724,6 +718,7 @@ type
     procedure OcultaBotoes;
     procedure ImprimirVisitas(rep: string);
     procedure SetaAcesso(nomeForm: string);
+    procedure TreeView_Menu;
     { Private declarations }
   public
     TipUsu: string;
@@ -855,7 +850,7 @@ type
 
 const
   ////////////////////////////////////////////////////////////
-  versao: ShortString = '2.01.08';
+  versao: ShortString = '2.01.09';
   ///////////////////////////////////////////////////////////
 var
 
@@ -2842,9 +2837,6 @@ begin
   { if Tipo_usuario >= '3' then
     Avisos1Click(Self); }
   OcultaBotoes;
-  sbAbrir.Visible := True;
-  sbFechar.Visible := True;
-  sbFecharClick(Self);
 
   cliente_pre.Visible := modulo_vendedor;
 
@@ -4955,8 +4947,6 @@ var
       opcao.Visible := HabilitaMenu(s);
       if opcao.Visible then
       begin
-        NoFilho := TreeView1.Items.AddChild(No, s);
-        NoFilho.ImageIndex := 0;
         for x := 0 to opcao.count - 1 do
           SubNivel(opcao.Items[x], NoFilho);
       end;
@@ -4983,8 +4973,6 @@ begin
       ItemM.Visible := HabilitaMenu(s);
       if ItemM.Visible then
       begin
-        No1 := TreeView1.Items.Add(nil, s);
-        No1.ImageIndex := 0;
         for z := 0 to ItemM.count - 1 do
           SubNivel(ItemM.Items[z], No1);
       end;
@@ -5016,57 +5004,6 @@ begin
       SubNivel(Menu.Items[i].Items[z]);
   end;
 
-end;
-
-procedure TFRPRI.TreeView1DblClick(Sender: TObject);
-var
-  Cont1: Integer;
-  s: string;
-begin
-  for Cont1 := 0 to FRPRI.ComponentCount - 1 do
-  begin
-    with FRPRI do
-    begin
-      if Components[Cont1] is TMenuItem then
-      begin
-        s := TMenuItem(Components[Cont1]).Caption;
-        Delete(s, pos('&', s), 1);
-
-        if (s = TreeView1.Selected.Text) then
-          TMenuItem(Components[Cont1]).Click;
-      end;
-    end;
-  end;
-end;
-
-procedure TFRPRI.sbFecharClick(Sender: TObject);
-begin
-  Panel3.Visible := False;
-  sbFechar.Parent := pnBotoes;
-  sbAbrir.Parent := pnBotoes;
-  sbFechar.Left := 3;
-  sbAbrir.Left := sbFechar.Left + sbFechar.Width + 2;
-  sbFechar.Top := pnBotoes.Height - sbFechar.Height - 2;
-  sbAbrir.Top := sbFechar.Top;
-  sbAbrir.Visible := True;
-  sbFechar.Visible := True;
-  sbAbrir.BringToFront;
-  sbFechar.BringToFront;
-end;
-
-procedure TFRPRI.SBAbrirClick(Sender: TObject);
-begin
-  Panel3.Visible := True;
-  sbFechar.Parent := pnBotoes;
-  sbAbrir.Parent := pnBotoes;
-  sbFechar.Left := 3;
-  sbAbrir.Left := sbFechar.Left + sbFechar.Width + 2;
-  sbFechar.Top := pnBotoes.Height - sbFechar.Height - 2;
-  sbAbrir.Top := sbFechar.Top;
-  sbAbrir.Visible := True;
-  sbFechar.Visible := True;
-  sbAbrir.BringToFront;
-  sbFechar.BringToFront;
 end;
 
 constructor TEmail.Create(corpo, assunto, end1, end2, end3, CC, BC: string;
@@ -5700,6 +5637,11 @@ begin
     end;
   end;
 
+  if AtivarTelaAberta(TFr_vendas_industria2, True) <> nil then
+  begin
+    mform := 'vendas_industria';
+    Exit;
+  end;
   Fr_vendas_industria2 := TFr_vendas_industria2(AbrirTela(TFr_vendas_industria2));
     mform := 'vendas_industria';
     Fr_vendas_industria2.Caption := 'Pedidos - Vendas';
@@ -5733,6 +5675,11 @@ end;
 
 procedure TFRPRI.RemessaseDevolues1Click(Sender: TObject);
 begin
+  if AtivarTelaAberta(TFr_vendas_industria2, False) <> nil then
+  begin
+    mform := 'vendas_devolucoes';
+    Exit;
+  end;
   Fr_vendas_industria2 := TFr_vendas_industria2(AbrirTela(TFr_vendas_industria2));
     mform := 'vendas_devolucoes';
     Fr_vendas_industria2.Caption := 'Pedidos - Devoluções e Remessas';
@@ -7402,6 +7349,13 @@ var
   Scroll: TTelaScroll;
   k: Integer;
 begin
+  // tela ja aberta em outra aba: so ativa a aba existente
+  if not ((AClasse = TFormClass(TFr_vendas_industria2)) or (AClasse = TFormClass(TFr_opc_relatorios))) then
+  begin
+    Result := AtivarTelaAberta(AClasse, False);
+    if Result <> nil then
+      Exit;
+  end;
   F := AClasse.Create(Self);
   TS := TTabSheet.Create(pgJanelas);
   TS.PageControl := pgJanelas;
@@ -7443,9 +7397,13 @@ begin
   Result := F;
 end;
 
+function FormDaAba(TS: TTabSheet): TForm; forward;
+
 procedure TFRPRI.pgJanelasDrawTab(Control: TCustomTabControl; TabIndex: Integer; const ARect: TRect; Active: Boolean);
 var
   XRect: TRect;
+  F: TForm;
+  Texto: string;
 begin
   with Control.Canvas do
   begin
@@ -7455,7 +7413,13 @@ begin
       Brush.Color := clBtnFace;
     FillRect(ARect);
     Font.Color := clWindowText;
-    TextOut(ARect.Left + 26, ARect.Top + 4, TPageControl(Control).Pages[TabIndex].Caption);
+    // titulo = caption atual do form (o caption pode mudar depois de criada a aba)
+    F := FormDaAba(TPageControl(Control).Pages[TabIndex]);
+    if F <> nil then
+      Texto := F.Caption
+    else
+      Texto := TPageControl(Control).Pages[TabIndex].Caption;
+    TextOut(ARect.Left + 26, ARect.Top + 4, Texto);
     // X de fechar, no inicio da aba (antes do caption)
     XRect.Left := ARect.Left + 4;
     XRect.Top := ARect.Top + 2;
@@ -7528,6 +7492,211 @@ begin
           Result := TForm(TScrollBox(TS.Controls[k]).Controls[j]);
           Exit;
         end;
+  end;
+end;
+
+function TFRPRI.AtivarTelaAberta(AClasse: TFormClass; AVenda: Boolean): TForm;
+var
+  i: Integer;
+  F: TForm;
+begin
+  Result := nil;
+  for i := 0 to pgJanelas.PageCount - 1 do
+  begin
+    F := FormDaAba(pgJanelas.Pages[i]);
+    if (F = nil) or not F.InheritsFrom(AClasse) then
+      Continue;
+    if (F is TFr_vendas_industria2) and (TFr_vendas_industria2(F).venda <> AVenda) then
+      Continue;
+    pgJanelas.ActivePage := pgJanelas.Pages[i];
+    if F is TFr_vendas_industria2 then
+      Fr_vendas_industria2 := TFr_vendas_industria2(F);
+    AtualizarMenuAba;
+    Result := F;
+    Exit;
+  end;
+end;
+
+procedure TFRPRI.ZerarRefGlobais(F: TForm);
+begin
+  if TObject(FRUSU) = F then
+    FRUSU := nil;
+  if TObject(FmAlterarPreco) = F then
+    FmAlterarPreco := nil;
+  if TObject(FmCalcular13Salario) = F then
+    FmCalcular13Salario := nil;
+  if TObject(FmCalcularComissao) = F then
+    FmCalcularComissao := nil;
+  if TObject(FmCalcularSalario) = F then
+    FmCalcularSalario := nil;
+  if TObject(FmMalaDireta) = F then
+    FmMalaDireta := nil;
+  if TObject(FmOrdemCompra) = F then
+    FmOrdemCompra := nil;
+  if TObject(Fm_Transf_Valores) = F then
+    Fm_Transf_Valores := nil;
+  if TObject(FrImpostos) = F then
+    FrImpostos := nil;
+  if TObject(FrPalmConexao) = F then
+    FrPalmConexao := nil;
+  if TObject(FrPedidosML) = F then
+    FrPedidosML := nil;
+  if TObject(Fr_Aviso_Representantes_Avulso) = F then
+    Fr_Aviso_Representantes_Avulso := nil;
+  if TObject(Fr_CFOP) = F then
+    Fr_CFOP := nil;
+  if TObject(Fr_Cliente) = F then
+    Fr_Cliente := nil;
+  if TObject(Fr_Cotacao) = F then
+    Fr_Cotacao := nil;
+  if TObject(Fr_Empresa) = F then
+    Fr_Empresa := nil;
+  if TObject(Fr_PDV) = F then
+    Fr_PDV := nil;
+  if TObject(Fr_categoria) = F then
+    Fr_categoria := nil;
+  if TObject(Fr_categoria_estoque) = F then
+    Fr_categoria_estoque := nil;
+  if TObject(Fr_cheque_terceiros) = F then
+    Fr_cheque_terceiros := nil;
+  if TObject(Fr_cidades) = F then
+    Fr_cidades := nil;
+  if TObject(Fr_colecao) = F then
+    Fr_colecao := nil;
+  if TObject(Fr_configuracao) = F then
+    Fr_configuracao := nil;
+  if TObject(Fr_conta_corrente) = F then
+    Fr_conta_corrente := nil;
+  if TObject(Fr_contas_pagar) = F then
+    Fr_contas_pagar := nil;
+  if TObject(Fr_cor) = F then
+    Fr_cor := nil;
+  if TObject(Fr_entrada) = F then
+    Fr_entrada := nil;
+  if TObject(Fr_eti_codbarras) = F then
+    Fr_eti_codbarras := nil;
+  if TObject(Fr_forma_pagamento) = F then
+    Fr_forma_pagamento := nil;
+  if TObject(Fr_fornecedor) = F then
+    Fr_fornecedor := nil;
+  if TObject(Fr_grupo) = F then
+    Fr_grupo := nil;
+  if TObject(Fr_log) = F then
+    Fr_log := nil;
+  if TObject(Fr_marcas) = F then
+    Fr_marcas := nil;
+  if TObject(Fr_montagem_carga) = F then
+    Fr_montagem_carga := nil;
+  if TObject(Fr_motivo_nfe_cancel) = F then
+    Fr_motivo_nfe_cancel := nil;
+  if TObject(Fr_motorista) = F then
+    Fr_motorista := nil;
+  if TObject(Fr_opc_relatorios) = F then
+    Fr_opc_relatorios := nil;
+  if TObject(Fr_parametro_credito) = F then
+    Fr_parametro_credito := nil;
+  if TObject(Fr_pedido_simplificado) = F then
+    Fr_pedido_simplificado := nil;
+  if TObject(Fr_prazo_pagamento) = F then
+    Fr_prazo_pagamento := nil;
+  if TObject(Fr_pre_pedido) = F then
+    Fr_pre_pedido := nil;
+  if TObject(Fr_produto_nao_revenda) = F then
+    Fr_produto_nao_revenda := nil;
+  if TObject(Fr_produtos) = F then
+    Fr_produtos := nil;
+  if TObject(Fr_recibo) = F then
+    Fr_recibo := nil;
+  if TObject(Fr_relatorio_cliente_vendedor) = F then
+    Fr_relatorio_cliente_vendedor := nil;
+  if TObject(Fr_representante) = F then
+    Fr_representante := nil;
+  if TObject(Fr_representantes_clientes) = F then
+    Fr_representantes_clientes := nil;
+  if TObject(Fr_status_emissor) = F then
+    Fr_status_emissor := nil;
+  if TObject(Fr_subcategoria) = F then
+    Fr_subcategoria := nil;
+  if TObject(Fr_tabela_unidade) = F then
+    Fr_tabela_unidade := nil;
+  if TObject(Fr_tamanho) = F then
+    Fr_tamanho := nil;
+  if TObject(Fr_telas) = F then
+    Fr_telas := nil;
+  if TObject(Fr_vendas_industria2) = F then
+    Fr_vendas_industria2 := nil;
+  if TObject(fmAlterarLayout) = F then
+    fmAlterarLayout := nil;
+  if TObject(fmLerRetornoCobranca) = F then
+    fmLerRetornoCobranca := nil;
+  if TObject(fm_alterar_senha) = F then
+    fm_alterar_senha := nil;
+  if TObject(fm_nfe_arquivos) = F then
+    fm_nfe_arquivos := nil;
+  if TObject(fm_nfe_danfe) = F then
+    fm_nfe_danfe := nil;
+  if TObject(fm_nfe_envio_lote) = F then
+    fm_nfe_envio_lote := nil;
+  if TObject(fm_vendor_enviar_pedidos) = F then
+    fm_vendor_enviar_pedidos := nil;
+  if TObject(fr_acerto_estoque) = F then
+    fr_acerto_estoque := nil;
+  if TObject(fr_banco) = F then
+    fr_banco := nil;
+  if TObject(fr_calculo_plr_consulta) = F then
+    fr_calculo_plr_consulta := nil;
+  if TObject(fr_contas_receber) = F then
+    fr_contas_receber := nil;
+  if TObject(fr_controle_visitas) = F then
+    fr_controle_visitas := nil;
+  if TObject(fr_etapas_producao) = F then
+    fr_etapas_producao := nil;
+  if TObject(fr_frete_combinado) = F then
+    fr_frete_combinado := nil;
+  if TObject(fr_ncm) = F then
+    fr_ncm := nil;
+  if TObject(fr_nfe_complementar) = F then
+    fr_nfe_complementar := nil;
+  if TObject(fr_plano_contas) = F then
+    fr_plano_contas := nil;
+  if TObject(fr_plano_contas_consulta) = F then
+    fr_plano_contas_consulta := nil;
+  if TObject(fr_pre_cadastro) = F then
+    fr_pre_cadastro := nil;
+  if TObject(fr_veiculo) = F then
+    fr_veiculo := nil;
+  if TObject(frm_controle_status_pedido) = F then
+    frm_controle_status_pedido := nil;
+  if TObject(frm_entrada_producao) = F then
+    frm_entrada_producao := nil;
+  if TObject(frm_estrutura_produto) = F then
+    frm_estrutura_produto := nil;
+  if TObject(frm_grade_comissao) = F then
+    frm_grade_comissao := nil;
+  if TObject(frm_nfe_email) = F then
+    frm_nfe_email := nil;
+  if TObject(frm_produtos_simplificado) = F then
+    frm_produtos_simplificado := nil;
+  if TObject(frm_remessa_boleto) = F then
+    frm_remessa_boleto := nil;
+end;
+
+procedure TFRPRI.RemoverAbaDaTela(F: TForm);
+var
+  TS: TTabSheet;
+begin
+  if (F = nil) or (F.Parent = nil) or (F.Parent.Parent = nil) or not (F.Parent.Parent is TTabSheet) then
+    Exit;
+  TS := TTabSheet(F.Parent.Parent);
+  ZerarRefGlobais(F);
+  if pgJanelas.ActivePage = TS then
+    LimparMenuAba;
+  TS.Free;
+  AtualizarMenuAba;
+  if pgJanelas.PageCount = 0 then
+  begin
+    pgJanelas.Visible := False;
+    pgDashboard.Visible := True;
   end;
 end;
 
@@ -7616,6 +7785,7 @@ begin
     end;
   end;
 
+  pgJanelas.Invalidate;
   PosicionarJanelas;
 end;
 
@@ -7679,6 +7849,12 @@ var
   SC: TShortCut;
   Item: TMenuItem;
 begin
+  if Msg.message = WM_USER + 101 then
+  begin
+    Handled := True;
+    RemoverAbaDaTela(TForm(Pointer(Msg.wParam)));
+    Exit;
+  end;
   // dispara o item de menu da tela ativa pelo atalho, antes do foco da tela
   if (Msg.message <> WM_KEYDOWN) and (Msg.message <> WM_SYSKEYDOWN) then
     Exit;
@@ -7753,11 +7929,11 @@ end;
 
 procedure TFRPRI.FormaFechada(Sender: TObject; var Action: TCloseAction);
 begin
-  // a aba ativa esta sendo fechada: remove os botoes de menu dela
-  if (pgJanelas.ActivePage <> nil) and (TObject(FormDaAba(pgJanelas.ActivePage)) = Sender) then
-    LimparMenuAba;
   Action := caFree;
+  // a aba so e removida depois que o form for liberado: a mensagem chega antes da liberacao
+  PostMessage(Handle, WM_USER + 101, WPARAM(NativeUInt(Pointer(Sender))), 0);
 end;
+
 
 procedure TFRPRI.pgJanelasMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);

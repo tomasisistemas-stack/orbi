@@ -9182,14 +9182,14 @@ object Fr_produtos: TFr_produtos
       FieldName = 'custo'
       Origin = 'custo'
       Precision = 15
-      Size = 2
+      Size = 4
     end
     object q_mov_entcusto_final: TBCDField
       AutoGenerateValue = arDefault
       FieldName = 'custo_final'
       Origin = 'custo_final'
       Precision = 15
-      Size = 2
+      Size = 4
     end
   end
   object q_mov_res: TFDQuery
